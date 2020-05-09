@@ -51,7 +51,7 @@ void cellPacking2D::defaultvars(){
 	contactMatrix	 		= nullptr;
 
 	// seed random numbers randomly
-	srand48(seed);
+	////drand48()(seed);
 }
 
 
@@ -504,7 +504,7 @@ void cellPacking2D::initializeBidisperse(int NV, double phiDisk, double sizeRati
 	phi = phiDisk;
 
 	// seed rng
-	srand48(56835698*seed);
+	////drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing plant cell objects" << endl;
@@ -553,8 +553,8 @@ void cellPacking2D::initializeBidisperse(int NV, double phiDisk, double sizeRati
 	// initialize positions of each cell
 	for (ci=0; ci<NCELLS; ci++){
 		// map onto random x and y position
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -598,7 +598,7 @@ void cellPacking2D::initializeVelocities(double tmp0){
 		// add to velocities and mean
 		for (d=0; d<NDIM; d++){
 			// get random direction
-			rv = drand48();
+			rv = (double)rand() / (RAND_MAX + 1.0);
 
 			cell(ci).setCVel(d,rv);
 			vmean.at(d) += rv;
@@ -2034,7 +2034,10 @@ void cellPacking2D::findJamming(double dphi0, double Ktol, double Ftol, double P
 				cout << "	** nc = " << nc << endl;
 				cout << " WRITING JAMMED CONFIG TO .jam FILE" << endl;
 				cout << " ENDING COMPRESSION SIMULATION" << endl;
-				printJammedConfig();
+				printJammedConfig_yc();
+				phiPrintObject << phi << endl;
+				printCalA();
+				printContact();
 				break;
 			}
 		}
@@ -2201,7 +2204,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	double rtmp, a0tmp, l0tmp, p0tmp;
 
 	// seed random number generator
-	srand48(23562457*seed);
+	////drand48()(23562457*seed);
 
 	// minimum number of vertices
 	const int nvmin = 12;
@@ -2215,8 +2218,8 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	vector<double> diskradii(NCELLS,0.0);
 	for (ci=0; ci<NCELLS; ci++){
 		// generate random numbers
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// calculate gaussian random variable using Box-Muller transform
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -2242,7 +2245,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	phi = phiDisk;
 
 	// reseed rng
-	srand48(56835698*seed);
+	////drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing plant cell objects" << endl;
@@ -2291,8 +2294,8 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	// initialize positions of each cell
 	for (ci=0; ci<NCELLS; ci++){
 		// map onto random x and y position
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -3010,5 +3013,64 @@ void cellPacking2D::printSystemStats(){
 	statPrintObject << endl;
 }
 
+void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, double t_scale) {
+
+	int ci, vi, d;
+	int count = 0;
+	double t = 0.0;
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (d = 0; d < NDIM; d++)
+				cell(ci).setVVel(vi, d, 0.0);
+		}
+	}
+
+
+	for (t = 0.0; t < T; t = t + dt0 * t_scale) {
+		// do verlet update
+		for (ci = 0; ci < NCELLS; ci++) {
+			cell(ci).verletPositionUpdate(dt0 * t_scale);
+			cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		calculateForces();
+
+		// update velocities
+		for (ci = 0; ci < NCELLS; ci++)
+			cell(ci).activeVerletVelocityUpdateCOM(dt0 * t_scale, Dr, vtau, v0);
+
+		count++;
+
+		phi = packingFraction();
+
+		if (count % 10 == 0) {
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+		}
+	}
+
+}
+
+
+void cellPacking2D::printCalA() {
+	for (int ci = 0; ci < NCELLS; ci++) {
+		calAPrintObject << cell(ci).calA() << endl;
+	}
+}
+
+void cellPacking2D::printContact() {
+	for (int ci = 0; ci < NCELLS; ci++) {
+		for (int cj = ci + 1; cj < NCELLS; cj++)
+			contactPrintObject << contacts(ci, cj) << " ";
+	}
+	contactPrintObject << endl;
+}
 
 

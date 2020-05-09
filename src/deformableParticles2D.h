@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+using namespace std;
 
 class deformableParticles2D{
 private:
@@ -68,6 +69,8 @@ private:
 	double c0; 			// rest angle for cell boundary
 	double del;			// contact distance for two edge segments
 	double a;			// only attraction parameter (distance and strength, good for DM)
+
+	double c_psi = 2 * 3.1415 * (double)rand() / (RAND_MAX + 1.0);
 
 public:
 	// constructors
@@ -190,6 +193,30 @@ public:
 	void printVertexPositions(std::ofstream& vertexPrintObject, int cellID);
 	void printVertexPositions(std::ofstream& vertexPrintObject, int cellID, int frame);
 	void printCellEnergy(std::ofstream& energyPrintObject, int frame);
+
+	void activeVerletVelocityUpdateCOM(double dt0, double Dr, double vtau, double v0);
+
+	void printVertexPositions_yc(std::ofstream& vertexPrintObject, int cellID) {
+		int p = 14;
+		// loop over vertices, print
+		for (int i = 0; i < NV; i++) {
+			for (int d = 0; d < NDIM; d++) {
+				if (vpos(i, d) - cpos(d) > 0.5 * L.at(d))
+					vertexPrintObject << std::setprecision(p) << vpos(i, d) - L.at(d);
+				else if (cpos(d) - vpos(i, d) > 0.5 * L.at(d))
+					vertexPrintObject << std::setprecision(p) << vpos(i, d) + L.at(d);
+				else
+					vertexPrintObject << std::setprecision(p) << vpos(i, d);
+
+				vertexPrintObject << ",";
+			}
+			vertexPrintObject << l0 << std::endl;
+
+
+		}
+	};
+
+	double calA();
 };
 
 

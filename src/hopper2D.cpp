@@ -105,8 +105,8 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 		ymax = w0 - radii.at(ci);
 
 		// get random location in hopper RESERVOIR
-		xpos = (xmin-xmax)*drand48() + xmax;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmin-xmax)*(double)rand() / (RAND_MAX + 1.0) + xmax;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -794,8 +794,8 @@ void cellPacking2D::hopperSPNVE(vector<double>& radii, double w0, double w, doub
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
 			// draw uniform random variables
-			r1 = drand48();
-			r2 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
+			r2 = (double)rand() / (RAND_MAX + 1.0);
 
 			// use Box-Muller trnsfrm to get GRV
 			grv = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -1042,7 +1042,7 @@ void cellPacking2D::flowHopperSP(vector<double>& radii, double w0, double w, dou
 					postmp = xmin + radii.at(ci);
 
 					// pick random y value
-					cell(ci).setCPos(1,drand48()*w0);
+					cell(ci).setCPos(1,(double)rand() / (RAND_MAX + 1.0)*w0);
 
 					// set x value
 					veltmp = 2.0*g*pow(radii.at(ci),2);

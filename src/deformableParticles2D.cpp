@@ -338,8 +338,8 @@ void deformableParticles2D::vertexPerturbation(double dscale){
 	// loop over vertices, perturb
 	for (i=0; i<NV; i++){
 		// get random perturbations
-		dx = 1.0 - 2.0*drand48();
-		dy = 1.0 - 2.0*drand48();
+		dx = 1.0 - 2.0*(double)rand() / (RAND_MAX + 1.0);
+		dy = 1.0 - 2.0*(double)rand() / (RAND_MAX + 1.0);
 
 		// normalize perturbations
 		dnorm = sqrt(dx*dx + dy*dy);
@@ -2086,7 +2086,7 @@ void deformableParticles2D::printVertexPositions(ofstream& vertexPrintObject, in
 	}
 }
 
-void deformableParticles2D::printCellEnergy(ofstream& energyPrintObject, int frame){
+void deformableParticles2D::printCellEnergy(ofstream& energyPrintObject, int frame) {
 	// local variables
 	double uPerimeter, uArea, uSurfaceTension, uBend, uInteraction, uTotal, KTotal;
 
@@ -2108,8 +2108,57 @@ void deformableParticles2D::printCellEnergy(ofstream& energyPrintObject, int fra
 	energyPrintObject << setw(30) << setprecision(16) << right << uTotal;
 	energyPrintObject << setw(30) << setprecision(16) << right << KTotal;
 	energyPrintObject << endl;
+};
+
+
+void deformableParticles2D::activeVerletVelocityUpdateCOM(double dt0, double Dr, double vtau, double v0) {
+	// local variables
+	int i, d;
+	double veltmp, anew, segmentMass, b;
+	double ftmp, dampNum, dampDenom, dampUpdate;
+	double r1;
+
+	// get segment mass
+	segmentMass = PI * pow(0.5 * del * l0, 2);
+
+	r1 = 1.0 - 2.0 * (double)rand() / (RAND_MAX + 1.0);
+
+	c_psi += dt0 * ((1.0 / vtau) * asin((cos(c_psi)
+		* cvel(1) - sin(c_psi) * cvel(0)) / (sqrt(cvel(1) *
+			cvel(1) + cvel(0) * cvel(0)) + 1e-20)) + 2.0 * Dr * PI * r1);
+
+	// update vertex velocities
+	for (i = 0; i < NV; i++) {
+
+		for (d = 0; d < NDIM; d++) {
+			// get current velocities	
+			veltmp = vvel(i, d);
+
+			// get the new acceleration from forces with damping
+			anew = vforce(i, d) / segmentMass;
+
+			// update velocity
+			veltmp = 0.5 * (anew + vacc(i, d)) + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
+
+			// set new velocity and acceleration
+			setVVel(i, d, veltmp);
+			setVAcc(i, d, anew);
+		}
+	}
+};
+
+
+double deformableParticles2D::calA() {
+
+	double totalArea = area();
+	double perimeter = 0;
+	double cal_A = 0;
+
+	for (int i = 0; i < NV; i++) {
+		perimeter += segmentLength(i);
+	}
+
+	cal_A = pow(perimeter, 2) / (4 * PI * totalArea);
+	return cal_A;
 }
-
-
-
 

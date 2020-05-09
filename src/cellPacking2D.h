@@ -59,6 +59,10 @@ private:
 	std::ofstream energyPrintObject;
 	std::ofstream statPrintObject;
 	std::ofstream jamPrintObject;
+	std::ofstream lengthscalePrintObject;
+	std::ofstream phiPrintObject;
+	std::ofstream calAPrintObject;
+	std::ofstream contactPrintObject;
 
 public:
 
@@ -106,8 +110,12 @@ public:
 		}
 	}
 	
-	void openJamObject(std::string& str){
+	void openJamObject(std::string& str, std::string& str1, std::string& str2, std::string& str3, std::string& str4) {
 		jamPrintObject.open(str.c_str());
+		lengthscalePrintObject.open(str1.c_str());
+		phiPrintObject.open(str2.c_str());
+		calAPrintObject.open(str3.c_str());
+		contactPrintObject.open(str4.c_str());
 		if (!jamPrintObject.is_open()) {
 			std::cout << "	ERROR: jamPrintObject could not open " << str << "..." << std::endl;
 			exit(1);
@@ -312,6 +320,35 @@ public:
 	void printSystemPositions(int frame);
 	void printSystemEnergy(int frame, double Uval, double Kval);
 	void printSystemStats();
+
+	// activity
+
+	void activity(double T, double v0, double Dr, double vtau);
+	void activityCOM(double T, double v0, double Dr, double vtau, double t_scale);
+	void printCalA();
+	void printContact();
+	void relaxP(double Ktolerance, double Ptolerance) {
+		fireMinimizeP(Ptolerance, Ktolerance);
+		phi = packingFraction();
+		printJammedConfig();
+		phiPrintObject << phi << std::endl;
+		printCalA();
+		printContact();
+	};
+	void closeF() {
+		jamPrintObject.close();
+		packingPrintObject.close();
+		energyPrintObject.close();
+		statPrintObject.close();
+		lengthscalePrintObject.close();
+		phiPrintObject.close();
+		calAPrintObject.close();
+		contactPrintObject.close();
+	};
+	void printJammedConfig_yc() {
+		for (int ci = 0; ci < NCELLS; ci++)
+			cell(ci).printVertexPositions_yc(jamPrintObject, ci);
+	};
 };
 
 #endif

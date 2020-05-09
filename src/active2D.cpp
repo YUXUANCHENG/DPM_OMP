@@ -52,8 +52,8 @@ void cellPacking2D::initializeActiveStickySP(vector<double>& radii, int NV, doub
 	radsum = 0.0;
 	for (ci=0; ci<NCELLS; ci++){
 		// generate random numbers
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// calculate gaussian random variable using Box-Muller transform
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -73,7 +73,7 @@ void cellPacking2D::initializeActiveStickySP(vector<double>& radii, int NV, doub
 	phi = phiDisk;
 
 	// reseed rng
-	srand48(56835698*seed);
+	////drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
@@ -123,8 +123,8 @@ void cellPacking2D::initializeActiveStickySP(vector<double>& radii, int NV, doub
 		ymax = L.at(1) - radii.at(ci);
 
 		// get random location in pipe
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -208,7 +208,7 @@ void cellPacking2D::singleActiveCell(int NV, double phiInit, double calA0, doubl
 
 	// get initial directors for each
 	// for (vi=0; vi<NV; vi++){
-	// 	r1 = drand48();
+	// 	r1 = (double)rand() / (RAND_MAX + 1.0);
 	// 	alpha.at(vi) = 2.0*PI*(2.0*r1 - 1.0);
 	// }
 
@@ -294,8 +294,8 @@ void cellPacking2D::singleActiveCell(int NV, double phiInit, double calA0, doubl
 		// UPDATE ACTIVE DIRECTORS
 		for (vi=0; vi<NV; vi++){
 			// draw uniform random variables
-			r1 = drand48();
-			r2 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
+			r2 = (double)rand() / (RAND_MAX + 1.0);
 
 			// use Box-Muller trnsfrm to get GRVs for active variable
 			g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -315,8 +315,8 @@ void cellPacking2D::singleActiveCell(int NV, double phiInit, double calA0, doubl
 		*/
 
 		// draw uniform random variables
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// use Box-Muller trnsfrm to get GRVs for active variable
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -570,8 +570,8 @@ void cellPacking2D::initializeActiveZebrafish(vector<double>& radii, int NV, dou
 	radsum = 0.0;
 	for (ci=0; ci<NCELLS; ci++){
 		// generate random numbers
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// calculate gaussian random variable using Box-Muller transform
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -596,7 +596,7 @@ void cellPacking2D::initializeActiveZebrafish(vector<double>& radii, int NV, dou
 	cout << "		-- Initial phi for first " << Ncurr << "/" << NCELLS << " particles = " << phi << endl;
 
 	// reseed rng
-	srand48(56835698*seed);
+	//drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
@@ -643,7 +643,7 @@ void cellPacking2D::initializeActiveZebrafish(vector<double>& radii, int NV, dou
 		if (ci < Ncurr){
 			// draw random integer between 0 and 4, to decide where
 			// to place particle
-			areaint = round(4*drand48());
+			areaint = round(4*(double)rand() / (RAND_MAX + 1.0));
 
 			// main channel
 			if (areaint <= 1){
@@ -675,8 +675,8 @@ void cellPacking2D::initializeActiveZebrafish(vector<double>& radii, int NV, dou
 			}
 
 			// get random location in pipe
-			xpos = (xmax-xmin)*drand48() + xmin;
-			ypos = (ymax-ymin)*drand48() + ymin;
+			xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+			ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 			// set as initial position of com
 			cell(ci).setCPos(0,xpos);
@@ -745,8 +745,8 @@ void cellPacking2D::dpInitializeActiveZebrafish(int NV, double phiDisk, double s
 	radsum = 0.0;
 	for (ci=0; ci<NCELLS; ci++){
 		// generate random numbers
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// calculate gaussian random variable using Box-Muller transform
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -770,7 +770,7 @@ void cellPacking2D::dpInitializeActiveZebrafish(int NV, double phiDisk, double s
 	cout << "		-- Initial phi for " << NCELLS << " particles = " << phi << endl;
 
 	// reseed rng
-	srand48(56835698*seed);
+	//drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
@@ -815,7 +815,7 @@ void cellPacking2D::dpInitializeActiveZebrafish(int NV, double phiDisk, double s
 	for (ci=0; ci<NCELLS; ci++){
 		// draw random integer between 0 and 4, to decide where
 		// to place particle
-		areaint = round(4*drand48());
+		areaint = round(4*(double)rand() / (RAND_MAX + 1.0));
 
 		// main channel
 		if (areaint <= 1){
@@ -848,8 +848,8 @@ void cellPacking2D::dpInitializeActiveZebrafish(int NV, double phiDisk, double s
 
 			
 		// get random location in pipe
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -883,7 +883,7 @@ void cellPacking2D::dpActiveZebrafishNVE(double v0){
 	// initialize velocities for particles in main channel
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
-			r1 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
 			cell(ci).setCVel(d, v0*(1-d)*cos(2.0*PI*(r1 - 0.5)) + v0*d*sin(2.0*PI*(r1 - 0.5)) );
 		}
 	}
@@ -2232,7 +2232,7 @@ void cellPacking2D::spActiveZebrafishVicsek(vector<double>& radii, double attrac
 				cell(ci).setUInt(vi,0.0);
 
 			//	UPDATE ACTIVE DIRECTOR
-			r1 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
 			if (vtau < 1e2)
 				psi.at(ci) += dt*((1.0/vtau)*asin(cos(psi.at(ci))*cell(ci).cvel(1) - sin(psi.at(ci))*cell(ci).cvel(0)) + 4.0*Dr*PI*(r1 - 0.5));
 			else
@@ -2316,7 +2316,7 @@ void cellPacking2D::dpPntNVE(double v0){
 	// initialize velocities for particles in main channel
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
-			r1 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
 			cell(ci).setCVel(d, v0*(1-d)*cos(2.0*PI*(r1 - 0.5)) + v0*d*sin(2.0*PI*(r1 - 0.5)) );
 		}
 	}
@@ -3057,8 +3057,8 @@ void cellPacking2D::spActivePipeNVE(vector<double>& radii, double T0){
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
 			// draw uniform random variables
-			r1 = drand48();
-			r2 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
+			r2 = (double)rand() / (RAND_MAX + 1.0);
 
 			// use Box-Muller trnsfrm to get GRV
 			grv = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -3230,8 +3230,8 @@ void cellPacking2D::spActivePipeFlow(vector<double>& radii, double attractivePar
 			*/
 
 			// draw uniform random variables
-			r1 = drand48();
-			r2 = drand48();
+			r1 = (double)rand() / (RAND_MAX + 1.0);
+			r2 = (double)rand() / (RAND_MAX + 1.0);
 
 			// use Box-Muller trnsfrm to get GRV for active variable
 			grv = sqrt(-2.0*log(r1))*cos(2*PI*r2);

@@ -46,8 +46,8 @@ void cellPacking2D::initializeStickySP(vector<double>& radii, double phiDisk, do
 	radsum = 0.0;
 	for (ci=0; ci<NCELLS; ci++){
 		// generate random numbers
-		r1 = drand48();
-		r2 = drand48();
+		r1 = (double)rand() / (RAND_MAX + 1.0);
+		r2 = (double)rand() / (RAND_MAX + 1.0);
 
 		// calculate gaussian random variable using Box-Muller transform
 		g1 = sqrt(-2.0*log(r1))*cos(2*PI*r2);
@@ -67,7 +67,7 @@ void cellPacking2D::initializeStickySP(vector<double>& radii, double phiDisk, do
 	phi = phiDisk;
 
 	// reseed rng
-	srand48(56835698*seed);
+	//drand48()(56835698*seed);
 
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
@@ -104,8 +104,8 @@ void cellPacking2D::initializeStickySP(vector<double>& radii, double phiDisk, do
 		ymax = L.at(1) - radii.at(ci);
 
 		// get random location in hopper RESERVOIR
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -188,8 +188,8 @@ void cellPacking2D::stickySPTriangularLattice(vector<double>& radii, double phiD
 		ymax = L.at(1) - radii.at(ci);
 
 		// place on triangular lattice
-		xpos = (xmax-xmin)*drand48() + xmin;
-		ypos = (ymax-ymin)*drand48() + ymin;
+		xpos = (xmax-xmin)*(double)rand() / (RAND_MAX + 1.0) + xmin;
+		ypos = (ymax-ymin)*(double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
