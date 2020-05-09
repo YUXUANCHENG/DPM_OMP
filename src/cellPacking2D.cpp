@@ -1516,7 +1516,7 @@ void cellPacking2D::fireMinimizeF(double Ftol, double Ktol, double& Fcheck, doub
 	for (k=0; k<kmax; k++){
 
 		// output some information to console
-		if (k % NPRINT == 0){
+		if (k % NPRINT == 0 && k > NPRINT){
 			cout << "===================================================" << endl << endl;
 			cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
 			cout << "===================================================" << endl;			
@@ -2091,8 +2091,8 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 		cout << "	* dphi 			= " << dphi << endl << endl;
 		cout << "	AFTER LAST MINIMIZATION:" << endl;
 		cout << "	* phi 			= " << phi << endl;
-		cout << "	* Fcheck 		= " << Fcheck << endl;
-		cout << "	* Kcheck 		= " << Kcheck << endl;
+		//cout << "	* Fcheck 		= " << Fcheck << endl;
+		//cout << "	* Kcheck 		= " << Kcheck << endl;
 		cout << endl << endl;
 
 		// increase packing fraction to new phi value
@@ -2489,7 +2489,7 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 			cout << "	* phi 		= " << phi << endl;
 			cout << "	* dt 		= " << dt << endl;
 			cout << "	* alpha 	= " << alpha << endl;
-			cout << "	* P 		= " << P << endl;
+			//cout << "	* P 		= " << P << endl;
 			cout << endl << endl;
 		}
 
