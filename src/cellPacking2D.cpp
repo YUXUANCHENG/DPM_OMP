@@ -1474,7 +1474,8 @@ void cellPacking2D::fireMinimizeF(double Ftol, double Ktol, double& Fcheck, doub
 	const double falpha 	= 0.99;
 	const double dtmax 		= 10*dt0;
 	const double dtmin 		= 0.01*dt0;
-	const int NMIN 			= 20;
+	//const int NMIN 			= 20;
+	const int NMIN = 100;
 	const int NNEGMAX 		= 2000;
 	const int NDELAY 		= 1000;
 	int npPos				= 0;
@@ -2042,6 +2043,8 @@ void cellPacking2D::findJamming(double dphi0, double Ktol, double Ftol, double P
 			}
 		}
 
+		//saveState(savedState);
+
 		// grow or shrink particles by scale factor
 		scaleLengths(scaleFactor);
 
@@ -2306,6 +2309,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 
 		// perturb vertex positions a little bit
 		cell(ci).vertexPerturbation(0.1);
+		cell(ci).printlengthscale(lengthscalePrintObject);
 	}
 
 	// set time step
@@ -2314,6 +2318,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	// use FIRE in PBC box to relax overlaps
 	cout << "		-- Using FIRE to relax overlaps..." << endl;
 	fireMinimizeSP(diskradii);
+	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 }
 
 

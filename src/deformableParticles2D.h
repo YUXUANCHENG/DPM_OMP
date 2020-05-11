@@ -217,6 +217,11 @@ public:
 	};
 
 	double calA();
+	void printlengthscale(std::ofstream& lengthscalePrintObject) {
+
+		lengthscalePrintObject << NV << std::endl;
+
+	}
 };
 
 

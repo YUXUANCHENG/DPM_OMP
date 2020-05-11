@@ -125,7 +125,7 @@ public:
 		for (int i = 0; i < 10; i++) {
 
 			cout << "Loop i = " << i << endl;
-			v0 = 0.10;
+			v0 = 0.01;
 			Dr = 1.0 + double(i) * 1.0;
 			v0PrintObject << Dr << endl;
 
@@ -146,7 +146,7 @@ public:
 
 			cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 			cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
-			cell_group.relaxP(Ktolerance, Ptolerance);
+			cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 		}
 
 		cout << "	** FINISHED COMPRESSING ABOVE JAMMING, ENDING MAIN FILE" << endl;

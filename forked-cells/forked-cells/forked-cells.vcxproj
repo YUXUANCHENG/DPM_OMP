@@ -139,7 +139,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="forked-cells.cpp" />
+    <ClInclude Include="..\..\src\cellPacking2D.h" />
+    <ClInclude Include="..\..\src\cell_jamming.h" />
+    <ClInclude Include="..\..\src\deformableParticles2D.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\active2D.cpp" />
+    <ClCompile Include="..\..\src\cellPacking2D.cpp" />
+    <ClCompile Include="..\..\src\deformableParticles2D.cpp" />
+    <ClCompile Include="..\..\src\hopper2D.cpp" />
+    <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\stickySP.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -330,7 +330,16 @@ public:
 	void relaxP(double Ktolerance, double Ptolerance) {
 		fireMinimizeP(Ptolerance, Ktolerance);
 		phi = packingFraction();
-		printJammedConfig();
+		printJammedConfig_yc();
+		phiPrintObject << phi << std::endl;
+		printCalA();
+		printContact();
+	};
+	void relaxF(double Ktolerance, double Ftolerance, double Ptolerance) {
+		double Fckeck, Kcheck;
+		fireMinimizeF(Ftolerance, Ktolerance, Fckeck, Kcheck);
+		phi = packingFraction();
+		printJammedConfig_yc();
 		phiPrintObject << phi << std::endl;
 		printCalA();
 		printContact();
