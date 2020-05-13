@@ -62,7 +62,7 @@ private:
 
 
 public:
-
+	
 	void unjam()
 	{
 
@@ -123,39 +123,129 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 10; i++) {
+			for (int j = 0; i < 10; i++) {
 
-			cout << "Loop i = " << i << endl;
-			v0 = 0.01;
-			Dr = 1.0 + double(i) * 1.0;
-			v0PrintObject << Dr << endl;
+				cout << "Loop i, j = " << i << "," << j << endl;
+				v0 = 0.1 + double(i) * 0.1;;
+				Dr = 1.0 + double(j) * 1.0;
+				v0PrintObject << v0 << "," << Dr << endl;
 
-			extend = "_" + to_string(i) + ".txt";
+				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
-			// output files
-			//string positionF = "position" + extend;
-			string energyF = "energy" + extend;
-			string jammingF = "jam" + extend;
-			string lengthscaleF = "length" + extend;
-			string phiF = "phi" + extend;
-			string calAF = "calA" + extend;
-			string contactF = "contact" + extend;
+				// output files
+				//string positionF = "position" + extend;
+				string energyF = "energy" + extend;
+				string jammingF = "jam" + extend;
+				string lengthscaleF = "length" + extend;
+				string phiF = "phi" + extend;
+				string calAF = "calA" + extend;
+				string contactF = "contact" + extend;
 
-			cell_group.loadState(jammed_state);
-			cell_group.closeF();
-			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF);
+				cell_group.loadState(jammed_state);
+				cell_group.closeF();
+				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF);
 
-			cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-			cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
-			cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
+				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+			}
 		}
 
-		cout << "	** FINISHED COMPRESSING ABOVE JAMMING, ENDING MAIN FILE" << endl;
+		cout << "	** FINISHED **   " << endl;
 	};
 
 
+	void unjam_decompressed()
+	{
+
+		// output files
+		string positionF = "position.txt";
+		string energyF = "energy.txt";
+		string jammingF = "jam.txt";
+		string lengthscaleF = "length.txt";
+		string phiF = "phi.txt";
+		string calAF = "calA.txt";
+		string contactF = "contact.txt";
+
+		std::ofstream v0PrintObject;
+		v0PrintObject.open("v0.txt");
+
+		// system size
+		int NCELLS = 16;
+		int NV = 16;
+		int seed = 5;
+		double Lini = 1.0;
+
+		// activity
+		double T = 100.0;
+		double v0 = 1.0;
+		double Dr = 10.0;
+		double vtau = 1e-2;
+		double t_scale = 1.00;
+
+		// instantiate object
+		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+		// open position output file
+		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF);
+
+		// Initialze the system as disks
+		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+		cell_group.initializeGel(NV, phiDisk, sizedev, del);
+
+		// change to DPM
+		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+		// set time scale
+		cell_group.vertexDPMTimeScale(timeStepMag);
 
 
 
+		// Compress then relax by FIRE
+		cout << " Compress then relax by FIRE " << endl;
+
+		
+		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+		//double phiTargetTmp = 0.8;
+		double phiTargetTmp = cell_group.packingFraction() - 0.1;
+		double deltaPhiTmp = 0.001;
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+
+		cellPacking2D jammed_state;
+		cell_group.saveState(jammed_state);
+
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; i < 10; i++) {
+
+				cout << "Loop i, j = " << i << "," << j << endl;
+				v0 = 0.1 + double(i) * 0.1;
+				Dr = 1.0 + double(j) * 1.0;
+				v0PrintObject << v0 << "," << Dr << endl;
+
+				extend = "_" + to_string(i) + to_string(j) + ".txt";
+
+				// output files
+				//string positionF = "position" + extend;
+				string energyF = "energy" + extend;
+				string jammingF = "jam" + extend;
+				string lengthscaleF = "length" + extend;
+				string phiF = "phi" + extend;
+				string calAF = "calA" + extend;
+				string contactF = "contact" + extend;
+
+				cell_group.loadState(jammed_state);
+				cell_group.closeF();
+				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF);
+
+				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
+				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+			}
+		}
+
+		cout << "	** FINISHED **   " << endl;
+	};
 
 
 

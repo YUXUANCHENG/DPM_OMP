@@ -10,7 +10,9 @@ using namespace std;
 int main() {
 
 	jamming main_function;
-	main_function.unjam();
+
+	//main_function.unjam();
+	main_function.unjam_decompressed();
 
 	system("pause");
 	return 0;

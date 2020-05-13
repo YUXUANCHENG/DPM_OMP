@@ -2070,7 +2070,7 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 	phi0 = phi;
 
 	// determine number of steps to target
-	NSTEPS = floor((phiTarget - phi0)/deltaPhi);
+	NSTEPS = floor(abs((phiTarget - phi0))/deltaPhi);
 	if (NSTEPS == 0)
 		NSTEPS = 1;
 
@@ -3053,7 +3053,7 @@ void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, dou
 
 		phi = packingFraction();
 
-		if (count % 10 == 0) {
+		if (count % 100 == 0) {
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
 			printCalA();
