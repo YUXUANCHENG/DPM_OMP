@@ -123,7 +123,7 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 10; i++) {
-			for (int j = 0; i < 10; i++) {
+			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				v0 = 0.1 + double(i) * 0.1;;
