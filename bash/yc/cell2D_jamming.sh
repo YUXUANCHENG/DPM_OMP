@@ -13,7 +13,7 @@ binf=$(pwd)/jamming.o
 rm -f $binf
 g++ --std=c++11 -I $srcdir $mainf $srcdir/*.cpp -o $binf 
 
-./$binf
+$binf
 
 
 
