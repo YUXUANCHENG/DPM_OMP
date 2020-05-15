@@ -221,8 +221,11 @@ public:
 
 		lengthscalePrintObject << NV << std::endl;
 
-	}
+	};
+	double cal_mean_v(int d);
 };
+
+
 
 
 

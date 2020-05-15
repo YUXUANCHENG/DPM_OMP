@@ -3058,6 +3058,7 @@ void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, dou
 			phiPrintObject << phi << endl;
 			printCalA();
 			printContact();
+			printV();
 		}
 	}
 
@@ -3078,4 +3079,17 @@ void cellPacking2D::printContact() {
 	contactPrintObject << endl;
 }
 
+void cellPacking2D::printV() {
+	double mean_v_x = 0;
+	double mean_v_y = 0;
 
+	for (int ci = 0; ci < NCELLS; ci++) {
+		mean_v_x += cell(ci).cal_mean_v(0);
+		mean_v_y += cell(ci).cal_mean_v(1);
+	}
+
+	mean_v_x /= NCELLS;
+	mean_v_y /= NCELLS;
+
+	vPrintObject << mean_v_x << "," << mean_v_y << endl;
+}

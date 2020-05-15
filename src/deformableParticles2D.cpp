@@ -2162,3 +2162,16 @@ double deformableParticles2D::calA() {
 	return cal_A;
 }
 
+double deformableParticles2D::cal_mean_v(int d){
+
+	double mean_v = 0;
+
+	for (int i = 0; i < NV; i++) {
+
+		mean_v += vvel(i, d);
+	}
+
+
+	return mean_v/NV;
+
+}
