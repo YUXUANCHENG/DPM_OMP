@@ -195,6 +195,7 @@ public:
 	void printCellEnergy(std::ofstream& energyPrintObject, int frame);
 
 	void activeVerletVelocityUpdateCOM(double dt0, double Dr, double vtau, double v0);
+	void activeVerletVelocityUpdateCOM_brownian(double dt0, double Dr, double vtau, double v0);
 
 	void printVertexPositions_yc(std::ofstream& vertexPrintObject, int cellID) {
 		int p = 14;

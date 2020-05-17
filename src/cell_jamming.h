@@ -27,7 +27,7 @@ private:
 
 	// disk constants
 	//const double phiDisk	 		= 0.65;			// initial packing fraction of disks
-	const double phiDisk = 0.6;
+	const double phiDisk = 0.5;
 
 	// compression constants
 	const double phiTarget = 1.03;			// cell packing fraction (regardless of final pressure)
@@ -148,7 +148,7 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
 				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
@@ -243,7 +243,7 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
 				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
@@ -252,6 +252,109 @@ public:
 	};
 
 	void unjam_kb()
+	{
+
+
+		std::ofstream v0PrintObject;
+		v0PrintObject.open("v0.txt");
+
+		// system size
+		int NCELLS = 16;
+		int NV = 16;
+		int seed = 5;
+		double Lini = 1.0;
+
+		// activity
+		double T = 100.0;
+		double v0 = 1.0;
+		double Dr = 10.0;
+		double vtau = 1e-2;
+		double t_scale = 1.00;
+
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 10; j++) {
+
+
+				cout << "Loop i, j = " << i << "," << j << endl;
+				//v0 = 0.1 + double(i) * 0.1;;
+				//Dr = 1.0 + double(j) * 1.0;
+				v0 = 0.8;
+				Dr = 8.0;
+				kb = 0.001 + double(j) * 0.001;
+				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
+
+				// output files
+				extend = "_jammed_" + to_string(i) + to_string(j) + ".txt";
+				//string positionF = "position" + extend;
+				string energyF = "energy" + extend;
+				string jammingF = "jam" + extend;
+				string lengthscaleF = "length" + extend;
+				string phiF = "phi" + extend;
+				string calAF = "calA" + extend;
+				string contactF = "contact" + extend;
+				string vF = "v" + extend;
+
+				
+
+
+				// instantiate object
+				cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+				cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+				// open position output file
+				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+				// Initialze the system as disks
+				cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+				cell_group.initializeGel(NV, phiDisk, sizedev, del);
+
+				// change to DPM
+				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+				// set time scale
+				cell_group.vertexDPMTimeScale(timeStepMag);
+
+
+
+				// Compress then relax by FIRE
+				cout << " Compress then relax by FIRE " << endl;
+
+				cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+				double phiTargetTmp = cell_group.packingFraction() - 0.1;
+				double deltaPhiTmp = 0.001;
+				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+
+				cellPacking2D jammed_state;
+				cell_group.saveState(jammed_state);
+
+				// output files
+				extend = "_" + to_string(i) + to_string(j) + ".txt";
+				//string positionF = "position" + extend;
+				energyF = "energy" + extend;
+				jammingF = "jam" + extend;
+				lengthscaleF = "length" + extend;
+				phiF = "phi" + extend;
+				calAF = "calA" + extend;
+				contactF = "contact" + extend;
+				vF = "v" + extend;
+
+				cell_group.loadState(jammed_state);
+				cell_group.closeF();
+				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+
+
+			}
+		}
+
+		cout << "	** FINISHED **   " << endl;
+	};
+
+
+	void active_brownian()
 	{
 
 		// output files
@@ -280,51 +383,49 @@ public:
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
-		for (int i = 0; i < 1; i++) {
+		// instantiate object
+		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+		// open position output file
+		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+		// Initialze the system as disks
+		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+		cell_group.initializeGel(NV, phiDisk, sizedev, del);
+
+		// change to DPM
+		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+		// set time scale
+		cell_group.vertexDPMTimeScale(timeStepMag);
+
+
+
+		// Compress then relax by FIRE
+		cout << " Compress then relax by FIRE " << endl;
+
+		double phiTargetTmp = 0.7;
+		double deltaPhiTmp = 0.001;
+
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+
+		cellPacking2D jammed_state;
+		cell_group.saveState(jammed_state);
+
+		for (int i = 0; i < 10; i++) {
 			for (int j = 0; j < 10; j++) {
 
-
 				cout << "Loop i, j = " << i << "," << j << endl;
-				//v0 = 0.1 + double(i) * 0.1;;
+				//v0 = 0.1;
+				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				v0 = 0.5;
-				Dr = 5.0;
-				kb = 0.0 + double(j) * 0.1;
+				Dr = 1e-3;
+				kb = 0.01 + double(j) * 0.01;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
-
-
-				// instantiate object
-				cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
-				cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
-
-				// open position output file
-				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-
-				// Initialze the system as disks
-				cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-				cell_group.initializeGel(NV, phiDisk, sizedev, del);
-
-				// change to DPM
-				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-
-				// set time scale
-				cell_group.vertexDPMTimeScale(timeStepMag);
-
-
-
-				// Compress then relax by FIRE
-				cout << " Compress then relax by FIRE " << endl;
-
-				//double phiTargetTmp = 0.8;
-				//double deltaPhiTmp = 0.001;
-
-				//cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp);
-				cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-
-				cellPacking2D jammed_state;
-				cell_group.saveState(jammed_state);
 
 				// output files
 				//string positionF = "position" + extend;
@@ -341,16 +442,14 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM(T, v0, Dr, vtau, t_scale);
 				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
 
 		cout << "	** FINISHED **   " << endl;
 	};
-
-
-
 
 
 

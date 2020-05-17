@@ -8,6 +8,7 @@
 // include file
 #include "deformableParticles2D.h"
 #include "cellPacking2D.h"
+#include "random"
 
 // namespace
 using namespace std;
@@ -2050,6 +2051,12 @@ void cellPacking2D::findJamming(double dphi0, double Ktol, double Ftol, double P
 
 		// update new phi (only update here, do NOT calculate relaxed phi value)
 		phi = packingFraction();
+
+		if (k % 10 == 0) {
+			printJammedConfig_yc();
+			printCalA();
+			printContact();
+		}
 	}
 
 	if (k == kmax){
@@ -2107,6 +2114,11 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 
 		// relax shapes (energies calculated in relax function)
 		fireMinimizeF(Ftol, Ktol, Fcheck, Kcheck);
+		if (k % 10 == 0) {
+			printJammedConfig_yc();
+			printCalA();
+			printContact();
+		}
 	}
 }
 
@@ -2319,6 +2331,11 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	cout << "		-- Using FIRE to relax overlaps..." << endl;
 	fireMinimizeSP(diskradii);
 	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
+
+	printJammedConfig_yc();
+	printCalA();
+	printContact();
+	
 }
 
 
@@ -2425,7 +2442,7 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 	const double falpha 	= 0.99;
 	const double dtmax 		= 10*dt0;
 	const double dtmin 		= 0.02*dt0;
-	const int NMIN 			= 20;
+	const int NMIN 			= 100;
 	const int NNEGMAX 		= 2000;
 	const int NDELAY 		= 1000;
 	int npPos				= 0;
@@ -2654,7 +2671,7 @@ void cellPacking2D::spForces(vector<double>& lenscales){
 	for (ci=0; ci<NCELLS; ci++){
 		for (cj=ci+1; cj<NCELLS; cj++){
 			// contact distance
-			contactDistance = lenscales.at(ci) + lenscales.at(cj);
+			contactDistance = lenscales.at(ci) + lenscales.at(cj) + (cell(ci).getl0() + cell(cj).getl0())/2;
 
 			// center-to-center distance
 			centerDistance = 0.0;
@@ -3049,6 +3066,63 @@ void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, dou
 		for (ci = 0; ci < NCELLS; ci++)
 			cell(ci).activeVerletVelocityUpdateCOM(dt0 * t_scale, Dr, vtau, v0);
 
+		count++;
+
+		phi = packingFraction();
+
+		if (count % 100 == 0) {
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
+		}
+	}
+
+}
+
+void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale) {
+
+	int ci, vi, d;
+	int count = 0;
+	double t = 0.0;
+	// random device class instance, source of 'true' randomness for initializing random seed
+	std::random_device rd;
+
+	// Mersenne twister PRNG, initialized with seed from previous random device instance
+	std::mt19937 gen(rd());
+
+	double random_angle;
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (d = 0; d < NDIM; d++)
+				cell(ci).setVVel(vi, d, 0.0);
+		}
+	}
+
+
+	for (t = 0.0; t < T; t = t + dt0 * t_scale) {
+		// do verlet update
+		for (ci = 0; ci < NCELLS; ci++) {
+			cell(ci).verletPositionUpdate(dt0 * t_scale);
+			cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		calculateForces();
+
+		// update velocities
+		for (ci = 0; ci < NCELLS; ci++) {
+			std::normal_distribution<double> dist(0, 1);
+
+			// get random number with normal distribution using gen as random source
+			random_angle = dist(gen);
+			cell(ci).activeVerletVelocityUpdateCOM_brownian(dt0 * t_scale, Dr, random_angle, v0);
+		}
 		count++;
 
 		phi = packingFraction();

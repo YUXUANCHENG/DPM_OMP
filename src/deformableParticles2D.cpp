@@ -12,7 +12,7 @@
 
 // include file
 #include "deformableParticles2D.h"
-
+#include "random"
 
 // namespace
 using namespace std;
@@ -2126,6 +2126,38 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM(double dt0, double Dr,
 	c_psi += dt0 * ((1.0 / vtau) * asin((cos(c_psi)
 		* cvel(1) - sin(c_psi) * cvel(0)) / (sqrt(cvel(1) *
 			cvel(1) + cvel(0) * cvel(0)) + 1e-20)) + 2.0 * Dr * PI * r1);
+
+	// update vertex velocities
+	for (i = 0; i < NV; i++) {
+
+		for (d = 0; d < NDIM; d++) {
+			// get current velocities	
+			veltmp = vvel(i, d);
+
+			// get the new acceleration from forces with damping
+			anew = vforce(i, d) / segmentMass;
+
+			// update velocity
+			veltmp = 0.5 * (anew + vacc(i, d)) + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
+
+			// set new velocity and acceleration
+			setVVel(i, d, veltmp);
+			setVAcc(i, d, anew);
+		}
+	}
+};
+
+void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, double Dr, double random_angle, double v0) {
+	// local variables
+	int i, d;
+	double veltmp, anew, segmentMass, b;
+	double ftmp, dampNum, dampDenom, dampUpdate;
+
+
+	// get segment mass
+	segmentMass = PI * pow(0.5 * del * l0, 2);
+
+	c_psi += sqrt( dt0 * Dr * 2) * random_angle;
 
 	// update vertex velocities
 	for (i = 0; i < NV; i++) {
