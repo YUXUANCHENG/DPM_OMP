@@ -1138,6 +1138,8 @@ void deformableParticles2D::shapeForces(){
 
 			// compute force scale
 			Kb = (kb*NV*calA0)/(4.0*PI*PI*a0*l0*l0);
+			//Kb = kb / (2 * NV * pow(l0, 4));
+			//Kb = kb;
 
 			for(d=0; d<NDIM; d++){
 				// compute force vector in d direction

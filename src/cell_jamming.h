@@ -52,7 +52,7 @@ private:
 
 
 	// ratio of preferred perimeter^2 to preferred area
-	const double calA0 = 1.1;
+	const double calA0 = 1.01;
 
 	// tolerances
 	const double Ftolerance = 1e-8;			// force tolerance (for FIRE min)
@@ -422,7 +422,7 @@ public:
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.01 + double(j) * 0.01;
+				kb = 0.001 + double(j) * 0.001;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
