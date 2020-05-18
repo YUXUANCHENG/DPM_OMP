@@ -27,7 +27,7 @@ private:
 
 	// disk constants
 	//const double phiDisk	 		= 0.65;			// initial packing fraction of disks
-	const double phiDisk = 0.5;
+	double phiDisk = 0.5;
 
 	// compression constants
 	const double phiTarget = 1.03;			// cell packing fraction (regardless of final pressure)
@@ -52,7 +52,7 @@ private:
 
 
 	// ratio of preferred perimeter^2 to preferred area
-	const double calA0 = 1.01;
+	const double calA0 = 1.03;
 
 	// tolerances
 	const double Ftolerance = 1e-8;			// force tolerance (for FIRE min)
@@ -127,9 +127,10 @@ public:
 			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-				v0 = 0.1 + double(i) * 0.1;;
-				Dr = 1.0 + double(j) * 1.0;
-				v0PrintObject << v0 << "," << Dr << endl;
+				v0 = 0.1 + double(i) * 0.1;
+				//Dr = 1.0 + double(j) * 1.0;
+				Dr = 1e-3;
+				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
@@ -210,7 +211,7 @@ public:
 
 		
 		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-		//double phiTargetTmp = 0.8;
+
 		double phiTargetTmp = cell_group.packingFraction() - d_phi;
 		double deltaPhiTmp = 0.001;
 		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
@@ -223,8 +224,10 @@ public:
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				v0 = 0.1 + double(i) * 0.1;
-				Dr = 1.0 + double(j) * 1.0;
-				v0PrintObject << v0 << "," << Dr << endl;
+				//Dr = 1.0 + double(j) * 1.0;
+				Dr = 1e-3;
+				kb = 0.001 + double(j) * 0.001;
+				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
@@ -371,7 +374,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 32;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
