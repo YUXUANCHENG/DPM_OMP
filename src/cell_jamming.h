@@ -193,7 +193,7 @@ public:
 
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-
+		phiDisk = 0.58;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -309,7 +309,7 @@ public:
 
 				// open position output file
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-				phiDisk = 0.6;
+				phiDisk = 0.58;
 				// Initialze the system as disks
 				cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 				cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -397,7 +397,7 @@ public:
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 		// Initialze the system as disks
-		phiDisk = 0.6;
+		phiDisk = 0.58;
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
 
