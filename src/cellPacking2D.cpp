@@ -3127,7 +3127,7 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 		phi = packingFraction();
 
-		if (count % 100 == 0) {
+		if (count % 1000 == 0) {
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
 			printCalA();
