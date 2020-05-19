@@ -3127,7 +3127,7 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 		phi = packingFraction();
 
-		if (count % 1000 == 0) {
+		if (count % 100 == 0) {
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
 			printCalA();
@@ -3137,7 +3137,62 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 	}
 
 }
+void cellPacking2D::activityCOM_brownian_test(double T, double v0, double Dr, double vtau, double t_scale) {
 
+	int ci, vi, d;
+	int count = 0;
+	double t = 0.0;
+	// random device class instance, source of 'true' randomness for initializing random seed
+	std::random_device rd;
+
+	// Mersenne twister PRNG, initialized with seed from previous random device instance
+	std::mt19937 gen(rd());
+
+	double random_angle;
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (d = 0; d < NDIM; d++)
+				cell(ci).setVVel(vi, d, 0.0);
+		}
+	}
+
+
+	for (t = 0.0; t < T; t = t + dt0 * t_scale) {
+		// do verlet update
+		for (ci = 0; ci < NCELLS; ci++) {
+			cell(ci).verletPositionUpdate(dt0 * t_scale);
+			cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		calculateForces();
+
+		// update velocities
+		for (ci = 0; ci < NCELLS; ci++) {
+			std::normal_distribution<double> dist(0, 1);
+
+			// get random number with normal distribution using gen as random source
+			random_angle = dist(gen);
+			cell(ci).activeVerletVelocityUpdateCOM_brownian(dt0 * t_scale, Dr, random_angle, v0);
+		}
+		count++;
+
+		phi = packingFraction();
+
+		if (count % 1 == 0) {
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
+		}
+	}
+
+}
 
 void cellPacking2D::printCalA() {
 	for (int ci = 0; ci < NCELLS; ci++) {

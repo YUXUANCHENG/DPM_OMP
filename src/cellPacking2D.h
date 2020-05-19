@@ -328,6 +328,7 @@ public:
 	void activity(double T, double v0, double Dr, double vtau);
 	void activityCOM(double T, double v0, double Dr, double vtau, double t_scale);
 	void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale);
+	void activityCOM_brownian_test(double T, double v0, double Dr, double vtau, double t_scale);
 	void printCalA();
 	void printContact();
 	void printV();

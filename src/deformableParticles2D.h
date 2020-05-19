@@ -186,6 +186,7 @@ public:
 
 	// integrator options
 	void verletPositionUpdate(double dt);
+	void BrownianPositionUpdate(double dt);
 	void verletVelocityUpdate(double dt);
 	void verletVelocityUpdate(double dt, double dampingParam);
 	

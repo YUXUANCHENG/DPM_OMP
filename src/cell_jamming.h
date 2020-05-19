@@ -181,7 +181,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 1000.0;
+		double T = 100.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -193,7 +193,7 @@ public:
 
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		phiDisk = 0.58;
+		phiDisk = 0.6;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -219,11 +219,11 @@ public:
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 1; i++) {
 			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-				v0 = 0.01 + double(i) * 0.01;
+				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
 				kb = 0.001 + double(j) * 0.001;
@@ -272,7 +272,7 @@ public:
 				double Lini = 1.0;
 
 				// activity
-				double T = 1000.0;
+				double T = 100.0;
 				double v0;
 				double Dr;
 				double vtau = 1e-2;
@@ -383,7 +383,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 1000.0;
+		double T = 100.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -476,13 +476,13 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 1;
+		int NCELLS = 2;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
 		// activity
-		double T = 100.0;
+		double T = 10.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -495,7 +495,7 @@ public:
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		phiDisk = 0.1;
+		phiDisk = 0.32;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -521,14 +521,14 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 1; j++) {
+			for (int j = 0; j < 2; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.001 + double(j) * 0.001;
+				kb = 0.0 + double(j) * 0.001;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
@@ -549,7 +549,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian_test(T, v0, Dr, vtau, t_scale);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}

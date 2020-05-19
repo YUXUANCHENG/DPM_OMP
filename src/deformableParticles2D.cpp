@@ -1950,6 +1950,26 @@ void deformableParticles2D::verletPositionUpdate(double dt){
 	}
 }
 
+void deformableParticles2D::BrownianPositionUpdate(double dt) {
+	// local variables
+	int i, d;
+	double postmp;
+
+	// update vertex positions
+	for (i = 0; i < NV; i++) {
+		for (d = 0; d < NDIM; d++) {
+			// update positions using velocity-Verlet with PBCs
+			postmp = vpos(i, d) + dt * vvel(i, d);
+			setVPos(i, d, postmp);
+
+			// set forces to 0
+			setVForce(i, d, 0.0);
+		}
+
+		// set uint to 0
+		setUInt(i, 0.0);
+	}
+}
 
 void deformableParticles2D::verletVelocityUpdate(double dt){
 	// local variables
@@ -2172,7 +2192,18 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 			anew = vforce(i, d) / segmentMass;
 
 			// update velocity
-			veltmp = 0.5 * (anew + vacc(i, d)) + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
+			//veltmp = 0.5 * (anew + vacc(i, d)) + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
+
+			veltmp = anew  + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
+
+			/*
+			if (abs(veltmp) > 5 * v0) {
+				if (veltmp > 0)
+					veltmp = 5 * v0;
+				else
+					veltmp = -5 * v0;
+			}
+			*/	
 
 			// set new velocity and acceleration
 			setVVel(i, d, veltmp);
