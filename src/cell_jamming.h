@@ -287,7 +287,7 @@ public:
 				kb = 0.0 + double(j) * 0.01;
 				//kb = 0.0;
 
-				v0PrintObject << v0 << "," << Dr << "," << kb << "," << NV << endl;
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << NCELLS << endl;
 
 				// output files
 				extend = "_jammed_" + to_string(i) + to_string(j) + ".txt";
@@ -350,7 +350,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
-				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 
 
 			}
