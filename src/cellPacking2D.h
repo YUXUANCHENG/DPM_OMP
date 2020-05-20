@@ -164,7 +164,7 @@ public:
 	void setdt(double val) { dt0 = val; dt = dt0; };
 
 	// set force values for all cells to be the same
-	void forceVals(double calA0, double ka, double kl, double gam, double kb, double kint, double del, double a);
+	void forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a);
 
 	
 	void vertexDPMTimeScale(double timeStepMag);

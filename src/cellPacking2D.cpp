@@ -897,7 +897,7 @@ double cellPacking2D::meanAsphericity(){
 *************************/
 
 // set forces values for all cells to be same
-void cellPacking2D::forceVals(double calA0, double ka, double kl, double gam, double kb, double kint, double del, double a){
+void cellPacking2D::forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a){
 	// local variables
 	int ci;
 

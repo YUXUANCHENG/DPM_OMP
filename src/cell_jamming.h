@@ -40,7 +40,7 @@ private:
 	const double aGelation = 0.05;			// attraction parameter during gelation sim
 
 	// force parameters
-	double kl = 1.0;				// perimeter force constant
+	double kl = 0.1;				// perimeter force constant
 	double ka = 1.0;				// area force constant
 	double gam = 0.0;				// surface tension force constant
 	double kb = 0.0;				// bending energy constant
@@ -86,9 +86,9 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 100.0;
-		double v0 = 1.0;
-		double Dr = 10.0;
+		double T = 200.0;
+		double v0;
+		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
@@ -98,7 +98,7 @@ public:
 
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-
+		phiDisk = 0.6;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -114,22 +114,21 @@ public:
 		// Compress then relax by FIRE
 		cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = 0.8;
-		double deltaPhiTmp = 0.001;
 
-		//cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp);
 		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
 
-		for (int i = 0; i < 10; i++) {
-			for (int j = 0; j < 10; j++) {
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 5; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
+				kb = 0.0 + double(j) * 0.01 * 2;
+				kl = 0.1;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
@@ -149,8 +148,9 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
-				cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
 
@@ -175,15 +175,15 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 32;
+		int NCELLS = 16;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
 		// activity
-		double T = 100.0;
-		double v0 = 1.0;
-		double Dr = 10.0;
+		double T = 200.0;
+		double v0 ;
+		double Dr ;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
@@ -220,13 +220,14 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 10; j++) {
+			for (int j = 0; j < 5; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.001 + double(j) * 0.001;
+				kb = 0.0 + double(j) * 0.01 * 2;
+				kl = 0.1;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
@@ -263,16 +264,16 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 1; j++) {
+			for (int j = 0; j < 6; j++) {
 
 				// system size
-				int NCELLS = pow(2,i+5);
+				int NCELLS = pow(2,i+4);
 				int NV = 16;
 				int seed = 5;
 				double Lini = 1.0;
 
 				// activity
-				double T = 100.0;
+				double T = 200.0;
 				double v0;
 				double Dr;
 				double vtau = 1e-2;
@@ -284,7 +285,8 @@ public:
 				//v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.0 + double(j) * 0.01;
+				kl = 0.1;
+				kb = 0.0 + double(j) * 0.01 * 2;
 				//kb = 0.0;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << NCELLS << endl;
@@ -309,7 +311,7 @@ public:
 
 				// open position output file
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-				phiDisk = 0.58;
+				phiDisk = 0.5;
 				// Initialze the system as disks
 				cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 				cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -326,7 +328,7 @@ public:
 				cout << " Compress then relax by FIRE " << endl;
 
 				//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-				double phiTargetTmp = 0.8;
+				double phiTargetTmp = 0.7;
 				double deltaPhiTmp = 0.001;
 				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
 
@@ -383,7 +385,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 100.0;
+		double T = 200.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -397,7 +399,7 @@ public:
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 		// Initialze the system as disks
-		phiDisk = 0.58;
+		phiDisk = 0.4;
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
 
@@ -412,7 +414,7 @@ public:
 		// Compress then relax by FIRE
 		cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = 0.8;
+		double phiTargetTmp = 0.6;
 		double deltaPhiTmp = 0.001;
 
 		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
@@ -422,14 +424,15 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 10; j++) {
+			for (int j = 0; j < 6; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.001 + double(j) * 0.001;
+				kb = 0.0 + double(j) * 0.01 * 2;
+				kl = 0.1;		
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
@@ -495,7 +498,7 @@ public:
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		phiDisk = 0.32;
+		phiDisk = 0.31;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -528,7 +531,8 @@ public:
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.0 + double(j) * 0.001;
+				kl = 0.1;
+				kb = 0.01 + double(j) * 0.01;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
