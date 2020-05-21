@@ -11,9 +11,9 @@ binf=$(pwd)/jamming.o
 
 # run compiler
 rm -f $binf
-g++ --std=c++11 -I $srcdir $mainf $srcdir/*.cpp -o $binf 
+g++ --std=c++11 -I $srcdir $srcdir/*.cpp -o $binf 
 
-$binf
+# $binf
 
 
 
