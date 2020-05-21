@@ -70,8 +70,13 @@ private:
 	double del;			// contact distance for two edge segments
 	double a;			// only attraction parameter (distance and strength, good for DM)
 
+<<<<<<< HEAD
 	double c_psi = 2 * 3.1415 * (double)rand() / (RAND_MAX + 1.0);
 
+=======
+	// shear strain (for LEbc)
+	double strain;
+>>>>>>> 467c2c9b32fc17c6c057266f9f4d6bd3c39ef9bc
 public:
 	// constructors
 	deformableParticles2D();
@@ -99,6 +104,7 @@ public:
 	double getc0() { return c0; };
 	double getdel() { return del; };
 	double geta() { return a; };
+	double getstrain() { return strain; };
 
 	// access pbc and box length information
 	int getpbc(int d) { return pbc.at(d); };
@@ -114,7 +120,7 @@ public:
 	double cvel(int dim);
 	double cforce(int dim);
 	double uInt(int vertex);
-	double distance(double p2, double p1, int d);
+	double distance(deformableParticles2D& onTheRight, int vj, int vi, int d);
 	double cellDistance(deformableParticles2D& onTheRight, int d);
 
 	// setters (simple mutation)
@@ -132,6 +138,7 @@ public:
 	void seta(double val) { a = val; };
 	void setpbc(int d, int val) { pbc.at(d) = val; };
 	void setL(int d, double val) { L.at(d) = val; };
+	void setstrain(double val) { strain = val; };
 
 	// setters (defined in .cpp file)
 	void setVPos(int vertex, int dim, double val);
@@ -167,8 +174,8 @@ public:
 	// force functions
 	void shapeForces();
 	int segmentForce(deformableParticles2D& onTheRight); // return 0 or 1, depending on contact
-	int vertexForce(deformableParticles2D& onTheRight, std::vector<double>& fij, std::vector<double>& rij);
-	int vertexForce(deformableParticles2D &onTheRight, std::vector<double>& fij, std::vector<double>& rij, double aij);
+	int vertexForce(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+	int vertexForce(deformableParticles2D &onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY, double aij);
 	int pwAttractiveContacts(deformableParticles2D &onTheRight);
 	int radialForce(deformableParticles2D& onTheRight, double bscale); 
 
