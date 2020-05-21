@@ -71,7 +71,7 @@ private:
 	double a;			// only attraction parameter (distance and strength, good for DM)
 
 	double c_psi = 2 * 3.1415 * (double)rand() / (RAND_MAX + 1.0);
-	
+
 	// shear strain (for LEbc)
 	double strain;
 
