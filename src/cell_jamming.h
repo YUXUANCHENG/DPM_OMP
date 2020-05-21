@@ -80,13 +80,13 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 32;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
 		// activity
-		double T = 200.0;
+		double T = 500.0;
 		double v0;
 		double Dr;
 		double vtau = 1e-2;
@@ -120,14 +120,15 @@ public:
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
 
-		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 5; j++) {
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-				v0 = 0.1 + double(i) * 0.1;
+				//v0 = 0.05;
+				v0 = 0.01 + double(i) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
-				kb = 0.0 + double(j) * 0.01 * 2;
+				kb = 0.0 + double(j) * 0.005;
 				kl = 0.1;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
@@ -264,10 +265,10 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 6; j++) {
+			for (int j = 0; j < 4; j++) {
 
 				// system size
-				int NCELLS = pow(2,i+4);
+				int NCELLS = pow(2,i+5);
 				int NV = 16;
 				int seed = 5;
 				double Lini = 1.0;
@@ -424,7 +425,7 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 6; j++) {
+			for (int j = 0; j < 5; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
@@ -524,15 +525,17 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 2; j++) {
+			for (int j = 0; j < 5; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
-				v0 = 0.1 + double(i) * 0.1;
+				v0 = 0.01 + double(i) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-3;
 				kl = 0.1;
-				kb = 0.01 + double(j) * 0.01;
+				//ka = 10;
+				kb = 0.02 + double(j) * 0.01;
+				//kb should be 0 ~ 0.03
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
