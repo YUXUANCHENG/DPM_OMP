@@ -70,13 +70,11 @@ private:
 	double del;			// contact distance for two edge segments
 	double a;			// only attraction parameter (distance and strength, good for DM)
 
-<<<<<<< HEAD
 	double c_psi = 2 * 3.1415 * (double)rand() / (RAND_MAX + 1.0);
-
-=======
+	
 	// shear strain (for LEbc)
 	double strain;
->>>>>>> 467c2c9b32fc17c6c057266f9f4d6bd3c39ef9bc
+
 public:
 	// constructors
 	deformableParticles2D();
