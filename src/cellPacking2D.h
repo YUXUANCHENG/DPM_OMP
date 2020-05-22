@@ -350,9 +350,9 @@ public:
 		printCalA();
 		printContact();
 	};
-	void relaxF(double Ktolerance, double Ftolerance, double Ptolerance) {
+	void relaxF(double Ftolerance, double Ptolerance) {
 		double Fckeck, Kcheck;
-		fireMinimizeF(Ftolerance, Ktolerance, Fckeck, Kcheck);
+		fireMinimizeF(Ftolerance, Fckeck, Kcheck);
 		phi = packingFraction();
 		printJammedConfig_yc();
 		phiPrintObject << phi << std::endl;

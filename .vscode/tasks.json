@@ -12,7 +12,7 @@
 				"-I",
 				"${workspaceFolder}/src/",
 				"-o",
-				"${fileDirname}/${fileBasenameNoExtension}"
+				"${workspaceFolder}/jamming.o"
 			],
 			"options": {
 				"cwd": "/usr/bin"

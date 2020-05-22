@@ -2118,7 +2118,7 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 
 		// relax shapes (energies calculated in relax function)
 
-		fireMinimizeF(Ftol, Ktol, Fcheck, Kcheck);
+		fireMinimizeF(Ftol, Fcheck, Kcheck);
 		if (k % 10 == 0) {
 			printJammedConfig_yc();
 			printCalA();

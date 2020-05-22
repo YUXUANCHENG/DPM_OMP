@@ -115,7 +115,7 @@ public:
 		cout << " Compress then relax by FIRE " << endl;
 
 
-		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+		cell_group.findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
@@ -211,11 +211,11 @@ public:
 		cout << " Compress then relax by FIRE " << endl;
 
 		
-		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+		cell_group.findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 		double phiTargetTmp = cell_group.packingFraction() - d_phi;
 		double deltaPhiTmp = 0.001;
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
@@ -331,7 +331,7 @@ public:
 				//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 				double phiTargetTmp = 0.7;
 				double deltaPhiTmp = 0.001;
-				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 				cellPacking2D jammed_state;
 				cell_group.saveState(jammed_state);
@@ -418,7 +418,7 @@ public:
 		double phiTargetTmp = 0.6;
 		double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 		cellPacking2D jammed_state;
@@ -518,7 +518,7 @@ public:
 		double phiTargetTmp = 0.3;
 		double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 		cellPacking2D jammed_state;
