@@ -23,7 +23,7 @@ private:
 
 	// simulation constants
 	const double sizedev = 0.1;			        // std dev of cell sizes
-	const double timeStepMag = 0.005;		// time step in MD units (zeta * lenscale / forcescale)
+	double timeStepMag = 0.005;		// time step in MD units (zeta * lenscale / forcescale)
 
 	// disk constants
 	//const double phiDisk	 		= 0.65;			// initial packing fraction of disks
@@ -80,7 +80,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 32;
+		int NCELLS = 16;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
@@ -127,7 +127,7 @@ public:
 				//v0 = 0.05;
 				v0 = 0.01 + double(i) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
+				Dr = 1e-2;
 				kb = 0.0 + double(j) * 0.005;
 				kl = 0.1;
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
@@ -264,8 +264,8 @@ public:
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 2; j++) {
 
 				// system size
 				int NCELLS = pow(2,i+5);
@@ -285,9 +285,9 @@ public:
 				v0 = 0.1;
 				//v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
+				Dr = 1e-2;
 				kl = 0.1;
-				kb = 0.0 + double(j) * 0.01 * 2;
+				kb = 0.0 + double(j) * 0.03;
 				//kb = 0.0;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << NCELLS << endl;
@@ -431,7 +431,7 @@ public:
 				//v0 = 0.1;
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
+				Dr = 1e-2;
 				kb = 0.0 + double(j) * 0.01 * 2;
 				kl = 0.1;		
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
@@ -492,6 +492,8 @@ public:
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
+		timeStepMag = 0.001;
+
 		// instantiate object
 		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
 		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
@@ -499,7 +501,7 @@ public:
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		phiDisk = 0.31;
+		phiDisk = 0.3;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -525,16 +527,16 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 5; j++) {
+			for (int j = 0; j < 1; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
-				v0 = 0.01 + double(i) * 0.01;
+				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
-				kl = 0.1;
+				Dr = 1e-2;
+				kl = 1;
 				//ka = 10;
-				kb = 0.02 + double(j) * 0.01;
+				kb = 0.1 + double(j) * 0.01;
 				//kb should be 0 ~ 0.03
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
@@ -556,7 +558,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian_test(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}

@@ -332,6 +332,9 @@ public:
 	void printCalA();
 	void printContact();
 	void printV();
+	void conserve_momentum();
+
+
 	void relaxP(double Ktolerance, double Ptolerance) {
 		fireMinimizeP(Ptolerance, Ktolerance);
 		phi = packingFraction();

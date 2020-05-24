@@ -224,9 +224,11 @@ public:
 		lengthscalePrintObject << NV << std::endl;
 
 	};
-	double cal_mean_v(int d);
-};
 
+	double cal_mean_v(int d);
+
+	double momentum(int d);
+};
 
 
 
