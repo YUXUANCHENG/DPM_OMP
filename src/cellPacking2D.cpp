@@ -3672,6 +3672,8 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 		}
 		count++;
 
+		conserve_momentum();
+
 		phi = packingFraction();
 
 		if (count % 100 == 0) {
@@ -3728,6 +3730,8 @@ void cellPacking2D::activityCOM_brownian_test(double T, double v0, double Dr, do
 		}
 		count++;
 
+		conserve_momentum();
+
 		phi = packingFraction();
 
 		if (count % 1 == 0) {
@@ -3768,4 +3772,34 @@ void cellPacking2D::printV() {
 	mean_v_y /= NCELLS;
 
 	vPrintObject << mean_v_x << "," << mean_v_y << endl;
+}
+
+
+void cellPacking2D::conserve_momentum() {
+	double factor = 0.0;
+	double system_p[2] = {0, 0};
+	double system_mass = 0;
+	double v_temp = 0;
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+	}
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		for (int d = 0; d < NDIM; d++){
+			system_p[d] += cell(ci).momentum(d);
+		}
+	}
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		for (int vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (int d = 0; d < NDIM; d++) {
+
+				v_temp = cell(ci).vvel(vi, d) - system_p[d]/system_mass;
+				cell(ci).setVVel(vi, d, v_temp);
+			}
+		}
+	}
+
+
 }

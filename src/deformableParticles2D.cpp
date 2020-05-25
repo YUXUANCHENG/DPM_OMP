@@ -2308,3 +2308,17 @@ double deformableParticles2D::cal_mean_v(int d){
 	return mean_v/NV;
 
 }
+
+double deformableParticles2D::momentum(int d) {
+	double momentum = 0;
+	double segmentMass = PI * pow(0.5 * del * l0, 2);
+
+	// update vertex velocities
+	for (int i = 0; i < NV; i++) {
+		momentum += vvel(i, d);
+	}
+
+	momentum *= segmentMass;
+
+	return momentum;
+}
