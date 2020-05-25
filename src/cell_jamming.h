@@ -486,7 +486,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 10.0;
+		double T = 100.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
