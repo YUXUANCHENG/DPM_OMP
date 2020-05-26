@@ -92,6 +92,8 @@ public:
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
+		//timeStepMag = 0.001;
+
 		// instantiate object
 		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
 		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
@@ -129,8 +131,10 @@ public:
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
 				kb = 0.0 + double(j) * 0.005;
+				//kb = 0.0;
 				kl = 0.1;
-				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
+				//kl = 0.05 + double(j) * 0.05;
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
@@ -229,7 +233,7 @@ public:
 				Dr = 1e-3;
 				kb = 0.0 + double(j) * 0.01 * 2;
 				kl = 0.1;
-				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
@@ -290,7 +294,7 @@ public:
 				kb = 0.0 + double(j) * 0.03;
 				//kb = 0.0;
 
-				v0PrintObject << v0 << "," << Dr << "," << kb << "," << NCELLS << endl;
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << endl;
 
 				// output files
 				extend = "_jammed_" + to_string(i) + to_string(j) + ".txt";
@@ -380,13 +384,13 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 32;
+		int NCELLS = 256;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
 		// activity
-		double T = 200.0;
+		double T = 1000.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -400,7 +404,7 @@ public:
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 		// Initialze the system as disks
-		phiDisk = 0.4;
+		phiDisk = 0.5;
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
 
@@ -415,7 +419,7 @@ public:
 		// Compress then relax by FIRE
 		cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = 0.6;
+		double phiTargetTmp = 0.7;
 		double deltaPhiTmp = 0.001;
 
 		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
@@ -425,16 +429,16 @@ public:
 		cell_group.saveState(jammed_state);
 
 		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 5; j++) {
+			for (int j = 0; j < 2; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
-				v0 = 0.1 + double(i) * 0.1;
+				v0 = 1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
-				kb = 0.0 + double(j) * 0.01 * 2;
+				Dr = 1e-3;
+				kb = 0.0 + double(j) * 0.03;
 				kl = 0.1;		
-				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 
@@ -486,7 +490,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 100.0;
+		double T = 10.0;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -534,7 +538,7 @@ public:
 				v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
-				kl = 1;
+				kl = 0.5;
 				//ka = 10;
 				kb = 0.1 + double(j) * 0.01;
 				//kb should be 0 ~ 0.03

@@ -3230,9 +3230,9 @@ void cellPacking2D::printV() {
 
 void cellPacking2D::conserve_momentum() {
 	double factor = 0.0;
-	double system_p[2] = {0, 0};
-	double system_mass = 0;
-	double v_temp = 0;
+	double system_p[2] = {0.0, 0.0};
+	double system_mass = 0.0;
+	double v_temp = 0.0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
 		system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
