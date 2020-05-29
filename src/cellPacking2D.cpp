@@ -3081,11 +3081,13 @@ void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, dou
 
 }
 
-void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale) {
+void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 	int ci, vi, d;
 	int count = 0;
 	double t = 0.0;
+	int print_frequency = floor(T/ (dt0 * t_scale * frames));
+
 	// random device class instance, source of 'true' randomness for initializing random seed
 	std::random_device rd;
 

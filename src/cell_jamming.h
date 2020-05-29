@@ -20,6 +20,7 @@ private:
 	// length paramaters
 	const int NT = 1e7;
 	const int NPRINT = 10000;
+	const int frames = 1000;
 
 	// simulation constants
 	const double sizedev = 0.1;			        // std dev of cell sizes
@@ -59,6 +60,7 @@ private:
 	const double Ptolerance = 1e-8;
 	const double Ktolerance = 1e-16;
 	string extend;
+
 
 
 public:
@@ -157,7 +159,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
@@ -256,7 +258,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
@@ -360,7 +362,7 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 
 
@@ -462,7 +464,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
@@ -480,7 +482,7 @@ public:
 
 
 			// system size
-			int NCELLS = 32;
+			int NCELLS = 16;
 			int NV = 16;
 			int seed = 5;
 			double Lini = 1.0;
@@ -491,6 +493,7 @@ public:
 			double Dr;
 			double vtau = 1e-2;
 			double t_scale = 1.00;
+			timeStepMag = 0.001;
 
 			// output files
 			extend = "_jammed_" + to_string(i) + ".txt";
@@ -538,12 +541,12 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 
 				//v0 = 0.1;
-				v0 = 0.1 + double(j) * 0.1;
+				v0 = 0.01 + double(j) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
 				kl = 0.1;
 				//kb = 0.0 + double(j) * 0.03;
-				kb = 0.5;
+				kb = 0.1;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << "," << phiTargetTmp << endl;
 
@@ -563,7 +566,7 @@ public:
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}
@@ -666,7 +669,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale);
+				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 			}
 		}
