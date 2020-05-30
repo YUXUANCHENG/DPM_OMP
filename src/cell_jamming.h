@@ -577,100 +577,102 @@ public:
 	void confluency()
 	{
 
-		// output files
-		string positionF = "position.txt";
-		string energyF = "energy.txt";
-		string jammingF = "jam.txt";
-		string lengthscaleF = "length.txt";
-		string phiF = "phi.txt";
-		string calAF = "calA.txt";
-		string contactF = "contact.txt";
-		string vF = "v.txt";
-
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		// system size
-		int NCELLS = 16;
-		int NV = 16;
-		int seed = 5;
-		double Lini = 1.0;
-
-		// activity
-		double T = 500.0;
-		double v0;
-		double Dr;
-		double vtau = 1e-2;
-		double t_scale = 1.00;
-		calA0 = 1.12;
-
-		//timeStepMag = 0.001;
-
-		// instantiate object
-		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
-		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
-
-		// open position output file
-		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		phiDisk = 0.7;
-		// Initialze the system as disks
-		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-		cell_group.initializeGel(NV, phiDisk, sizedev, del);
-
-		// change to DPM
-		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-
-		// set time scale
-		cell_group.vertexDPMTimeScale(timeStepMag);
+		for (int i = 0; i < 9; i++) {
 
 
+			// system size
+			int NCELLS = 16;
+			int NV = 16;
+			int seed = 5;
+			double Lini = 1.0;
 
-		// Compress then relax by FIRE
-		cout << " Compress then relax by FIRE " << endl;
+			// activity
+			double T = 500.0;
+			double v0;
+			double Dr;
+			double vtau = 1e-2;
+			double t_scale = 1.00;
 
-		double phiTargetTmp = 1.0;
-		double deltaPhiTmp = 0.001;
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
 
-		cellPacking2D jammed_state;
-		cell_group.saveState(jammed_state);
+			calA0 = 1.12 + double(i) * 0.01;
+			//Dr = 1.0 + double(j) * 1.0;
+			Dr = 1e-2;
+			//kb = 0.0 + double(j) * 0.005;
+			kb = 0.0;
+			kl = 0.1;
+			//kl = 0.05 + double(j) * 0.05;
 
-		for (int i = 0; i < 10; i++) {
-			for (int j = 0; j < 10; j++) {
+			// output files
+			extend = "_jammed_" + to_string(i) + ".txt";
+			//string positionF = "position" + extend;
+			string energyF = "energy" + extend;
+			string jammingF = "jam" + extend;
+			string lengthscaleF = "length" + extend;
+			string phiF = "phi" + extend;
+			string calAF = "calA" + extend;
+			string contactF = "contact" + extend;
+			string vF = "v" + extend;
+
+			// instantiate object
+			cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+			cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+			// open position output file
+			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+			phiDisk = 0.7;
+			// Initialze the system as disks
+			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+			cell_group.initializeGel(NV, phiDisk, sizedev, del);
+
+			// change to DPM
+			cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+			// set time scale
+			cell_group.vertexDPMTimeScale(timeStepMag);
+
+
+
+			// Compress then relax by FIRE
+			cout << " Compress then relax by FIRE " << endl;
+
+			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+			double phiTargetTmp = 1.0;
+			double deltaPhiTmp = 0.001;
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+
+			cellPacking2D jammed_state;
+			cell_group.saveState(jammed_state);
+
+			for (int j = 0; j < 9; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-
-				calA0 = 1.12 + double(i) * 0.1;
+	
 				//v0 = 0.04;
 				v0 = 0.01 + double(j) * 0.01;
-				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
-				//kb = 0.0 + double(j) * 0.005;
-				kb = 0.0;
-				kl = 0.1;
-				//kl = 0.05 + double(j) * 0.05;
+
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
-				extend = "_" + to_string(i) + to_string(j) + ".txt";
-
 				// output files
+				extend = "_" + to_string(i) + to_string(j) + ".txt";
 				//string positionF = "position" + extend;
-				string energyF = "energy" + extend;
-				string jammingF = "jam" + extend;
-				string lengthscaleF = "length" + extend;
-				string phiF = "phi" + extend;
-				string calAF = "calA" + extend;
-				string contactF = "contact" + extend;
-				string vF = "v" + extend;
+				energyF = "energy" + extend;
+				jammingF = "jam" + extend;
+				lengthscaleF = "length" + extend;
+				phiF = "phi" + extend;
+				calAF = "calA" + extend;
+				contactF = "contact" + extend;
+				vF = "v" + extend;
 
 				cell_group.loadState(jammed_state);
 				cell_group.closeF();
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+
 			}
 		}
 
