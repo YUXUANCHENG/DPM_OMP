@@ -2215,16 +2215,19 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 
 double deformableParticles2D::calA() {
 
-	double totalArea = area();
+	double totalArea = polygonArea();
 	double perimeter = 0;
 	double cal_A = 0;
+
+	// determine calAmin for given cell
+	double calAMin = NV * tan(PI / NV) / PI;
 
 	for (int i = 0; i < NV; i++) {
 		perimeter += segmentLength(i);
 	}
 
 	cal_A = pow(perimeter, 2) / (4 * PI * totalArea);
-	return cal_A;
+	return cal_A/calAMin;
 }
 
 double deformableParticles2D::cal_mean_v(int d){
