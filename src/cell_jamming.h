@@ -478,7 +478,7 @@ public:
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 0; i < 9; i++) {
+		for (int i = 0; i < 10; i++) {
 
 
 			// system size
@@ -536,7 +536,7 @@ public:
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
 
-			for (int j = 0; j < 9; j++) {
+			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 
@@ -580,7 +580,7 @@ public:
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 0; i < 9; i++) {
+		for (int i = 0; i < 10; i++) {
 
 
 			// system size
@@ -646,7 +646,7 @@ public:
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
 
-			for (int j = 0; j < 9; j++) {
+			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 	

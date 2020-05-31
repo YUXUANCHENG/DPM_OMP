@@ -333,6 +333,7 @@ public:
 	void printContact();
 	void printV();
 	void conserve_momentum();
+	double scale_v(double v0);
 
 
 	void relaxP(double Ktolerance, double Ptolerance) {
