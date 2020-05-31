@@ -20,7 +20,7 @@ private:
 	// length paramaters
 	const int NT = 1e7;
 	const int NPRINT = 10000;
-	const int frames = 1000;
+	int frames = 1000;
 
 	// simulation constants
 	const double sizedev = 0.1;			        // std dev of cell sizes
@@ -168,112 +168,15 @@ public:
 	};
 
 
-	void unjam_decompressed(double d_phi)
-	{
-
-		// output files
-		string positionF = "position.txt";
-		string energyF = "energy.txt";
-		string jammingF = "jam.txt";
-		string lengthscaleF = "length.txt";
-		string phiF = "phi.txt";
-		string calAF = "calA.txt";
-		string contactF = "contact.txt";
-		string vF = "v.txt";
-
-		std::ofstream v0PrintObject;
-		v0PrintObject.open("v0.txt");
-
-		// system size
-		int NCELLS = 16;
-		int NV = 16;
-		int seed = 5;
-		double Lini = 1.0;
-
-		// activity
-		double T = 200.0;
-		double v0;
-		double Dr;
-		double vtau = 1e-2;
-		double t_scale = 1.00;
-
-		// instantiate object
-		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
-		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
-
-		// open position output file
-		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		phiDisk = 0.6;
-		// Initialze the system as disks
-		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-		cell_group.initializeGel(NV, phiDisk, sizedev, del);
-
-		// change to DPM
-		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-
-		// set time scale
-		cell_group.vertexDPMTimeScale(timeStepMag);
-
-
-
-		// Compress then relax by FIRE
-		cout << " Compress then relax by FIRE " << endl;
-
-
-		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-
-		double phiTargetTmp = cell_group.packingFraction() - d_phi;
-		double deltaPhiTmp = 0.001;
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
-
-		cellPacking2D jammed_state;
-		cell_group.saveState(jammed_state);
-
-		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 5; j++) {
-
-				cout << "Loop i, j = " << i << "," << j << endl;
-				v0 = 0.1 + double(i) * 0.1;
-				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
-				kb = 0.0 + double(j) * 0.01 * 2;
-				kl = 0.1;
-				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << endl;
-
-				extend = "_" + to_string(i) + to_string(j) + ".txt";
-
-				// output files
-				//string positionF = "position" + extend;
-				string energyF = "energy" + extend;
-				string jammingF = "jam" + extend;
-				string lengthscaleF = "length" + extend;
-				string phiF = "phi" + extend;
-				string calAF = "calA" + extend;
-				string contactF = "contact" + extend;
-				string vF = "v" + extend;
-
-				cell_group.loadState(jammed_state);
-				cell_group.closeF();
-				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-
-				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-			}
-		}
-
-		cout << "	** FINISHED **   " << endl;
-	};
 
 	void unjam_N()
 	{
-
+		int frames = 20000;
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 2; i < 3; i++) {
+		for (int i = 5; i < 6; i++) {
 			for (int j = 0; j < 2; j++) {
 
 				// system size
