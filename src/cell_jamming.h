@@ -134,7 +134,7 @@ public:
 				v0 = 0.04;
 				//v0 = 0.01 + double(i) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				//kb = 0.0 + double(j) * 0.005;
 				kb = 0.0;
 				//kl = 0.1;
@@ -197,7 +197,7 @@ public:
 				v0 = 0.1;
 				//v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				kl = 0.1;
 				kb = 0.0 + double(j) * 0.03;
 				//kb = 0.0;
@@ -446,7 +446,7 @@ public:
 				//v0 = 0.1;
 				v0 = 0.01 + double(j) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				kl = 0.1;
 				//kb = 0.0 + double(j) * 0.03;
 				kb = 0.1;
@@ -497,14 +497,14 @@ public:
 		double t_scale = 1.00;
 
 		//Dr = 1.0 + double(j) * 1.0;
-		Dr = 1e-2;
+		Dr = 1e-3;
 		//kb = 0.0 + double(j) * 0.005;
 		kb = 0.0;
 		kl = 0.1;
 		//kl = 0.05 + double(j) * 0.05;
 
-		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.94;
+		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
+		//double phi_max = 0.94;
 
 		for (int i = 0; i < 10; i++) {
 
