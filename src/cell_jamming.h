@@ -490,7 +490,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 500.0;
+		double T = 1000.0;
 		double v0;
 		double Dr;
 		double vtau = 1e-2;
@@ -503,8 +503,8 @@ public:
 		kl = 0.1;
 		//kl = 0.05 + double(j) * 0.05;
 
-		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-
+		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
+		double phi_max = 0.94;
 
 		for (int i = 0; i < 10; i++) {
 
@@ -558,7 +558,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 	
 				//v0 = 0.04;
-				v0 = 0.01 + double(j) * 0.01;
+				v0 = 0.002 + double(j) * 0.002;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
