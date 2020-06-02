@@ -2213,6 +2213,7 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM(double dt0, double Dr,
 
 	r1 = 1.0 - 2.0 * (double)rand() / (RAND_MAX + 1.0);
 
+	// Update polarization angle with alignment
 	c_psi += dt0 * ((1.0 / vtau) * asin((cos(c_psi)
 		* cvel(1) - sin(c_psi) * cvel(0)) / (sqrt(cvel(1) *
 			cvel(1) + cvel(0) * cvel(0)) + 1e-20)) + 2.0 * Dr * PI * r1);
@@ -2254,7 +2255,7 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 
 		for (d = 0; d < NDIM; d++) {
 			// get current velocities	
-			veltmp = vvel(i, d);
+			// veltmp = vvel(i, d);
 
 			// get the new acceleration from forces with damping
 			anew = vforce(i, d) / segmentMass;
@@ -2263,15 +2264,6 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 			//veltmp = 0.5 * (anew + vacc(i, d)) + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
 
 			veltmp = anew  + v0 * ((1 - d) * cos(c_psi) + d * sin(c_psi));
-
-			/*
-			if (abs(veltmp) > 5 * v0) {
-				if (veltmp > 0)
-					veltmp = 5 * v0;
-				else
-					veltmp = -5 * v0;
-			}
-			*/	
 
 			// set new velocity and acceleration
 			setVVel(i, d, veltmp);
@@ -2283,16 +2275,19 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 
 double deformableParticles2D::calA() {
 
-	double totalArea = area();
+	double totalArea = polygonArea();
 	double perimeter = 0;
 	double cal_A = 0;
+
+	// determine calAmin for given cell
+	double calAMin = NV * tan(PI / NV) / PI;
 
 	for (int i = 0; i < NV; i++) {
 		perimeter += segmentLength(i);
 	}
 
 	cal_A = pow(perimeter, 2) / (4 * PI * totalArea);
-	return cal_A;
+	return cal_A/calAMin;
 }
 
 double deformableParticles2D::cal_mean_v(int d){

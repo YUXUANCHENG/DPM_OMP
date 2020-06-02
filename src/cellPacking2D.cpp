@@ -3699,11 +3699,15 @@ void cellPacking2D::activityCOM(double T, double v0, double Dr, double vtau, dou
 
 }
 
-void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale) {
+void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 	int ci, vi, d;
 	int count = 0;
 	double t = 0.0;
+
+	// Cal print frequency
+	int print_frequency = floor(T/ (dt0 * t_scale * frames));
+
 	// random device class instance, source of 'true' randomness for initializing random seed
 	std::random_device rd;
 
@@ -3712,6 +3716,10 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 	double random_angle;
 
+	// Scale velocity by avg cell radius
+	double scaled_v = scale_v(v0);
+
+	// Reset velocity
 	for (ci = 0; ci < NCELLS; ci++) {
 		for (vi = 0; vi < cell(ci).getNV(); vi++) {
 			for (d = 0; d < NDIM; d++)
@@ -3719,8 +3727,8 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 		}
 	}
 
-
-	for (t = 0.0; t < T; t = t + dt0 * t_scale) {
+	// Active brownian MD
+	for (t = 0.0; t < T; t += dt0 * t_scale) {
 		// do verlet update
 		for (ci = 0; ci < NCELLS; ci++) {
 			cell(ci).verletPositionUpdate(dt0 * t_scale);
@@ -3739,15 +3747,16 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 			// get random number with normal distribution using gen as random source
 			random_angle = dist(gen);
-			cell(ci).activeVerletVelocityUpdateCOM_brownian(dt0 * t_scale, Dr, random_angle, v0);
+			cell(ci).activeVerletVelocityUpdateCOM_brownian(dt0 * t_scale, Dr, random_angle, scaled_v);
 		}
 		count++;
 
+		// Reset COM velocity
 		conserve_momentum();
 
 		phi = packingFraction();
 
-		if (count % 100 == 0) {
+		if (count % print_frequency == 0) {
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
 			printCalA();
@@ -3757,6 +3766,7 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 	}
 
 }
+
 void cellPacking2D::activityCOM_brownian_test(double T, double v0, double Dr, double vtau, double t_scale) {
 
 	int ci, vi, d;
@@ -3848,9 +3858,9 @@ void cellPacking2D::printV() {
 
 void cellPacking2D::conserve_momentum() {
 	double factor = 0.0;
-	double system_p[2] = {0, 0};
-	double system_mass = 0;
-	double v_temp = 0;
+	double system_p[2] = {0.0, 0.0};
+	double system_mass = 0.0;
+	double v_temp = 0.0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
 		system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
@@ -3874,3 +3884,24 @@ void cellPacking2D::conserve_momentum() {
 
 
 }
+
+double cellPacking2D::scale_v(double v0) {
+
+	double area0 = 0;
+	double scaled_v;
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		area0 += cell(ci).geta0();
+	}
+
+	area0 /= NCELLS;
+	scaled_v = v0 * sqrt(area0 * PI);
+
+	return scaled_v;
+}
+
+
+
+
+
+
