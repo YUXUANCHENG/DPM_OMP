@@ -56,7 +56,7 @@ private:
 	double calA0 = 1.03;
 
 	// tolerances
-	const double Ftolerance = 1e-8;			// force tolerance (for FIRE min)
+	const double Ftolerance = 1e-9;			// force tolerance (for FIRE min)
 	const double Ptolerance = 1e-8;
 	const double Ktolerance = 1e-16;
 	string extend;
@@ -244,7 +244,7 @@ public:
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << "," << phiTargetTmp << endl;
 
-				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 				cellPacking2D jammed_state;
 				cell_group.saveState(jammed_state);
@@ -331,7 +331,7 @@ public:
 		double phiTargetTmp = 0.7;
 		double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 		cellPacking2D jammed_state;
@@ -434,7 +434,7 @@ public:
 				//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 				double phiTargetTmp = 0.7;
 				double deltaPhiTmp = 0.001;
-				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
@@ -503,8 +503,8 @@ public:
 		kl = 0.1;
 		//kl = 0.05 + double(j) * 0.05;
 
-		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.94;
+		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
+		//double phi_max = 0.94;
 
 		for (int i = 0; i < 10; i++) {
 
@@ -548,7 +548,7 @@ public:
 		double phiTargetTmp = 0.6;
 		double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 			cellPacking2D jammed_state;
@@ -620,7 +620,7 @@ public:
 
 		// Compress then relax by FIRE
 		cout << " Compress then relax by FIRE " << endl;
-		cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+		cell_group.findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 		return cell_group.packingFraction();
 

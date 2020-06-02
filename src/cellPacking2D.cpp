@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 /*
 
 	Methods file for cellPacking2D class
@@ -1986,7 +1987,7 @@ void cellPacking2D::findJamming(double dphi0, double Ftol, double Ptol){
 	dr0 = sqrt((phi+dphi0)/phi);
 
 	// save initial state
-	r0 = sqrt(cell(0).geta0());
+	// r0 = sqrt(cell(0).geta0());
 	saveState(savedState);
 
 	// initialize as unjammed
@@ -2042,6 +2043,8 @@ void cellPacking2D::findJamming(double dphi0, double Ftol, double Ptol){
 		cout << "	* undercompressed = " << undercompressed << endl;
 		cout << "	* overcompressed = " << overcompressed << endl;
 		cout << "	* jammed = " << jammed << endl << endl;
+
+		/*
 		cout << "	* contact matrix:" << endl;
 
 		// print contact matrix to console
@@ -2057,6 +2060,7 @@ void cellPacking2D::findJamming(double dphi0, double Ftol, double Ptol){
 
 		// print final two lines
 		cout << endl << endl;
+		*/
 
 		// update packing fraction based on jamming check
 		if (rL < 0){
