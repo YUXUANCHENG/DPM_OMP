@@ -56,7 +56,7 @@ private:
 	double calA0 = 1.03;
 
 	// tolerances
-	const double Ftolerance = 1e-8;			// force tolerance (for FIRE min)
+	const double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
 	const double Ptolerance = 1e-8;
 	const double Ktolerance = 1e-16;
 	string extend;
