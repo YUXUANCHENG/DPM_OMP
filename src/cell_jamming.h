@@ -415,7 +415,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.5 + double(i) * 0.02;
+			phiDisk = 0.55 + double(i) * 0.02;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -432,7 +432,7 @@ public:
 			cout << " Compress then relax by FIRE " << endl;
 
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-			double phiTargetTmp = 0.7 + double(i) * 0.02;
+			double phiTargetTmp = 0.75 + double(i) * 0.02;
 			double deltaPhiTmp = 0.001;
 			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
 
