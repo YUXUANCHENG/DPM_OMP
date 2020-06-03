@@ -7,6 +7,7 @@
 #include "deformableParticles2D.h"
 #include <sstream>
 #include <cmath>
+#include <omp.h>
 
 // use std name space
 using namespace std;
@@ -377,10 +378,18 @@ public:
 
 	void soft_particle_limit()
 	{
+#pragma omp parallel
+		{
+			int ID = omp_get_thread_num();
+
+			cout << "hello " << ID << endl;
+
+		}
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
+#pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
 
 
@@ -396,10 +405,10 @@ public:
 			double Dr;
 			double vtau = 1e-2;
 			double t_scale = 1.00;
-			timeStepMag = 0.001;
+			double timeStepMag = 0.001;
 
 			// output files
-			extend = "_jammed_" + to_string(i) + ".txt";
+			string extend = "_jammed_" + to_string(i) + ".txt";
 			//string positionF = "position" + extend;
 			string energyF = "energy" + extend;
 			string jammingF = "jam" + extend;
@@ -415,7 +424,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.55 + double(i) * 0.02;
+			double phiDisk = 0.55 + double(i) * 0.02;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -478,7 +487,14 @@ public:
 	};
 
 	void confluency()
-	{
+	{	
+#pragma omp parallel
+		{
+			int ID = omp_get_thread_num();
+
+			cout << "hello " <<  ID << endl;
+
+		}
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
@@ -491,7 +507,6 @@ public:
 
 		// activity
 		double T = 1000.0;
-		double v0;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
@@ -503,17 +518,18 @@ public:
 		kl = 0.1;
 		//kl = 0.05 + double(j) * 0.05;
 
-		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		//double phi_max = 0.94;
+		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
+		double phi_max = 0.94;
 
+#pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
 
 
-			calA0 = 1.12 + double(i) * 0.01;
+			double calA0 = 1.12 + double(i) * 0.01;
 
 
 			// output files
-			extend = "_jammed_" + to_string(i) + ".txt";
+			string extend = "_jammed_" + to_string(i) + ".txt";
 			//string positionF = "position" + extend;
 			string energyF = "energy" + extend;
 			string jammingF = "jam" + extend;
@@ -558,7 +574,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 	
 				//v0 = 0.04;
-				v0 = 0.002 + double(j) * 0.002;
+				double v0 = 0.002 + double(j) * 0.002;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
