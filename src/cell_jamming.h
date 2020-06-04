@@ -378,7 +378,7 @@ public:
 
 	void soft_particle_limit()
 	{
-		Ftolerance = 1e-8;
+		Ftolerance = 1e-7;
 #pragma omp parallel
 		{
 			int ID = omp_get_thread_num();
@@ -425,7 +425,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			double phiDisk = 0.55 + double(i) * 0.02;
+			double phiDisk = 0.45 + double(i) * 0.02;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -519,8 +519,8 @@ public:
 		kl = 0.1;
 		//kl = 0.05 + double(j) * 0.05;
 
-		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.94;
+		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
+		//double phi_max = 0.94;
 
 #pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
