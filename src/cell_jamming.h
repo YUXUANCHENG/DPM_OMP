@@ -7,6 +7,7 @@
 #include "deformableParticles2D.h"
 #include <sstream>
 #include <cmath>
+#include <omp.h>
 
 // use std name space
 using namespace std;
@@ -56,9 +57,9 @@ private:
 	double calA0 = 1.03;
 
 	// tolerances
-	const double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
-	const double Ptolerance = 1e-8;
-	const double Ktolerance = 1e-16;
+	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
+	double Ptolerance = 1e-8;
+	double Ktolerance = 1e-16;
 	string extend;
 
 
@@ -134,7 +135,7 @@ public:
 				v0 = 0.04;
 				//v0 = 0.01 + double(i) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				//kb = 0.0 + double(j) * 0.005;
 				kb = 0.0;
 				//kl = 0.1;
@@ -197,7 +198,7 @@ public:
 				v0 = 0.1;
 				//v0 = 0.1 + double(i) * 0.1;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				kl = 0.1;
 				kb = 0.0 + double(j) * 0.03;
 				//kb = 0.0;
@@ -377,10 +378,19 @@ public:
 
 	void soft_particle_limit()
 	{
+		Ftolerance = 1e-7;
+#pragma omp parallel
+		{
+			int ID = omp_get_thread_num();
+
+			cout << "hello " << ID << endl;
+
+		}
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
+#pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
 
 
@@ -396,10 +406,10 @@ public:
 			double Dr;
 			double vtau = 1e-2;
 			double t_scale = 1.00;
-			timeStepMag = 0.001;
+			double timeStepMag = 0.001;
 
 			// output files
-			extend = "_jammed_" + to_string(i) + ".txt";
+			string extend = "_jammed_" + to_string(i) + ".txt";
 			//string positionF = "position" + extend;
 			string energyF = "energy" + extend;
 			string jammingF = "jam" + extend;
@@ -415,7 +425,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.5 + double(i) * 0.02;
+			double phiDisk = 0.45 + double(i) * 0.02;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -431,10 +441,10 @@ public:
 			// Compress then relax by FIRE
 			cout << " Compress then relax by FIRE " << endl;
 
-				//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
-				double phiTargetTmp = 0.7;
-				double deltaPhiTmp = 0.001;
-				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
+			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+			double phiTargetTmp = 0.7 + double(i) * 0.02;
+			double deltaPhiTmp = 0.001;
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
@@ -446,7 +456,7 @@ public:
 				//v0 = 0.1;
 				v0 = 0.01 + double(j) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-2;
+				Dr = 1e-3;
 				kl = 0.1;
 				//kb = 0.0 + double(j) * 0.03;
 				kb = 0.1;
@@ -478,7 +488,14 @@ public:
 	};
 
 	void confluency()
-	{
+	{	
+#pragma omp parallel
+		{
+			int ID = omp_get_thread_num();
+
+			cout << "hello " <<  ID << endl;
+
+		}
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
@@ -491,13 +508,12 @@ public:
 
 		// activity
 		double T = 1000.0;
-		double v0;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
 
 		//Dr = 1.0 + double(j) * 1.0;
-		Dr = 1e-2;
+		Dr = 1e-3;
 		//kb = 0.0 + double(j) * 0.005;
 		kb = 0.0;
 		kl = 0.1;
@@ -506,14 +522,15 @@ public:
 		double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 		//double phi_max = 0.94;
 
+#pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
 
 
-			calA0 = 1.12 + double(i) * 0.01;
+			double calA0 = 1.12 + double(i) * 0.01;
 
 
 			// output files
-			extend = "_jammed_" + to_string(i) + ".txt";
+			string extend = "_jammed_" + to_string(i) + ".txt";
 			//string positionF = "position" + extend;
 			string energyF = "energy" + extend;
 			string jammingF = "jam" + extend;
@@ -559,7 +576,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 	
 				//v0 = 0.04;
-				v0 = 0.002 + double(j) * 0.002;
+				double v0 = 0.002 + double(j) * 0.002;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
