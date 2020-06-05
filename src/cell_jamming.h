@@ -444,7 +444,7 @@ public:
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 			double phiTargetTmp = 0.7 + double(i) * 0.02;
 			double deltaPhiTmp = 0.001;
-			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
