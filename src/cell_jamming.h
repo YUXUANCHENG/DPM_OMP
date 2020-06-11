@@ -456,7 +456,7 @@ public:
 				//v0 = 0.1;
 				v0 = 0.01 + double(j) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
-				Dr = 1e-3;
+				Dr = 1e-2;
 				kl = 0.1;
 				//kb = 0.0 + double(j) * 0.03;
 				kb = 0.1;
@@ -513,7 +513,7 @@ public:
 		double t_scale = 1.00;
 
 		//Dr = 1.0 + double(j) * 1.0;
-		Dr = 1e-3;
+		Dr = 1e-2;
 		//kb = 0.0 + double(j) * 0.005;
 		kb = 0.0;
 		kl = 0.1;
