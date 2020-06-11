@@ -2120,6 +2120,20 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 			printContact();
 		}
 	}
+
+	while (phi < phiTarget) {
+
+		phiNew = phi + deltaPhi;
+		setPackingFraction(phiNew);
+
+		// calculate phi before minimization
+		phi = packingFraction();
+
+		// relax shapes (energies calculated in relax function)
+		fireMinimizeF(Ftol, Ktol, Fcheck, Kcheck);
+
+	}
+
 }
 
 
