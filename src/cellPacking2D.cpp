@@ -2223,7 +2223,7 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 		phi = packingFraction();
 
 		// relax shapes (energies calculated in relax function)
-		fireMinimizeF(Ftol, Ktol, Fcheck, Kcheck);
+		fireMinimizeF(Ftol, Fcheck, Kcheck);
 
 	}
 
