@@ -507,7 +507,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 1000.0;
+		double T = 10000.0;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
