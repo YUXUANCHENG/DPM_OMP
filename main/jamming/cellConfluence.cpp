@@ -1,10 +1,7 @@
 /*
 
-	Main .cpp file to compress NCELLS to jamming
-	print jammed configuration, and then
-	compress to confluency (phi = 1.03) and record steps in
-	between to monitor the pressure required to deform cells 
-	into confluence
+	Main .cpp file to read in existing JAM 
+	file, then compress to confluency (nominally phi = 1.0)
 
 */
 
@@ -22,68 +19,58 @@ const double PI = 4.0*atan(1);
 // simulation constants
 const int NT 					= 1e7; 			// number of time steps
 const int NPRINT 				= 2e3;			// number of time steps between prints
-const double timeStepMag 		= 0.02;			// time step in MD unit
-const double phiDisk 			= 0.55;			// initial phi of SP disks
-const double deltaPhi0 			= 5e-4;			// initial delta phi
-const double sizeRatio 			= 1.4;			// ratio between small and large particles
-const double sizeFraction		= 0.5;			// fraction of small particles
-
-// target packing fraction (confluence)
-const double phiTarget 			= 1.0;
+const double timeStepMag 		= 0.01;			// time step in MD unit
+const double dphi 				= 5e-5;			// packing fraction increase
+const double T0 				= 1e-8;			// initial velocities for read-in cells
 
 // force parameters
 const double ka 				= 1.0;			// area force constant (should be = 1)
 const double gam 				= 0.0;			// surface tension force constant
-const double kint 				= 0.05;			// interaction energy constant
+const double kint 				= 1.0;			// interaction energy constant
 const double a 					= 0.0;			// attraction parameter 
 const double del 				= 1.0;			// radius of vertices in units of l0
 
 // tolerances
-const double Ftol 				= 1e-14;		// force tolerance (for FIRE min)
-const double Ptol 				= 1e-6;			// pressure tolerance
+const double Ftol 				= 7e-13;		// force tolerance (for FIRE min)
+
+// ouputs
+const double dlogpTol 			= 0.25;			// log difference between pressures of different frames
 
 // int main
 int main(int argc, char const *argv[])
 {
-	// local variables
-	int NCELLS, NV, seed;
-	double calA0, kl, kb;
+	// input variables
+	int seed;
+	double calA0, kl, kb, pTarget;
 
 	// inputs from command line
-	string NCELLS_str 			= argv[1];
-	string NV_str 				= argv[2];
-	string calA0_str 			= argv[3];
-	string kl_str 				= argv[4];
-	string kb_str 				= argv[5];
+	string inputFile 			= argv[1];
+	string calA0_str 			= argv[2];
+	string kl_str 				= argv[3];
+	string kb_str 				= argv[4];
+	string pTarget_str 			= argv[5];
 	string seed_str				= argv[6];
 	string energyFile 			= argv[7];
 	string jammingFile 			= argv[8];
 	string vdosFile 			= argv[9];
 
 	// load strings into sstream
-	stringstream NCELLSss(NCELLS_str);
-	stringstream NVss(NV_str);
 	stringstream calA0ss(calA0_str);
 	stringstream klss(kl_str);
 	stringstream kbss(kb_str);
+	stringstream pTargetss(pTarget_str);
 	stringstream seedss(seed_str);
 
 	// parse values from strings
-	NCELLSss 		>> NCELLS;
-	NVss 			>> NV;
 	calA0ss 		>> calA0;
 	klss 			>> kl;
 	kbss 			>> kb;
+	pTargetss		>> pTarget;
 	seedss 			>> seed;
 
 	// instantiate main packing object
-	cout << "	** Instantiating object for initial disk packing to be turned into a cell packing" << endl;
-	cout << "	** NCELLS = " << NCELLS << endl;
-	cellPacking2D packingObject(NCELLS,NT,NPRINT,1.0,seed);
-
-	// set initial conditions as if disks in box with given packing fraction (sets boundary size)
-	cout << "	** Initializing gel at phiDisk = " << phiDisk << " using SP model" << endl;
-	packingObject.initializeBidisperse(NV, phiDisk, sizeRatio, sizeFraction, del);
+	cout << "	** Reading in from file " << inputFile << endl;
+	cellPacking2D packingObject(inputFile,T0,seed);
 
 	// set deformability, force values
 	packingObject.forceVals(calA0,ka,kl,gam,kb,kint,del,a);
@@ -93,123 +80,85 @@ int main(int argc, char const *argv[])
 
 	// open position output file
 	packingObject.openJamObject(jammingFile);
-
-	// compress to set packing fraction using FIRE, pressure relaxation
-	packingObject.findJamming(deltaPhi0, Ftol, Ptol);
-
-	// get packing fraction, test to see if we should keep compressing
-	double phiJ = packingObject.packingFraction();
-	double phiTmp, phiTargetTmp, deltaPhiTmp;
-
-	// open energy and vdos file
 	packingObject.openEnergyObject(energyFile);
 	packingObject.openStatObject(vdosFile);
 
-	// compute initial vdos
+	// set NT and NPRINT
+	packingObject.setNT(NT);
+	packingObject.setNPRINT(NPRINT);
+
+	// compress to set packing fraction using FIRE, pressure relaxation
+	double Fcheck, Kcheck;
+	cout << "	** relaxing system with Ftol = " << Ftol << endl;
+	packingObject.fireMinimizeF(Ftol, Fcheck, Kcheck);
+	cout << "	** Fcheck = " << Fcheck << endl;
+	cout << "	** Kcheck = " << Kcheck << endl;
+
+	// compute pressure
+	double Pcheck = 0.5*(packingObject.getSigmaXX() + packingObject.getSigmaYY())/(packingObject.getNCELLS()*packingObject.getL(0)*packingObject.getL(0));
+	cout << "	** Pcheck = " << Pcheck << endl << endl;
+
+	// print initial configuration and compute VDOS
+	cout << "	** computing VDOS, printing to " << vdosFile << endl << endl;
+	packingObject.printJammedConfig();
 	packingObject.vdos();
 
-	// step 1: compress by dphi to dphi*10, repeat for dphi = 1e-8, 1e-7, 1e-6, 1e-5, 1e-4
-	// 	-- only save jammed configuration and vdos after compression (5 configs, 5 sets fo evals)
-	// 
-	// step 2: compress by dphi = 1e-3 to phiTarget, saving every NSKIP configs (based on distance of phiJ to confluence)
-	// step 3: save configurationa and vdos of configuration at phi target
+	// IDEA: compress by small packing fraction steps, 
+	// only output when difference between pressures exceeds increasing scale
 
-	// variables for compression to confluence
-	int NSTEPS, NDPHIDECADES;
-	double phiRange, dphi0;
-	int PRINTSTEPS = 20;
-	int NSKIP;
+	// determine thresholds for output based on difference in pressure between frames
+	double pCurrent = Pcheck;
+	double pLast = pCurrent;
+	double dlogp = 0.0;
+	int NFRAMES = ceil((log10(pTarget) - log10(pCurrent))/dlogp);
 
-	// initial increment parameters
-	NDPHIDECADES = 5;
-	dphi0 = 1e-8;
+	// output to console
+	cout << "	** Compressing to confluence, printing " << NFRAMES << " frames, starting from pressure " << pCurrent << " to final pressure " << pTarget << endl;
 
-	// check vs phiTarget
-	if (phiJ < phiTarget){
+	// compute degree to which size should be increased
+	double phi = packingObject.packingFraction();
+	double rscale = sqrt((phi + dphi)/phi);
 
-		// initial dphi
-		deltaPhiTmp = dphi0;
+	// compress to target pressure
+	int itmax = 1e3;
+	int it = 0;
+	while(Pcheck < pTarget && it < itmax){
+		// iterator
+		it++;
 
-		// initial jammed packing fraction
-		phiTmp = phiJ;
+		// decrease by packing fraction
+		cout << "	** Compression protocol it = " << it << " from phi = " << phi << " to phi + dphi = " << phi + dphi << " by dphi = " << dphi << endl;
+		packingObject.scaleLengths(rscale);
 
-		// print to console
-		cout << "	~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *" << endl << endl;
-		cout << "	** Beginning compression protocol, first compressing by dphi = 1e-8 from phiJ = " << phiTmp << endl << endl; 
-		cout << "	~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *" << endl << endl;
+		// minimize
+		packingObject.fireMinimizeF(Ftol, Fcheck, Kcheck);
 
-		// compress packing in nlogpts logarithmically spaced steps to 1e-2 over phiJ
-		for (int i=0; i<NDPHIDECADES; i++){
-			// get new phi target
-			phiTargetTmp = phiTmp + 10*deltaPhiTmp;
+		// updated packing fraction
+		phi = packingObject.packingFraction();
+		packingObject.updatePackingFraction();
 
-			// compress to new phiTarget by new deltaPhi
-			cout << "	** QS compression protocol i = " << i << " from phi = " << phiTmp << " to phiTarget = " << phiTargetTmp << " by dphi = " << deltaPhiTmp << endl;
-			packingObject.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftol);
+		// updated pressure/cell
+		Pcheck = 0.5*(packingObject.getSigmaXX() + packingObject.getSigmaYY())/(packingObject.getNCELLS()*packingObject.getL(0)*packingObject.getL(0));
+		pCurrent = Pcheck;
 
-			// increment dphi by a factor of 10
-			deltaPhiTmp *= 10;
+		// compute difference in pressure since last output
+		dlogp = log10(pCurrent) - log10(pLast);
 
-			// print jammed configuration and vdos
-			phiTmp = packingObject.packingFraction();
-			cout << "	** Printing compressed state at i = " << i << ", phi = " << phiTmp << " to jam file" << endl;
-			packingObject.printJammedConfig();
+		// print vdos and config when difference in pressures is large enough
+		if (dlogp > dlogpTol){
+			cout << "	** at it = " << it << ", outputting vdos and config to files..." << endl;
 			packingObject.vdos();
-		}
+			packingObject.printJammedConfig();
 
-		// print to console
-		cout << "	~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *" << endl << endl;
-		cout << "	** Finished incremental decade compression, now compressing from phi = " << phiTmp <<  " to phiTarget = " << phiTarget << endl << endl; 
-		cout << "	~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ * ~ *" << endl << endl;
-
-		// if still not confluent, compress to confluency
-		if (phiTmp < phiTarget){
-			// distance from current packing fraction to target
-			phiRange = phiTarget - phiTmp;
-
-			// determine number of compressive steps to target confluency
-			NSTEPS = ceil(phiRange/deltaPhiTmp);
-
-			// recompute dphi
-			deltaPhiTmp = phiRange/NSTEPS;
-
-			// choose to print during compression or not
-			if (NSTEPS < 2*PRINTSTEPS){
-				// compress to target packing fraction, only store configurations at the end
-				cout << "	** QS compression protocol to final phiTarget = " << phiTarget << endl;
-				packingObject.qsIsoCompression(phiTarget, deltaPhiTmp, Ftol);
-			}
-			else{
-				// compress in steps, output every NSKIP steps
-				NSKIP = NSTEPS/PRINTSTEPS;
-
-				// loop over compression steps until target reached
-				while (phiTmp < phiTarget){
-					// temporary target is NSKIPS ahead
-					phiTargetTmp = phiTmp + NSKIP*deltaPhiTmp;
-
-					// compress
-					cout << "	** QS compression protocol to phiTarget = " << phiTargetTmp << endl;
-					packingObject.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftol);
-
-					// check if over true phiTarget, if so then break
-					phiTmp = packingObject.packingFraction();
-					if (phiTmp > phiTarget)
-						break;
-					else{
-						cout << "	** Printing compressed state at phi = " << phiTmp << " to jam file" << endl;
-						packingObject.printJammedConfig();
-						packingObject.vdos();
-					}
-				}
-			}
+			// reset pLast
+			pLast = pCurrent;
 		}
 	}
 
-	// Print final confluent config to jammed file
-	cout << "	** Printing final confluent state at phiC = " << packingObject.packingFraction() << " to jam file" << endl;
-	packingObject.printJammedConfig();
+	// print final configuration
+	cout << "	** at it = " << it << ", outputting FINAL vdos and config to files..." << endl;
 	packingObject.vdos();
+	packingObject.printJammedConfig();
 
 	cout << "	** FINISHED COMPRESSING ABOVE JAMMING, ENDING MAIN FILE" << endl;
 	return 0;
