@@ -870,7 +870,7 @@ double deformableParticles2D::polygonArea(){
 
 // calculate cell area
 
-double safe_acos(double x)
+double deformableParticles2D::safe_acos(double x)
 {
 	if (x < -1.0) x = -1.0;
 	else if (x > 1.0) x = 1.0;
