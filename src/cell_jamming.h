@@ -562,11 +562,11 @@ public:
 			// Compress then relax by FIRE
 			cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = phi_max;
-		double deltaPhiTmp = 0.001;
+			double phiTargetTmp = phi_max;
+			double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
-		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
+			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
