@@ -562,7 +562,7 @@ public:
 			// Compress then relax by FIRE
 			cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = 0.6;
+		double phiTargetTmp = phi_max;
 		double deltaPhiTmp = 0.001;
 
 		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
