@@ -575,7 +575,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 	
 				//v0 = 0.04;
-				double v0 = 0.002 + double(j) * 0.002;
+				double v0 = 0.002 + double(j) * 0.001;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
