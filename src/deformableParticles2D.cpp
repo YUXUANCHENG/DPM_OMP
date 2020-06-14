@@ -904,6 +904,15 @@ double deformableParticles2D::polygonArea(){
 }
 
 // calculate cell area
+
+double safe_acos(double x)
+{
+	if (x < -1.0) x = -1.0;
+	else if (x > 1.0) x = 1.0;
+	return acos(x);
+}
+
+
 // NOTE: OLD VERSION USED TRIANGULAR AREA FROM area(i) FUNCTION
 double deformableParticles2D::area(){
 	// local variables
@@ -928,7 +937,7 @@ double deformableParticles2D::area(){
 			avi = PI*av;
 		else{
 			// get arc fraction for given vertex
-			thetai = acos(ci);
+			thetai = safe_acos(ci);
 
 			// get segment lengths
 			li = segmentLength(vi);
@@ -956,7 +965,7 @@ double deformableParticles2D::area(){
 		// check for error
 		if (avi != avi){
 			cout << "	ERROR: vertex area calculated is a nan, vi = " << vi << ", thetai = " << thetai << ". " << endl;
-			cout << "	** uxi = " << uxi << ", uyi = " << uyi << "; uxim1 = " << uyim1 << ", uyim1 = " << uyim1 << endl;
+			cout << "	** uxi = " << uxi << ", uyi = " << uyi << "; uxim1 = " << uxim1 << ", uyim1 = " << uyim1 << endl;
 			cout << " 	** segmentCosine(vi) = " << segmentCosine(vi) << endl;
 			cout << "  	** Ending." << endl;
 			exit(1);

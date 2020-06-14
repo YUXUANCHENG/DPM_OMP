@@ -159,6 +159,7 @@ public:
 
 	// calculations
 	double polygonArea();							// area of polygon (without vertices)
+	double safe_acos(double x);
 	double area();									// area of cell
 	double perimeter();								// perimeter of cell
 	double asphericity();							// instantaneous asphericity parameter
