@@ -2160,7 +2160,7 @@ void cellPacking2D::findJamming(double dphi0, double Ftol, double Ptol){
 		// update new phi (only update here, do NOT calculate relaxed phi value)
 		phi = packingFraction();
 
-		if (k % 10 == 0) {
+		if (k % 1 == 0) {
 			printJammedConfig_yc();
 			printCalA();
 			printContact();
