@@ -1603,21 +1603,6 @@ void cellPacking2D::fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck){
 	// iterate until system converged
 	kmax = 1e6;
 	for (k=0; k<kmax; k++){
-		// output some information to console
-		if (k % NPRINT == 0){
-			cout << "===================================================" << endl << endl;
-			cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
-			cout << "===================================================" << endl;			
-			cout << "	* Run data:" << endl;
-			cout << "	* Kcheck 	= " << Kcheck << endl;
-			cout << "	* Fcheck 	= " << Fcheck << endl;
-			cout << "	* Pcheck 	= " << Pcheck << endl;
-			cout << "	* phi 		= " << phi << endl;
-			cout << "	* dt 		= " << dt << endl;
-			cout << "	* alpha 	= " << alpha << endl;
-			cout << "	* P 		= " << P << endl;
-			cout << endl << endl;
-		}
 
 		// Step 1. calculate P and norms
 		P = 0.0;
