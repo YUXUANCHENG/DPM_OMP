@@ -3291,7 +3291,7 @@ double cellPacking2D::scale_v(double v0) {
 	}
 
 	area0 /= NCELLS;
-	scaled_v = v0 * sqrt(area0 * PI);
+	scaled_v = v0 * sqrt(area0 / PI);
 
 	return scaled_v;
 }
