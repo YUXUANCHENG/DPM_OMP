@@ -13,10 +13,11 @@ int main() {
 
 	//main_function.unjam();
 	//main_function.soft_particle_limit();
-	main_function.confluency();
+	//main_function.confluency();
 	//main_function.unjam_N();
 	//main_function.active_brownian();
 	//main_function.test();
+	main_function.test_ground_shape();
 
 
 	system("pause");
