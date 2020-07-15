@@ -762,7 +762,7 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 10.0;
+		double T = 1.0;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
@@ -777,7 +777,7 @@ public:
 
 
 		for (int i = 0; i < 10; i++) {
-
+			ka = 10;
 			double calA0 = 1.12 ;
 			kl = 0.05 + double(i) * 0.05;
 			// output files
