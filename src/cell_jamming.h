@@ -843,7 +843,10 @@ public:
 
 				cell_group.loadState(jammed_state);
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+
+				double Fcheck, Kcheck;
+				cell_group.fireMinimizeF(Ftolerance, Ktolerance, Fcheck, Kcheck);
+
 				cell_group.closeF();
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 

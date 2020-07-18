@@ -2072,9 +2072,6 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 	double phi0, phiNew, dphi, Fcheck, Kcheck;
 	int NSTEPS, k;
 
-	// relax shapes (energies calculated in relax function)
-	fireMinimizeF(Ftol, Ktol, Fcheck, Kcheck);
-
 	// get initial packing fraction
 	phi = packingFraction();
 	phi0 = phi;
