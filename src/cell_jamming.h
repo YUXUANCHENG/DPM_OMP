@@ -676,7 +676,7 @@ public:
 		double phi_max = 0.94;
 
 		double ratio = 100.0;
-		ka = 10;
+		//ka = 10;
 
 #pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
