@@ -670,14 +670,13 @@ public:
 
 		//Dr = 1.0 + double(j) * 1.0;
 		Dr = 1e-2;
-		//kb = 0.0 + double(j) * 0.005;
-		kb = 0.0;
-		kl = 0.1;
-		//kl = 0.05 + double(j) * 0.05;
+
 
 		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 		double phi_max = 0.94;
-		double ratio = 10.0;
+
+		double ratio = 100.0;
+		ka = 10;
 
 #pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
@@ -934,7 +933,7 @@ public:
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 			double phiTargetTmp = phi_max;
 			double deltaPhiTmp = 0.001;
-			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance, Ktolerance);
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
@@ -963,7 +962,7 @@ public:
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 
 				double Fcheck, Kcheck;
-				cell_group.fireMinimizeF(Ftolerance, Ktolerance, Fcheck, Kcheck);
+				cell_group.fireMinimizeF(Ftolerance, Fcheck, Kcheck);
 
 				cell_group.closeF();
 				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);

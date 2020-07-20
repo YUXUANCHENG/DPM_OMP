@@ -17,7 +17,8 @@ int main() {
 	//main_function.unjam_N();
 	//main_function.active_brownian();
 	//main_function.test();
-	main_function.test_ground_shape();
+	//main_function.test_ground_shape();
+	main_function.const_ground_shape();
 
 
 	system("pause");
