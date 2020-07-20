@@ -677,13 +677,15 @@ public:
 
 		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 		double phi_max = 0.94;
+		double ratio = 10.0;
 
 #pragma omp parallel for
 		for (int i = 0; i < 10; i++) {
 
 
 			double calA0 = 1.12;
-
+			double kb = 0.0001 * (i + 1);
+			double kl = ratio * kb;
 
 			// output files
 			string extend = "_jammed_" + to_string(i) + ".txt";
