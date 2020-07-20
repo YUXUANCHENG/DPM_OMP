@@ -3909,6 +3909,7 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 			printCalA();
 			printContact();
 			printV();
+			cout << "t = " << t << endl;
 		}
 	}
 
