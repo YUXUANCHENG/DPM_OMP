@@ -8,7 +8,7 @@ srcdir=$cellsdir/src
 # compile into binary using packing.h
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
-jobnumber=2;
+jobnumber=10;
 # mainf=$maindir/jamming/cellJamming.cpp
 
 # run compiler
@@ -30,11 +30,11 @@ done
 
 slurmf=$workdir/slurm.sh
 partition=pi_ohern
-job_name=helloworld
+job_name=DPM
 
 echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf
-echo \#SBATCH --cpus-per-task=1 >> $slurmf
+echo \#SBATCH --cpus-per-task=10 >> $slurmf
 echo \#SBATCH --array=1-$jobnumber >> $slurmf
 echo \#SBATCH -n 1 >> $slurmf
 echo \#SBATCH -p $partition >> $slurmf
@@ -42,7 +42,7 @@ echo \#SBATCH -J $job_name >> $slurmf
 echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
-sbatch $slurmf
+sbatch -t 5-00:00:00 $slurmf
 
 
 

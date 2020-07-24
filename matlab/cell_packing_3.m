@@ -10,7 +10,8 @@ global T1_index;
 
 %folder = "D:\project\cells1_N\";
 %folder = "D:\project\cells38\";
-folder = "~/project/cells46/";
+%folder = "~/project/cells46/";
+folder = "~/project/test/1/";
 %folder = "C:\Users\Yuxuan Cheng\source\repos\cells\forked-cells\forked-cells\";
 
 v0_file = folder + "v0.txt";
@@ -25,7 +26,7 @@ mean_p = [];
 var_p = [];
 msd = {};
 
-for t_index_i = 0:9
+for t_index_i =1:9
     %close all
     for t_index_j = 0:9
     try

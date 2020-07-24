@@ -786,7 +786,8 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 10000.0;
+		double T = 100000.0;
+		int frames = 5000;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
@@ -850,33 +851,35 @@ public:
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
 
-#pragma omp parallel for
+#pragma omp parallel for 
 			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 
 				//v0 = 0.04;
-				double v0 = 0.006 + double(j) * 0.003;
-
-				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
-
+				double v0 = 0.002 + double(j) * 0.002;
+#pragma omp critical
+				{
+					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
+				}
 				// output files
-				extend = "_" + to_string(i) + to_string(j) + ".txt";
+				string extend = "_" + to_string(i) + to_string(j) + ".txt";
 				//string positionF = "position" + extend;
-				energyF = "energy" + extend;
-				jammingF = "jam" + extend;
-				lengthscaleF = "length" + extend;
-				phiF = "phi" + extend;
-				calAF = "calA" + extend;
-				contactF = "contact" + extend;
-				vF = "v" + extend;
+				string energyF = "energy" + extend;
+				string jammingF = "jam" + extend;
+				string lengthscaleF = "length" + extend;
+				string phiF = "phi" + extend;
+				string calAF = "calA" + extend;
+				string contactF = "contact" + extend;
+				string vF = "v" + extend;
 
-				cell_group.loadState(jammed_state);
-				cell_group.closeF();
-				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+				cellPacking2D local_cell_group;
+				cell_group.saveState(local_cell_group);
+				local_cell_group.closeF();
+				local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
+				local_cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				local_cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}
