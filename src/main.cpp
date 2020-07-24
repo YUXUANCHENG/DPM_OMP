@@ -7,7 +7,7 @@ using namespace std;
 
 
 
-int main() {
+int main(int argc, char const *argv[])
 
 	jamming main_function;
 
@@ -18,7 +18,8 @@ int main() {
 	//main_function.active_brownian();
 	//main_function.test();
 	//main_function.test_ground_shape();
-	main_function.const_ground_shape();
+	//main_function.const_ground_shape();
+	main_function.const_ground_shape_arg(argv);
 
 
 	system("pause");
