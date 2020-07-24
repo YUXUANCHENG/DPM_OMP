@@ -9,8 +9,9 @@ global T1_index;
 
 
 %folder = "D:\project\cells1_N\";
-folder = "D:\project\cells38\";
-folder = "C:\Users\Yuxuan Cheng\source\repos\cells\forked-cells\forked-cells\";
+%folder = "D:\project\cells38\";
+folder = "~/project/cells46/";
+%folder = "C:\Users\Yuxuan Cheng\source\repos\cells\forked-cells\forked-cells\";
 
 v0_file = folder + "v0.txt";
 v0 = csvread(v0_file);
@@ -141,35 +142,35 @@ for t_index_i = 0:9
 %     end
 %     
 
-    T1_count = zeros(1, frames);
-    for i = 1 : frames-1
-        start_point = 1 + N * ( i - 1 );
-        end_point = N * i;
-        xpos_at_frame = coordinate(start_point:end_point,1);
-        ypos_at_frame = coordinate(start_point:end_point,2);
-        start_point = 1 + N * ( i );
-        end_point = N * (i+1);
-        xpos_at_next_frame = coordinate(start_point:end_point,1);
-        ypos_at_next_frame = coordinate(start_point:end_point,2);
-        %T1_count(1,i+1) = T1_swap_1(xpos_at_frame, ypos_at_frame,xpos_at_next_frame, ypos_at_next_frame, Ncell,lengthscale, (t_index_j+1)*10+1);
-        T1_count(1,i+1) = T1_swap_2(xpos_at_frame, ypos_at_frame,xpos_at_next_frame, ypos_at_next_frame, Ncell,lengthscale, i,(t_index_j+1)*10+1);
-    end
-    
-    figure((t_index_j+1)*10+5), clf, hold on, box on;
-    n = 100; % average every n values
-    %T1_count = arrayfun(@(i) mean(T1_count(i:i+n-1)),1:n:length(T1_count)-n+1)'; % the averaged vector
-    plot((1:length(T1_count))* (1/5000) * (100000/0.005),T1_count);
-    xlabel('time');ylabel('T1');
-    ax = gca;
-    ax.XScale = "log";
-    hold off;
-    %sum(T1_count)/(frames *(1/5000) * (100000/0.005))
-    figure((t_index_j+1)*10+6)
-    test = find(T1_count>0) * (1/5000) * (100000/0.005);
-    [count,edges] = histcounts(log10(test));
-    histogram(test,10.^edges,'Normalization','countdensity')
-    xlabel('time');ylabel('T1 rate');
-    set(gca, 'xscale','log')
+%     T1_count = zeros(1, frames);
+%     for i = 1 : frames-1
+%         start_point = 1 + N * ( i - 1 );
+%         end_point = N * i;
+%         xpos_at_frame = coordinate(start_point:end_point,1);
+%         ypos_at_frame = coordinate(start_point:end_point,2);
+%         start_point = 1 + N * ( i );
+%         end_point = N * (i+1);
+%         xpos_at_next_frame = coordinate(start_point:end_point,1);
+%         ypos_at_next_frame = coordinate(start_point:end_point,2);
+%         %T1_count(1,i+1) = T1_swap_1(xpos_at_frame, ypos_at_frame,xpos_at_next_frame, ypos_at_next_frame, Ncell,lengthscale, (t_index_j+1)*10+1);
+%         T1_count(1,i+1) = T1_swap_2(xpos_at_frame, ypos_at_frame,xpos_at_next_frame, ypos_at_next_frame, Ncell,lengthscale, i,(t_index_j+1)*10+1);
+%     end
+%     
+%     figure((t_index_j+1)*10+5), clf, hold on, box on;
+%     n = 100; % average every n values
+%     %T1_count = arrayfun(@(i) mean(T1_count(i:i+n-1)),1:n:length(T1_count)-n+1)'; % the averaged vector
+%     plot((1:length(T1_count))* (1/5000) * (100000/0.005),T1_count);
+%     xlabel('time');ylabel('T1');
+%     ax = gca;
+%     ax.XScale = "log";
+%     hold off;
+%     %sum(T1_count)/(frames *(1/5000) * (100000/0.005))
+%     figure((t_index_j+1)*10+6)
+%     test = find(T1_count>0) * (1/5000) * (100000/0.005);
+%     [count,edges] = histcounts(log10(test));
+%     histogram(test,10.^edges,'Normalization','countdensity')
+%     xlabel('time');ylabel('T1 rate');
+%     set(gca, 'xscale','log')
     
 %     i = frames;
 %     
@@ -309,24 +310,45 @@ ax.FontSize = 22;
 ax.XScale = "log";
 ax.YScale = "log";
 
-all_mean_cal_A = reshape(all_mean_cal_A, 10, []);
+% all_mean_cal_A = reshape(all_mean_cal_A, [], 10);
+% figure(8);
+% heatmap(flip(all_mean_cal_A,1))
+% ax = gca;
+% ax.XData = unique(v0(:,end-1));
+% ax.YData = flip(unique(v0(:,1)));
+% xlabel("calA0");
+% ylabel("v0");
+% title("calA");
+
+all_mean_cal_A = reshape(all_mean_cal_A, [], 10);
 figure(8);
 heatmap(flip(all_mean_cal_A,1))
 ax = gca;
-ax.XData = unique(v0(:,end-1));
+ax.XData = unique(v0(:,3));
 ax.YData = flip(unique(v0(:,1)));
 xlabel("calA0");
 ylabel("v0");
 title("calA");
 
-ifjammed = reshape(ifjammed, 10, []);
+% ifjammed = reshape(ifjammed, [], 10);
+% figure(6);
+% %heatmap(flip(ifjammed,1),'CellLabelColor','none')
+% heatmap(flip(ifjammed,1))
+% ax = gca;
+% ax.XData = unique(v0(:,end-1));
+% ax.YData = flip(unique(v0(:,1)));
+% xlabel("calA0");
+% ylabel("v0");
+% title("Phase Diagram");
+
+ifjammed = reshape(ifjammed, [], 10);
 figure(6);
 %heatmap(flip(ifjammed,1),'CellLabelColor','none')
 heatmap(flip(ifjammed,1))
 ax = gca;
-ax.XData = unique(v0(:,end-1));
+ax.XData = unique(v0(:,3));
 ax.YData = flip(unique(v0(:,1)));
-xlabel("calA0");
+xlabel("kb");
 ylabel("v0");
 title("Phase Diagram");
 
@@ -381,6 +403,8 @@ title("Phase Diagram");
 % plot(v0,all_mean_cal_A)
 % xlabel("v0");
 % ylabel("CalA");
+
+
 
 function [vAll,cAll,xcomp,ycomp] = draw_voronoi(xpos_at_frame, ypos_at_frame, Ncell, lengthscale, fig)
     xcomp = zeros(1,Ncell);
@@ -934,4 +958,15 @@ end
 % loglog(kl,1.12-all_mean_cal_A(3,:))
 % P = polyfit(log10(kb(2:end)),log10(1.12-all_mean_cal_A(2:end,3)),1)
 % loglog(kb,1.12-all_mean_cal_A(:,3))
+
+% figure(7);hold on
+% scatter(all_mean_cal_A(:)-1,ifjammed(:))
+% P = polyfit(log10(all_mean_cal_A(:)-1), log10(ifjammed(:)), 1);
+% yfit = P(1)*log10(all_mean_cal_A(:)-1)+P(2);
+% plot(all_mean_cal_A(:)-1,10.^(yfit),'r-.');
+% ax = gca;
+% ax.XScale = "log";
+% ax.YScale = "log";
+% xlabel('calA-1');ylabel('MSD');
+
 
