@@ -24,7 +24,7 @@ for index in `seq 0 $range`; do
  #   mkdir -p $current   
  #   cd $current
  #   touch hello.world
-    runString="mkdir -p $current;cd $current;touch hello.world;"
+    runString="mkdir -p $current;cd $current;$binf $index;"
     echo "$runString" >> $taskf
 done
 
