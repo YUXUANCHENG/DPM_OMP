@@ -20,7 +20,8 @@ const double PI = 4.0*atan(1);
 const int NT 					= 1e7; 			// number of time steps
 const int NPRINT 				= 2e3;			// number of time steps between prints
 const double timeStepMag 		= 0.03;			// time step in MD unit
-const double dphi 				= 5e-5;			// packing fraction increase
+const double dphi 				= 5e-4;			// initial packing fraction increase
+const double dphiFast			= 10*dphi; 		// second packing fraction incremenet, to get to larger pressures faster
 const double T0 				= 1e-8;			// initial velocities for read-in cells
 
 // force parameters
@@ -31,10 +32,11 @@ const double a 					= 0.0;			// attraction parameter
 const double del 				= 1.0;			// radius of vertices in units of l0
 
 // tolerances
-const double Ftol 				= 1e-13;		// force tolerance (for FIRE min)
+const double Ftol 				= 1e-12;		// force tolerance (for FIRE min)
+const double Ptol 				= 1e-8;			// pressure tolerance
 
 // ouputs
-const double dlogpTol 			= 0.2;			// log difference between pressures of different frames
+const double dlogpTol 			= 0.1;			// log difference between pressures of different frames
 
 // int main
 int main(int argc, char const *argv[])
@@ -78,9 +80,8 @@ int main(int argc, char const *argv[])
 	// update time scale
 	packingObject.vertexDPMTimeScale(timeStepMag);
 
-	// open position output file
+	// open jamming and vdos output file
 	packingObject.openJamObject(jammingFile);
-	packingObject.openEnergyObject(energyFile);
 	packingObject.openStatObject(vdosFile);
 
 	// set NT and NPRINT
@@ -89,22 +90,25 @@ int main(int argc, char const *argv[])
 
 	// compress to set packing fraction using FIRE, pressure relaxation
 	double Fcheck, Kcheck;
-	cout << "	** relaxing system with Ftol = " << Ftol << endl;
-	packingObject.fireMinimizeF(Ftol, Fcheck, Kcheck);
-	cout << "	** Fcheck = " << Fcheck << endl;
-	cout << "	** Kcheck = " << Kcheck << endl;
+	cout << "	** relaxing system Enthalpy H = U + PV with Ftol = " << Ftol << endl;
+	packingObject.enthalpyMin(dphi, Ftol, Ptol);
 
-	// compute pressure
+	// compute pressure in initial jammed state
 	double Pcheck = 0.5*(packingObject.getSigmaXX() + packingObject.getSigmaYY())/(packingObject.getNCELLS()*packingObject.getL(0)*packingObject.getL(0));
 	cout << "	** Pcheck = " << Pcheck << endl << endl;
 
 	// print initial configuration and compute VDOS
 	cout << "	** computing VDOS, printing to " << vdosFile << endl << endl;
-	packingObject.printJammedConfig();
 	packingObject.vdos();
 
 	// IDEA: compress by small packing fraction steps, 
 	// only output when difference between pressures exceeds increasing scale
+
+	// open energy output file
+	packingObject.openEnergyObject(energyFile);
+
+	// print first line of energy relaxation (to match with first jamming frame)
+	packingObject.printSystemEnergy(1);
 
 	// determine thresholds for output based on difference in pressure between frames
 	double pCurrent = Pcheck;
@@ -146,19 +150,24 @@ int main(int argc, char const *argv[])
 
 		// print vdos and config when difference in pressures is large enough
 		if (dlogp > dlogpTol){
-			cout << "	** at it = " << it << ", outputting vdos and config to files..." << endl;
+			cout << "	** at it = " << it << ", dlogp = " << dlogp << " which is > " << dlogpTol << ", so outputting vdos and config to files..." << endl;
 			packingObject.vdos();
 			packingObject.printJammedConfig();
 
 			// reset pLast
 			pLast = pCurrent;
+
+			// if pressure above fast pressure, increase compression step size
+			if (pCurrent > 1e-2*pTarget)
+				rscale = sqrt((phi + dphiFast)/phi);
 		}
 	}
 
 	// print final configuration
-	cout << "	** at it = " << it << ", outputting FINAL vdos and config to files..." << endl;
+	cout << "	** at it = " << it << ", outputting FINAL vdos, config and energy to files..." << endl;
 	packingObject.vdos();
 	packingObject.printJammedConfig();
+	packingObject.printSystemEnergy(1);
 
 	cout << "	** FINISHED COMPRESSING ABOVE JAMMING, ENDING MAIN FILE" << endl;
 	return 0;

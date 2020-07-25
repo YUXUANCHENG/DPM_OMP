@@ -18,17 +18,22 @@ NDOFList        = zeros(NSIM,1);        % total # of degrees of freedom in each 
 NFRAMEList      = zeros(NSIM,1);        % total # of frames for each sim
 NvList          = cell(NSIM,1);         % # of vertices on each particle
 LList           = zeros(NSIM,2);        % box lengths
+a0List          = cell(NSIM,1);         % particle preferred area list
+l0List          = cell(NSIM,1);         % vertex size list
+riList          = cell(NSIM,1);         % number of rattlers list
 
 % containers for extracted VDOS data
 pList           = cell(NSIM,1);         % list of positive pressures
 NvvList         = cell(NSIM,1);         % # of vertex-vertex contacts
 NccList         = cell(NSIM,1);         % # of cell-cell contacts
+NvvrList        = cell(NSIM,1);         % # of vertex-vertex contacts after rattler removal
+NccrList        = cell(NSIM,1);         % # of cell-cell contacts after rattler removal
 NqList          = cell(NSIM,1);         % # of quartic modes, counted by stiffness matrix
 lambdaMatList   = cell(NSIM,1);         % matrix of lambda values as a function of pressure
 stiffEVMatList  = cell(NSIM,1);         % matrix of eigenvalues from stiffness matrix
 vertexPrList    = cell(NSIM,1);         % vertex participation ratio as a function of pressure
 cellPrList      = cell(NSIM,1);         % cell participation ratio as a function of pressure     
-projList        = cell(NSIM,3);         % mode projection as a function of pressure
+projList        = cell(NSIM,1);         % mode projection as a function of pressure (Dong's 3 directions, Frenet-Serret)
 
 % containers for extracted energetic data
 jFrameList      = cell(NSIM,1);         % map from energetic frame list to vdos frame list
@@ -169,6 +174,10 @@ for ss = 1:NSIM
     % parse and sort vdos data
     NvvInput                = cellJamData.Nvv;
     NccInput                = cellJamData.Ncc;
+    xposInput               = cellJamData.xpos;
+    yposInput               = cellJamData.ypos;
+    l0Input                 = cellJamData.l0;
+    a0Input                 = cellJamData.a0;
     lambdaInput             = cellVDOSData.totalEvals;
     evecsInput              = cellVDOSData.totalEvecs;
     totalStEvalsInput       = cellVDOSData.totalStEvals;
@@ -180,6 +189,10 @@ for ss = 1:NSIM
     evecsPos                = evecsInput(ssPos);
     Ppos                    = P(P > PCUT);
     NPOSFRAMES              = sum(P > PCUT);
+    xpos                    = xposInput(ssPos,:);
+    ypos                    = yposInput(ssPos,:);
+    l0Pos                   = l0Input(ssPos,:);
+    a0Pos                   = a0Input(ssPos,:);
     
     NFRAMEList(ss)          = NPOSFRAMES;
     
@@ -189,6 +202,8 @@ for ss = 1:NSIM
     pList{ss}               = Ppos;
     NvvList{ss}             = NvvPos;
     NccList{ss}             = NccPos;
+    l0List{ss}              = l0Pos;
+    a0List{ss}              = a0Pos;
     
     fprintf('\t ** -- Eigenvalue matrix...\n');
     
@@ -263,7 +278,7 @@ for ss = 1:NSIM
     fprintf('\t ** -- Mode projections...\n');
     
     % compute projections for each pressure
-    projections = cell(NPOSFRAMES,3);
+    projections = cell(NPOSFRAMES,5);
     for pp = 1:NPOSFRAMES
         % swap eigenvector order for use in Dong's code
         evectmp = evecsPos{pp};
@@ -285,9 +300,9 @@ for ss = 1:NSIM
         yall = zeros(NVTOT,1);
         Dc = zeros(NCELLS,1);
 
-        xtmp = cellJamData.xpos(pp,:);
-        ytmp = cellJamData.ypos(pp,:);
-        l0tmp = cellJamData.l0(pp,:);
+        xtmp = xpos(pp,:);
+        ytmp = ypos(pp,:);
+        l0tmp = l0Pos(pp,:);
         last = 1;
 
         for nn = 1:NCELLS
@@ -307,9 +322,71 @@ for ss = 1:NSIM
         projections{pp,1} = V2_norm(1,:)';
         projections{pp,2} = V2_norm(2,:)';
         projections{pp,3} = V2_norm(3,:)';
-    end
+        
+        % Project eigenvectors onto frenet serret
+        
+        % compute FS directions
+        tv = zeros(NDOF,1);
+        sv = zeros(NDOF,1);
+        last = 1;
+        for nn = 1:NCELLS
+            % vertex indices
+            ip1 = [(2:nv(nn))'; 1];
+            im1 = [nv(nn); (1:nv(nn)-1)'];
+            
+            % vertex coordinates for cell nn
+            vx = xtmp{nn};
+            vy = ytmp{nn};
 
-    fprintf('\t ** Finishing storing simulation data...\n');
+            % directions for each vertex, normalized for each cell
+            vl = [vx(ip1) - vx, vy(ip1) - vy];
+            l = sqrt(sum(vl.^2,2));
+            ul = vl./l;
+            ti = ul(im1,:) + ul;
+            ti = ti./sqrt(sum(ti.^2,2));
+            si = ul(im1,:) - ul;
+            si = si./sqrt(sum(si.^2,2));
+            
+            % store in array
+            next = last + 2*nv(nn) - 1;
+            xindnn = last:2:(next-1);
+            yindnn = (last+1):2:next;
+            tv(xindnn) = ti(:,1);
+            tv(yindnn) = ti(:,2);
+            sv(xindnn) = si(:,1);
+            sv(yindnn) = si(:,2);
+            last = next + 1;
+        end
+        
+        % normalize tv and sv across all vertices
+        tvnorm = sqrt(sum(tv.^2));
+        svnorm = sqrt(sum(sv.^2));
+        
+        tv = tv./tvnorm;
+        sv = sv./svnorm;
+        
+        % compute dot product of each constructed direction with
+        % eigenvector
+        t_proj = zeros(NDOF,1);
+        s_proj = zeros(NDOF,1);
+        for dd = 1:NDOF
+            evtmp = evectmp(:,dd);
+            last = 0;
+            for nn = 1:NCELLS
+                for vv = 1:nv(nn)
+                    xi = 2*vv - 1 + last;
+                    yi = 2*vv + last;
+                    t_proj(dd) = t_proj(dd) + abs(tv(xi)*evtmp(xi) + tv(yi)*evtmp(yi));
+                    s_proj(dd) = s_proj(dd) + abs(sv(xi)*evtmp(xi) + sv(yi)*evtmp(yi));
+                end
+                last = last + 2*nv(nn);
+            end
+        end
+        
+        % save projection
+        projections{pp,4} = t_proj;
+        projections{pp,5} = s_proj;
+    end
 
     % number of quartic modes
     lambdaMatList{ss}       = lambdaMatrix;
@@ -326,23 +403,171 @@ for ss = 1:NSIM
     
     enStress                = cellEnergyData.stress;
     enPhi                   = cellEnergyData.phi;
-    enP                     = 0.5*(enStress(:,1) + enStress(:,2))/(NCELLS*Lx*Ly);
+    enP                     = 0.5*(enStress(:,1) + enStress(:,3))/(NCELLS*Lx*Ly);
     enCalA                  = cellEnergyData.calA;
     enCalA0                 = cellEnergyData.calA0;
     enPList{ss}             = enP;
     enPhiList{ss}           = enPhi;
     enCalAList{ss,1}        = enCalA;
     enCalAList{ss,2}        = enCalA0;
+    
+    
+    
+    % -- compute number of rattlers
+    fprintf('\t ** -- Computing rattler data...\n');
+    
+    ritmp = zeros(NPOSFRAMES,NCELLS);
+    Nvvr = zeros(NPOSFRAMES,1);
+    Nccr = zeros(NPOSFRAMES,1);
+    for pp = 1:NPOSFRAMES
+        nvvMeas = 0;
+        nccMeas = 0;
+        
+        % contact matrices
+        cij = zeros(NCELLS);
+        bcij = zeros(NCELLS);
+        
+        % vertex positions and sizes
+        xtmp = xpos(pp,:);
+        ytmp = ypos(pp,:);
+        l0tmp = l0Pos(pp,:);
+            
+        
+        % loop over vertex pairs, try to get correctly Nvv and Ncc
+        for ii = 1:NCELLS
+            xii = xtmp{ii};
+            yii = ytmp{ii};
+            dii = l0tmp(ii);
+            
+            for jj = ii+1:NCELLS
+                xjj = xtmp{jj};
+                yjj = ytmp{jj};
+                djj = l0tmp(jj);
+                
+                ccFound = 0;
+                
+                for aa = 1:nv(ii)
+                    for bb = 1:nv(jj)
+                        sab = 0.5*(dii + djj);
+                        
+                        % scale contact distance by a little bit to make
+                        % contacts easier to count
+                        sab = sab*(1.0 + 1e-8);
+                        
+                        dx = xjj(bb) - xii(aa);
+                        dx = dx - Lx*round(dx/Lx);
+                        
+                        dy = yjj(bb) - yii(aa);
+                        dy = dy - Ly*round(dy/Ly);
+                        
+                        dr = sqrt(dx*dx + dy*dy);
+                        
+                        % if vertices overlap, increase contact count
+                        if dr < sab
+                            if ccFound == 0
+                                nccMeas = nccMeas + 1;
+                                bcij(ii,jj) = 1;
+                                bcij(jj,ii) = 1;
+                                ccFound = 1;
+                            end
+                            nvvMeas = nvvMeas + 1;
+                            cij(ii,jj) = cij(ii,jj) + 1;
+                            cij(jj,ii) = cij(jj,ii) + 1;
+                        end
+                    end
+                end
+            end
+        end
+        
+        dnvv = NvvPos(pp) - nvvMeas;
+        dncc = NccPos(pp) - nccMeas;
+        fprintf('\t\t ** pp = %d, dnvv = %d, dncc = %d\n',pp,dnvv,dncc);
+        
+        % get initial cell contacts
+        zcc = sum(bcij,1);
+        
+        % number of rattlers, marginal rattlers
+        nm = 1;
+        it = 0;
+        itmax = 1e3;
+        while (nm > 0 && it < itmax)
+            
+            % reset marginal count to 0
+            nm = 0;
+            
+            % remove all cells with only 1 cell-cell contact
+            ct1_inds = (zcc == 1);
+            nct = sum(ct1_inds);
+            
+            nm = nm + nct;
+            
+            cij(ct1_inds,:) = zeros(nct,NCELLS);
+            cij(:,ct1_inds) = zeros(NCELLS,nct);
+            
+            bcij(ct1_inds,:) = zeros(nct,NCELLS);
+            bcij(:,ct1_inds) = zeros(NCELLS,nct);
+            
+            % update zcc
+            zcc = sum(bcij,1);
+            
+            % remove all cells with 2 cell-cell contacts, at least 1 is
+            % marginal
+            mvvcts = sum(cij == 1,2);
+            ct2_inds = ((mvvcts == 1 | mvvcts == 2) & (zcc == 2)');
+            nct = sum(ct2_inds);
+            
+            nm = nm + nct;
+            
+            cij(ct2_inds,:) = zeros(nct,NCELLS);
+            cij(:,ct2_inds) = zeros(NCELLS,nct);
+            
+            bcij(ct2_inds,:) = zeros(nct,NCELLS);
+            bcij(:,ct2_inds) = zeros(NCELLS,nct);
+            
+            % update zcc
+            zcc = sum(bcij,1);
+            
+            % increase iterate check
+            it = it + 1;
+        end
+        if it == itmax
+            error('Error in processBidConf, iteration max found while removing rattlers.');
+        end
+        
+        % tally up rattlers
+        ri = (zcc == 0);
+        
+        
+        % compute nvv and ncc after rattler removal
+        zvv = sum(cij,1);
+        
+        Nvvr(pp) = NCELLS*mean(zvv)/2;
+        Nccr(pp) = NCELLS*mean(zcc)/2;
+        
+        % save for this pressure
+        ritmp(pp,:) = ri';
+    end
+    
+    % save rattker matrix to list
+    riList{ss} = ritmp;
+    NvvrList{ss} = Nvvr;
+    NccrList{ss} = Nccr;
+    
+    fprintf('\t ** Finishing storing simulation data for ss = %d...\n',ss);
 end
 
 % delete any entries that were skipped
 NCELLSList(simSkip)         = [];
 NDOFList(simSkip)           = [];
 NvList(simSkip)             = [];
-LList(simSkip)              = [];
+LList(simSkip,:)            = [];
+a0List(simSkip)             = [];
+l0List(simSkip)             = [];
 pList(simSkip)              = [];
 NvvList(simSkip)            = [];
 NccList(simSkip)            = [];
+NvvrList(simSkip)           = [];
+NccrList(simSkip)           = [];
 NqList(simSkip)             = [];
 lambdaMatList(simSkip)      = [];
 stiffEVMatList(simSkip)     = [];
@@ -352,7 +577,8 @@ projList(simSkip)           = [];
 jFrameList(simSkip)         = [];
 enPList(simSkip)            = [];
 enPhiList(simSkip)          = [];
-enCalAList(simSkip)         = [];
+enCalAList(simSkip,:)       = [];
+riList(simSkip)             = [];
 
 % total number of sims after removing empties
 NSIMS = sum(~simSkip);
@@ -363,9 +589,10 @@ NSIMS = sum(~simSkip);
 fprintf('\t ** saving to %s\n',saveStr);
 
 save(saveStr,...
-    'NSIMS','simStr','NCELLSList','NDOFList','NvList','LList',...
-    'NFRAMEList','pList','NvvList','NccList','NqList',...
+    'NSIMS','simStr','NCELLSList','NDOFList','NvList','LList','a0List','l0List',...
+    'NFRAMEList','pList','NvvList','NccList','NvvrList','NccrList','NqList',...
     'lambdaMatList','stiffEVMatList','vertexPrList','cellPrList','projList',...
-    'jFrameList','enPList','enPhiList','enCalAList');
+    'jFrameList','enPList','enPhiList','enCalAList','riList');
 
 end
+

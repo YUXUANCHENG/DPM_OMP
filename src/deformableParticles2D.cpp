@@ -1114,7 +1114,8 @@ double deformableParticles2D::segmentCosine(int vi){
 
 /************************
 
-	Shape Forces
+	Single-particle
+	forces
 
 *************************/
 
@@ -1210,6 +1211,47 @@ void deformableParticles2D::shapeForces(){
 	            setVForce(i,d,vforce(i,d) + ftmp);
 	        }
 		}
+	}
+}
+
+// add to gravitational body force on single cell
+// NOTE : G FORCE ADDED TO TOTAL FORCE
+// NOTE : dir = 0 is +x direction, dir = 1 is -y direction
+void deformableParticles2D::gravityForces(double g, int dir){
+	// local variables
+	int i, im1, ip1;
+	double xi, yi, xim1, yim1, xip1, yip1;
+	double fxtmp, fytmp;
+
+	// loop over vertices
+	for (i=0; i<NV; i++){
+		// get neighboring indices
+		im1 = (i-1+NV) % NV;
+		ip1 = (i+1) % NV;
+
+		// vertex coordinates
+		xi = vpos(i,0);
+		yi = vpos(i,1);
+
+		xim1 = vpos(im1,0);
+		yim1 = vpos(im1,1);
+
+		xip1 = vpos(ip1,0);
+		yip1 = vpos(ip1,1);
+
+		// compute force on i
+		if (dir == 0){
+			fxtmp = -(g/6.0)*((xip1 - xim1)*yi - (2.0*xi + xip1)*yip1 + (2.0*xi + xim1)*yim1);
+			fytmp = -(g/6.0)*((xi + xip1)*xip1 - (xim1 + xi)*xim1);
+		}
+		else{
+			fxtmp = -(g/6.0)*((yi + yip1)*yip1 - (yim1 + yi)*yim1);
+			fytmp = -(g/6.0)*((yip1 - yim1)*xi - (2.0*yi + yip1)*xip1 + (2.0*yi + yim1)*xim1);
+		}
+
+		// add to total force (factor of NV is to take mass into account)
+		setVForce(i,0,vforce(i,0) + fxtmp);
+		setVForce(i,1,vforce(i,1) + fytmp);
 	}
 }
 
@@ -1842,6 +1884,7 @@ int deformableParticles2D::radialForce(deformableParticles2D &onTheRight, double
 
 	return inContact;
 }
+
 
 /************************
 

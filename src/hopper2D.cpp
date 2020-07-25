@@ -28,26 +28,24 @@ const double PI = 4*atan(1);
 // 	** SET PBCS TO 0
 // 
 // 
-// 	******************************************************************************************
-// 	NOTE ABOUT LEN: right now, assume using the constructor that assigns Lx = Ly = input, so 
-//  use of L in the below code will always be L.at(0). A BETTER WAY TO DO IT would be to 
-//  use Lx = L.at(0) = the L parameter (length of tapered region) and Ly = L.at(1) = w0, 
-//  i.e. width of hopper in y-direction. Then you can eliminate the th variable and calculate
-// 	it in situ, and decrease the number of required input parameters
-// 	******************************************************************************************
 // 
 // 
-// 	NOTE: radii should be input in units of sigma, the mean particle diameter
-// 		** also will give the ratio of nv_i to NV, the number of vertices on the mean
+// 	07/09/2020: NOTE THAT THIS INITIALIZES FOR DPM; for SP, may have issues because L is necessarily different
+// 				NEED TO write different initialization for DPM
+
 void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double w, double th, double Lmin, int NV){
 	// local variables
 	int ci, vi, d, nvtmp;
 	double a0tmp, l0tmp, calA0tmp;
 	double xpos, ypos;
 	double xmin, xmax, ymin, ymax;
+	double vrmin, Ltmp;
 
 	// minimum number of vertices
 	const int nvmin = 12;
+
+	// random number generator
+	srand(10*seed);
 
 	// check inputs to hopper initialization
 	if (w0 < 0.0){
@@ -73,11 +71,9 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
 	for (ci=0; ci<NCELLS; ci++){
-		// boundary information ( SET PBCS TO 1 )
-		for (d=0; d<NDIM; d++){
-			cell(ci).setL(d,L.at(0));
+		// boundary information ( SET PBCS TO 0 )
+		for (d=0; d<NDIM; d++)
 			cell(ci).setpbc(d,0);
-		}
 
 		// number of vertices ( SIGMA SETS # OF VERTS )
 		nvtmp = round(2.0*radii.at(ci)*NV);
@@ -93,16 +89,25 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 		// initialize cells as regular polygons
 		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
 
-		// preferred area is disk area
-		a0tmp = PI*radii.at(ci)*radii.at(ci);
+		// preferred area is regular polygon with slightly smaller radius
+		a0tmp = 0.5*nvtmp*pow(radii.at(ci),2.0)*sin(2.0*PI/nvtmp);
 
 		// initial length of polygon side
-		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/NV;
+		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/nvtmp;
 
 		// set preferred area and length 
 		cell(ci).seta0(a0tmp);
 		cell(ci).setl0(l0tmp);
 		cell(ci).setdel(1.0);
+	}
+
+	// initialize L based on smallest vertex radius
+	vrmin = 0.5*cell(0).getl0();
+	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
+	L.at(0) = Ltmp;
+	for (ci=0; ci<NCELLS; ci++){
+		for (d=0; d<NDIM; d++)
+			cell(ci).setL(d,Ltmp);
 	}
 
 	// initialize particle positions
@@ -121,9 +126,6 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
 		cell(ci).setCPos(1,ypos);
-
-		// initialize vertices as a regular polygon
-		cell(ci).regularPolygon();
 	}
 
 	// initialize phi
@@ -131,15 +133,39 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 	phi = hopperPackingFraction(radii,w0,w,th);
 	cout << "which is phi = " << phi << endl;
 
-	// initial time scales (t_0^2 = mass*sigma/f_0, mass = 0.25*PI*sigma^2)
+	// initial time scales
 	cout << "		-- Ininitializing time scale" << endl;
-	dt = 0.1*sqrt(0.25*PI);
+	dt = 0.01;
 	dt0 = dt;
 
+	// slightly increase radii to give more space for dp
+	double rscaleForDP = 1.1;
+	for (ci=0; ci<NCELLS; ci++)
+		radii.at(ci) *= rscaleForDP;
+
 	// use FIRE in hopper geometry to relax overlaps
-	cout << "		-- Using FIRE to relax overlaps..." << endl;
+	cout << "		-- Using FIRE to relax initial overlaps..." << endl;
 	fireMinimizeHopperSP(radii,w0,w,th);
+
+	// shrink radii back down for SP runs
+	for (ci=0; ci<NCELLS; ci++)
+		radii.at(ci) /= rscaleForDP;
+
+	// update vertex positions based on cell positions
+	for (ci=0; ci<NCELLS; ci++){		
+
+		// initialize vertices as a regular polygon
+		cell(ci).regularPolygon();
+
+		// update real-space positions
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
+		}
+	}
 }
+
+
 
 void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, double w, double th){
 	// HARD CODE IN FIRE PARAMETERS
@@ -199,8 +225,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 			cout << " 	FIRE MINIMIZATION, itr = " << itr << endl << endl;
 			cout << "===================================================" << endl;
 			cout << "	* Run data:" << endl;
-			cout << "	* K 		= " << Knew/Ktol << endl;
-			cout << "	* Pvirial 	= " << Pvirial/Ptol << endl;
+			cout << "	* K 		= " << Knew << endl;
+			cout << "	* Pvirial 	= " << Pvirial << endl;
 			cout << "	* phi 		= " << phi << endl;
 			cout << "	* dt 		= " << dt << endl;
 			cout << "	* alpha 	= " << alpha << endl;
@@ -331,7 +357,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 		// check for convergence
 		converged = (abs(Pvirial) < Ptol && npPMIN > NMIN);
-		converged = (converged || (abs(Pvirial) > 2*Ptol && Knew < Ktol));
+		converged = (converged || (abs(Pvirial) > Ptol && Knew < Ktol));
 
 		if (converged){
 			cout << "	** FIRE has converged!" << endl;
@@ -354,7 +380,6 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 // calculate all forces on SP model particles
 // 	** if closed = 1, orifice is closed off by wall
-// 	** b is damping coefficient
 // 	** g is force strength (i.e. generalized gravity)
 void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, double th, double g, int closed){
 	// local variables
@@ -440,6 +465,75 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 		for (ci=0; ci<NCELLS; ci++)
 			cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
 	}
+}
+
+// calculate all forces on DP model particles
+// 	** if closed = 1, orifice is closed off by wall
+// 	** g is force strength (i.e. generalized gravity)
+void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int closed){
+	// local variables
+	int ci,cj,vi,d,dd,inContact;
+
+	// reset virial stresses to 0
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	// reset contacts before force calculation
+	resetContacts();
+	Ncc = 0;
+	Nvv = 0;
+
+	// reset forces
+	for (ci=0; ci<NCELLS; ci++){
+		// reset center of mass forces
+		for (d=0; d<NDIM; d++)
+			cell(ci).setCForce(d,0.0);
+
+		// reset vertex forces and interaction energy
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			// forces
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVForce(vi,d,0.0);
+
+			// energies
+			cell(ci).setUInt(vi,0.0);
+		}
+	}
+
+
+	// loop over cells and cell pairs, calculate shape and interaction forces
+	for (ci=0; ci<NCELLS; ci++){
+		// loop over pairs, add info to contact matrix
+		for (cj=ci+1; cj<NCELLS; cj++){
+			// calculate forces, add to number of vertex-vertex contacts
+			inContact = cell(ci).vertexForce(cell(cj),sigmaXX,sigmaXY,sigmaYX,sigmaYY);
+			if (inContact > 0){
+				// add to cell-cell contacts
+				addContact(ci,cj);
+				Ncc++;
+
+				// increment vertex-vertex contacts
+				Nvv += inContact;
+			}
+		}
+
+		// forces on vertices due to shape
+		cell(ci).shapeForces();
+
+		// gravity force (in +x direction)
+		cell(ci).gravityForces(g,0);
+	}
+
+	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	// wall forces
+	hopperWallForcesDP(w0,w,th,closed);
 }
 
 
@@ -762,7 +856,403 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 // wall forces between cells as droplets (DP model)
 // 	** if closed = 1, orifice is closed off by wall
 void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int closed){
-	
+	// local variables
+	int ci, vi; 							// indices
+	double x, y;							// vertex positions
+	double sigma; 							// vertex diameter
+	double sb, sib, xtb, ytb, xbb, ybb;		// bead information
+	double Lx, xedge;						// hopper nozzle length variables
+	double t, c, s;							// tangent, cosine, sine
+	double hPlus, hMinus;					// height of angled wall
+	double dyPlus, dyMinus; 				// distance from top/bottom wall
+	double yPlusMin, yMinusMax; 			// cutoff positions for wall forces
+	double lw, lwx, lwy;					// elements of vector pointing from wall to vertex
+	double overlap;							// overlap of vertex with wall
+	double ftmp, utmp;						// force/energy of particle overlap with walls
+	double yline;							// line separating edge force from wall force
+
+	// hopper nozzle length
+	Lx = L.at(0);
+
+	// trig factors
+	t = tan(th);
+	c = cos(th);
+	s = sin(th);
+
+	// edge bead information
+	sb 		= cell(0).getl0()*cell(0).getdel();
+	xtb 	= Lx - 0.5*sb;
+	ytb 	= 0.5*(w0 + w + sb);
+	xbb 	= xtb;
+	ybb 	= 0.5*(w0 - w - sb);
+
+
+	// loop over cells and vertices
+	for (ci=0; ci<NCELLS; ci++){
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			// get vertex diameter
+			sigma = cell(ci).getl0()*cell(ci).getdel();
+
+			// determine sigma_ij with edge bead
+			sib = 0.5*(sigma + sb);
+
+			// x cutoff for bead interaction
+			xedge = xtb - sib*c;
+
+			// get particle positions
+			x = cell(ci).vpos(vi,0);
+			y = cell(ci).vpos(vi,1);
+
+			// check hopper walls
+			if (x > -sigma*s){
+				// if vertex in hopper bulk
+				if (x < xedge){
+					// check ymin for walls
+					yPlusMin 	= w0 - (x/t) - (0.5*sigma/s);
+					yMinusMax 	= (x/t) + (0.5*sigma/s);
+
+					// if true, interacting with bottom wall
+					if (y < yMinusMax){
+						// distance to wall
+						lw = (y - x/t)*s;
+
+						if (lw < 0.5*sigma){
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = (2.0/sigma)*(1 - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on bottom wall
+							sigmaYX += ftmp*c;
+							sigmaYY -= ftmp*s;
+						}
+					}
+
+
+					// if true, interacting with top wall
+					if (y > yPlusMin){
+						// distance to wall
+						lw = (w0 - x/t - y)*s;
+
+						if (lw < 0.5*sigma){
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = (2.0/sigma)*(1 - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on top wall
+							sigmaXX += ftmp*c;
+							sigmaXY += ftmp*s;
+						}
+					}
+				}
+
+				// if particle is near edge; either do wall force or force due to edge
+				else if (x > xedge && x < Lx){
+					// check on top wall
+					if (y > 0.5*w0){
+						// define line separating wall force and edge force regime
+						yline = (x - xtb)/t + ytb;
+
+						// if above yline, use wall force from top wall
+						if (y > yline){
+							// distance
+							lw = (w0 - (x/t) - y)*s;
+
+							if (lw < 0.5*sigma){
+								// overlap with wall
+								overlap = 2.0*lw/sigma;
+
+								// force
+								ftmp = (2.0/sigma)*(1 - overlap);
+								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
+
+								// add to energies
+								utmp = 0.5*pow(1 - overlap,2);
+								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+								// add to net force on top wall
+								sigmaXX += ftmp*c;
+								sigmaXY += ftmp*s;
+							}
+						}
+						// else, check overlap with bead
+						else{
+							// vector to edge bead
+							lwx = x - xtb;
+							lwy = y - ytb;
+
+							// distance to bead center edge
+							lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
+
+							if (lw < 0.5*sigma){
+								// overlap with wall (use bead edge, not center)
+								overlap = 2.0*lw/sigma;
+
+								// force
+								ftmp = (2.0/sigma)*(1 - overlap);
+								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+
+								// add to energies
+								utmp = 0.5*pow(1 - overlap,2);
+								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+								// add to net force on top wall
+								sigmaXX -= ftmp*(lwx/lw);
+								sigmaXY -= ftmp*(lwy/lw);
+							}
+						}
+					}
+					// check on bottom wall
+					else{
+						// define line separating wall force and edge force regime
+						yline = (xbb - x)/t + ybb;
+
+						// if below yline, use wall force
+						if (y < yline){
+							// distance to wall
+							lw = (y - (x/t))*s;
+
+							if (lw < 0.5*sigma){
+								// overlap with wall
+								overlap = 2.0*lw/sigma;
+
+								// force
+								ftmp = (2.0/sigma)*(1 - overlap);
+								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
+
+								// add to energies
+								utmp = 0.5*pow(1 - overlap,2);
+								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+								// add to net force on bottom wall
+								sigmaYX += ftmp*c;
+								sigmaYY -= ftmp*s;
+							}
+						}
+						// else, check overlap with bottom bead						
+						else{
+							// vector to bottom bead
+							lwx = x - xbb;
+							lwy = y - ybb;
+
+							// distance
+							lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
+
+							if (lw < 0.5*sigma){
+								// overlap with wall (use bead edge, not center)
+								overlap = 2.0*lw/sigma;
+
+								// force
+								ftmp = (2.0/sigma)*(1 - overlap);
+								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+
+								// add to energies
+								utmp = 0.5*pow(1 - overlap,2);
+								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+								// add to net force on bottom wall
+								sigmaYX -= ftmp*(lwx/lw);
+								sigmaYY -= ftmp*(lwy/lw);
+							}
+						}
+					}
+				}
+			}
+
+			// check reservoir walls
+			if (x < 0){
+				// check ymin for walls
+				yPlusMin 	= w0 - 0.5*sigma;
+				yMinusMax 	= 0.5*sigma;
+
+				// if true, interacting with bottom wall
+				if (y < yMinusMax){
+					// vector from wall to particle
+					lwy = y;
+
+					// overlap with wall
+					overlap = 2.0*lwy/sigma;
+
+					// add to y force ONLY (points in positive y direction)
+					ftmp = (2.0/sigma)*(1 - overlap);
+					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp);
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2);
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+					// add to net force on bottom wall
+					sigmaYY -= ftmp;
+				}
+
+				// if true, interacting with top wall
+				if (y > yPlusMin){
+					// vector from particle to wall
+					lwy = w0 - y;
+
+					// overlap with wall
+					overlap = 2.0*lwy/sigma;
+
+					// add to y force ONLY (points in negative y direction)
+					ftmp = (2.0/sigma)*(1 - overlap);
+					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2);
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+					// add to net force on top wall
+					sigmaXY += ftmp;
+				}
+			}
+
+			// if orifice closed, check orifice wall
+			if (closed == 1){
+				if (x > Lx - 0.5*sigma){
+
+					// vector from particle to wall
+					lwx = Lx - x;
+
+					// overlap with wall
+					overlap = 2.0*lwx/sigma;
+
+					// add to x force ONLY (points in negative x direction)
+					ftmp = (2.0/sigma)*(1 - overlap);
+					cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp);
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2);
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+				}
+			}
+
+			// add vertical edge wall
+			if (x > Lx && x < Lx + 0.5*sigma){
+				// check if overlap with edge bead or wall
+				if (y > 0.5*w0){
+					// check top bead or vert wall
+					if (y < ytb){
+						// interacting with top edge bead but outside of hopper
+
+						// vector to edge bead
+						lwx = x - xtb;
+						lwy = y - ytb;
+
+						// distance
+						lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
+
+						if (lw < 0.5*sigma){
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = (2.0/sigma)*(1 - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on top wall
+							sigmaXX -= ftmp*(lwx/lw);
+							sigmaXY -= ftmp*(lwy/lw);
+						}
+					}
+					else{
+						// interacting with vertical wall, force only in +x direction
+
+						// vector from wall to particle
+						lwx = x - Lx;
+
+						// overlap with wall
+						overlap = 2.0*lwx/sigma;
+
+						// add to y force ONLY (points in positive y direction)
+						ftmp = (2.0/sigma)*(1 - overlap);
+						cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp);
+
+						// add to energies
+						utmp = 0.5*pow(1 - overlap,2);
+						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+						// add to net force on top wall
+						sigmaXX -= ftmp;
+					}
+				}
+				else if (y < 0.5*w0){
+					// check if bottom bead or vert wall
+					if (y > ybb){
+						// vector to bottom bead
+						lwx = x - xbb;
+						lwy = y - ybb;
+
+						// distance
+						lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
+
+						if (lw < 0.5*sigma){
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = (2.0/sigma)*(1 - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on bottom wall
+							sigmaYX -= ftmp*(lwx/lw);
+							sigmaYY -= ftmp*(lwy/lw);
+						}
+					}
+					else{
+						// interacting with vertical wall, force only in +x direction
+
+						// vector from wall to particle
+						lwx = x - Lx;
+
+						// overlap with wall
+						overlap = 2.0*lwx/sigma;
+
+						// add to y force ONLY (points in positive y direction)
+						ftmp = (2.0/sigma)*(1 - overlap);
+						cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp);
+
+						// add to energies
+						utmp = 0.5*pow(1 - overlap,2);
+						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+						// add to net force on bottom wall
+						sigmaYX -= ftmp;
+					}
+				}
+			}
+
+
+		}
+	}
 }
 
 
@@ -771,7 +1261,110 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 
 
-// function to run NVE dynamics using velocity-verlet to check energy conservation
+// function to run NVE dynamics on DP particles using velocity-verlet to check energy conservation
+void cellPacking2D::hopperDPNVE(double w0, double w, double th, double g, double T0){
+	// local variables
+	int closed = 0;
+	int t, ci, vi, vip1, nvtmp, d;
+	double Pvirial, K;
+	double aH, aR, aT;
+	double cxtmp, xi, xip1, yi, yip1, utmp;
+
+	// reservoir area
+	aR = w0*L.at(0);
+
+	// hopper area
+	aH = w*w0 + pow(w0-w,2)/(4.0*tan(th));
+
+	// total area
+	aT = aR + aH;
+
+	// check that NT has been set 
+	if (NT <= 0){
+		cout << "	** ERROR: in hopper DP NVE, sim length NT = " << NT << ", which is <= 0. ending." << endl;
+		exit(1);
+	}
+
+	// initialize velocities
+	initializeVelocities(T0);
+
+	// loop over time, run NVE dynamics
+	for (t=0; t<NT; t++){
+		// update virial pressure
+		Pvirial = 0.5*(sigmaXX + sigmaYY)/(NCELLS*aT);
+
+		// update kinetic energy based on com velocity
+		K = totalKineticEnergy();
+
+		// output some information to console
+		if (t % NPRINT == 0){
+			cout << "===================================================" << endl << endl;
+			cout << " 		Deformable Particle NVE in hopper geometry, t = " << t << endl << endl;
+			cout << "===================================================" << endl;
+
+			// add gravitiational potential energy to uint
+			for (ci=0; ci<NCELLS; ci++){
+				// get com position
+				cxtmp = 0.0;
+				nvtmp = cell(ci).getNV();
+				for (vi=0; vi<nvtmp; vi++){
+					// next index
+					vip1 = (vi+1) % nvtmp;
+
+					// get vertex coordinates
+					xi = cell(ci).vpos(vi,0);
+					xip1 = cell(ci).vpos(vip1,0);
+
+					yi = cell(ci).vpos(vi,1);
+					yip1 = cell(ci).vpos(vip1,1);
+
+					// add to com
+					cxtmp += (1.0/6.0)*((xi + xip1)*(xi*yip1 - xip1*yi));
+				}
+
+				// add to potential energy
+				utmp = -g*cxtmp;
+				for (vi=0; vi<nvtmp; vi++)
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + (utmp/nvtmp));
+			}
+
+			// print if object has been opened already
+			if (packingPrintObject.is_open()){
+				cout << "	* Printing DP center positions to file" << endl;
+				printHopperDP(w0, w, th);
+			}
+			
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing DP energy to file" << endl;
+				printSystemEnergy();
+			}
+			
+			cout << "	* Run data:" << endl;
+			cout << "	* U 		= " << totalPotentialEnergy() << endl;
+			cout << "	* K 		= " << totalKineticEnergy() << endl;
+			cout << "	* E 		= " << totalPotentialEnergy() + totalKineticEnergy() << endl;
+			cout << "	* virial P 	= " << Pvirial << endl;
+			cout << "	* dt 		= " << dt << endl;
+			cout << endl << endl;
+		}
+
+		// VV update in FIRE 2.0: position update
+		for (ci=0; ci<NCELLS; ci++){
+			cell(ci).verletPositionUpdate(dt);
+			cell(ci).updateCPos();
+		}
+
+		// calculate forces
+		hopperForcesDP(w0, w, th, g, closed);
+
+		// VV update in FIRE 2.0: Velocity update 2
+		for (ci=0; ci<NCELLS; ci++)
+			cell(ci).verletVelocityUpdate(dt);
+	}
+}
+
+
+// function to run NVE dynamics on SP particles using velocity-verlet to check energy conservation
 void cellPacking2D::hopperSPNVE(vector<double>& radii, double w0, double w, double th, double T0){
 	// local variables
 	int t, ci, d;
@@ -877,6 +1470,10 @@ void cellPacking2D::hopperSPNVE(vector<double>& radii, double w0, double w, doub
 		hopperVelVerletSP(radii);
 	}
 }
+
+
+
+
 
 
 
@@ -1080,8 +1677,140 @@ void cellPacking2D::flowHopperSP(vector<double>& radii, double w0, double w, dou
 
 
 // function to flow cells through hopper as deformable particles (DP) using body force of scale g
-void cellPacking2D::flowHopperDP(double w0, double w, double th, double g){
+void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double b){
+	// local variables
+	int closed = 0;
+	int t, ci, cj, vi, vip1, nvtmp, d;
+	double Pvirial, K;
+	double aH, aR, aT;
+	double cxtmp, cytmp, xi, xip1, yi, yip1, utmp;
 
+	// replacement check
+	double minx, dx, dy, wmax, wmin;
+
+	// reservoir area
+	aR = w0*L.at(0);
+
+	// hopper area
+	aH = w*w0 + pow(w0-w,2)/(4.0*tan(th));
+
+	// total area
+	aT = aR + aH;
+
+	// check that NT has been set 
+	if (NT <= 0){
+		cout << "	** ERROR: in hopper DP NVE, sim length NT = " << NT << ", which is <= 0. ending." << endl;
+		exit(1);
+	}
+
+	// loop over time, run NVE dynamics
+	for (t=0; t<NT; t++){
+		// update virial pressure
+		Pvirial = 0.5*(sigmaXX + sigmaYY)/(NCELLS*aT);
+
+		// update kinetic energy based on com velocity
+		K = totalKineticEnergy();
+
+		// output some information to console
+		if (t % NPRINT == 0){
+			cout << "===================================================" << endl << endl;
+			cout << " 		Deformable Particle flow in hopper geometry, t = " << t << endl << endl;
+			cout << "===================================================" << endl;
+
+			// add gravitiational potential energy to uint
+			for (ci=0; ci<NCELLS; ci++){
+				// get com position
+				cxtmp = 0.0;
+				nvtmp = cell(ci).getNV();
+				for (vi=0; vi<nvtmp; vi++){
+					// next index
+					vip1 = (vi+1) % nvtmp;
+
+					// get vertex coordinates
+					xi = cell(ci).vpos(vi,0);
+					xip1 = cell(ci).vpos(vip1,0);
+
+					yi = cell(ci).vpos(vi,1);
+					yip1 = cell(ci).vpos(vip1,1);
+
+					// add to com
+					cxtmp += (1.0/6.0)*((xi + xip1)*(xi*yip1 - xip1*yi));
+				}
+
+				// add to potential energy
+				utmp = -g*cxtmp;
+				for (vi=0; vi<nvtmp; vi++)
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + (utmp/nvtmp));
+			}
+
+			// print if object has been opened already
+			if (packingPrintObject.is_open()){
+				cout << "	* Printing DP center positions to file" << endl;
+				printHopperDP(w0, w, th);
+			}
+			
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing DP energy to file" << endl;
+				printSystemEnergy();
+			}
+			
+			cout << "	* Run data:" << endl;
+			cout << "	* U 		= " << totalPotentialEnergy() << endl;
+			cout << "	* K 		= " << totalKineticEnergy() << endl;
+			cout << "	* E 		= " << totalPotentialEnergy() + totalKineticEnergy() << endl;
+			cout << "	* virial P 	= " << Pvirial << endl;
+			cout << "	* dt 		= " << dt << endl;
+			cout << endl << endl;
+		}
+
+		// VV position update
+		for (ci=0; ci<NCELLS; ci++){
+			cell(ci).verletPositionUpdate(dt);
+			cell(ci).updateCPos();
+
+			// replace in back of hopper
+			if (cell(ci).cpos(0) > L.at(0) + 2.0*sqrt(cell(ci).geta0())){
+				// find minimum xcoordinate
+				minx = L.at(0);
+				for (cj=0; cj<NCELLS; cj++){
+					if (cell(cj).cpos(0) < minx)
+						minx = cell(cj).cpos(0);
+				}
+
+				// place particle behind minimum
+				cxtmp = minx - 1.5*sqrt(cell(ci).geta0());
+
+				// give random y (if cx tmp is in nozzle, use ybounds from nozzle heights)
+				if (cxtmp < 0)
+					cytmp = (w0 - 2.0*sqrt(cell(ci).geta0()))* (double)rand() / (RAND_MAX + 1.0) + sqrt(cell(ci).geta0());
+				else{
+					wmin = cxtmp*tan(th) + sqrt(cell(ci).geta0());
+					wmax = w0 - wmin - sqrt(cell(ci).geta0());
+					cytmp = (wmax - wmin)* (double)rand() / (RAND_MAX + 1.0) + wmin;
+				}
+
+
+				// compute change in position
+				dx = cxtmp - cell(ci).cpos(0);
+				dy = cytmp - cell(ci).cpos(1);
+
+				// update real-space positions
+				for (vi=0; vi<cell(ci).getNV(); vi++){
+					cell(ci).setVPos(vi,0,cell(ci).vpos(vi,0) + dx);
+					cell(ci).setVPos(vi,1,cell(ci).vpos(vi,1) + dy);
+				}
+				cell(ci).updateCPos();
+			}
+		}
+		
+
+		// calculate forces
+		hopperForcesDP(w0, w, th, g, closed);
+
+		// VV update 2 with damping
+		for (ci=0; ci<NCELLS; ci++)
+			cell(ci).verletVelocityUpdate(dt,b);
+	}
 }
 
 
@@ -1274,7 +2003,61 @@ void cellPacking2D::printHopperSP(vector<double>& radii, double w0, double w, do
 }
 
 // function to print DP information to file
-void cellPacking2D::printHopperDP(double w0, double w, double th, double g){}
+void cellPacking2D::printHopperDP(double w0, double w, double th){
+	// local variables
+	int ci,d;
+	int w1 = 12;
+	int w2 = 6;
+	int w3 = 30;
+
+	// check to see if file is open
+	if (!packingPrintObject.is_open()) {
+		cout << "	ERROR: packingPrintObject is not open in printHopperSP(), ending." << endl;
+		exit(1);
+	}
+
+	// print information starting information
+	packingPrintObject << setw(w1) << left << "NEWFR" << " " << endl;
+	packingPrintObject << setw(w1) << left << "NUMCL" << setw(w2) << right << NCELLS << endl;
+
+	// print hopper information
+	packingPrintObject << setw(w1) << left << "HOPPR";
+	packingPrintObject << setw(w1) << right << w0;
+	packingPrintObject << setw(w1) << right << w;
+	packingPrintObject << setw(w1) << setprecision(6) << right << th;
+	packingPrintObject << endl;
+
+	// print stress information
+	packingPrintObject << setw(w1) << left << "WLFRC";
+	packingPrintObject << setw(w3) << right << sigmaXX;
+	packingPrintObject << setw(w3) << right << sigmaXY;
+	packingPrintObject << setw(w3) << right << sigmaYX;
+	packingPrintObject << setw(w3) << right << sigmaYY;
+	packingPrintObject << endl;
+
+	// print contact information
+	packingPrintObject << setw(w1) << left << "NCNTS";
+	packingPrintObject << setw(w1) << right << Ncc;
+	packingPrintObject << setw(w1) << right << Nvv;
+	packingPrintObject << endl;
+
+	// print contact matrix
+	packingPrintObject << setw(w1) << left << "CMMAT";
+
+	// print contact matrix
+	for (int ci=0; ci<NCELLS; ci++){
+		for (int cj=ci+1; cj<NCELLS; cj++)
+			packingPrintObject << setw(w2) << contacts(ci,cj);
+	}
+	packingPrintObject << endl;
+
+	// print info for rest of the cells
+	for (int ci=0; ci<NCELLS; ci++)
+		cell(ci).printVertexPositions(packingPrintObject,ci);
+
+	// print end frame
+	packingPrintObject << setw(w1) << left << "ENDFR" << " " << endl;
+}
 
 
 
