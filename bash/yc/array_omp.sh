@@ -30,6 +30,7 @@ for index in `seq 0 $range`; do
 done
 
 slurmf=$workdir/slurm.sh
+rm -f $slurmf
 partition=pi_ohern
 job_name=DPM
 
