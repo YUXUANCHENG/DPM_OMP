@@ -16,6 +16,7 @@ rm -f $binf
 g++ --std=c++11 -fopenmp -I $srcdir $srcdir/*.cpp -o $binf 
 
 taskf=$workdir/task.txt
+rm -f $taskf
 
 let range=$jobnumber-1
 for index in `seq 0 $range`; do
