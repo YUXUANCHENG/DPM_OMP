@@ -912,8 +912,8 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 100000.0;
-		int frames = 5000;
+		double T = 1000000.0;
+		int frames = 50000;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
@@ -923,7 +923,7 @@ public:
 
 
 		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.94;
+		double phi_max = 0.92;
 
 		double ratio = 100.0;
 		//ka = 10;
@@ -983,7 +983,8 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 
 				//v0 = 0.04;
-				double v0 = 0.002 + double(j) * 0.002;
+				//double v0 = 0.002 + double(j) * 0.002;
+				double v0 = 0.001 * (i + 1) + double(j) * 0.002;
 #pragma omp critical
 				{
 					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;

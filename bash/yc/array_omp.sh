@@ -44,7 +44,7 @@ echo \#SBATCH -J $job_name >> $slurmf
 echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
-sbatch -t 5-00:00:00 $slurmf
+sbatch -t 7-00:00:00 $slurmf
 
 
 
