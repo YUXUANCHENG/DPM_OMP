@@ -751,7 +751,7 @@ public:
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 		// Initialze the system as disks
-		phiDisk = 0.65;
+		phiDisk = 0.60;
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
 
@@ -921,10 +921,6 @@ public:
 		//Dr = 1.0 + double(j) * 1.0;
 		Dr = 1e-2;
 
-
-		//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.92;
-
 		double ratio = 100.0;
 		//ka = 10;
 
@@ -934,6 +930,10 @@ public:
 			double calA0 = 1.12;
 			double kb = 0.0001 * (i + 1);
 			double kl = ratio * kb;
+
+			//double phi_max = 0.94;
+			double phi_max = 0.85;
+			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
 			string extend = "_jammed_" + to_string(i) + ".txt";
@@ -952,7 +952,8 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.65;
+			//phiDisk = 0.65;
+			phiDisk = 0.60;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -984,7 +985,7 @@ public:
 
 				//v0 = 0.04;
 				//double v0 = 0.002 + double(j) * 0.002;
-				double v0 = 0.001 * (i + 1) + double(j) * 0.002;
+				double v0 = 0.003 + 0.0002 * double(i) + double(j) * 0.002;
 #pragma omp critical
 				{
 					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
