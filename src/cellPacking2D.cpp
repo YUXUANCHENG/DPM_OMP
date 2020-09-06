@@ -4191,18 +4191,14 @@ void cellPacking2D::printContact() {
 }
 
 void cellPacking2D::printV() {
-	double mean_v_x = 0;
-	double mean_v_y = 0;
+	double v_x = 0;
+	double v_y = 0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
-		mean_v_x += cell(ci).cal_mean_v(0);
-		mean_v_y += cell(ci).cal_mean_v(1);
+		v_x = cell(ci).cal_mean_v(0);
+		v_y = cell(ci).cal_mean_v(1);
+		vPrintObject << v_x << "," << v_y << endl;
 	}
-
-	mean_v_x /= NCELLS;
-	mean_v_y /= NCELLS;
-
-	vPrintObject << mean_v_x << "," << mean_v_y << endl;
 }
 
 
