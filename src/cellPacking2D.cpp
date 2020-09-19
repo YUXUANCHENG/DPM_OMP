@@ -4246,8 +4246,84 @@ double cellPacking2D::scale_v(double v0) {
 	return scaled_v;
 }
 
+void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames){
+	// local variables
+	int ci, vi, d;
+	int count = 0;
+	double U,K,rv;
+	int print_frequency = floor(T/ (dt0 * t_scale * frames));
 
+	// Scale velocity by avg cell radius
+	double scaled_v = scale_v(v0);
+	double current_K = cal_temp(scaled_v);
+	double current_U = totalPotentialEnergy();
+	double current_E = current_K + current_U;
+	// Reset velocity
+	for (ci=0; ci<NCELLS; ci++){
+		for (d=0; d<NDIM; d++){
+			// get random direction
+			rv = (double)rand() / (RAND_MAX + 1.0);
+			cell(ci).setCVel(d,rv);
+		}
+	}
+	conserve_momentum();
+	rescaleVelocities(current_K);
 
+	// run NVE for allotted time
+	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
+		// print data first to get the initial condition
+		if (count % print_frequency == 0) {
+			// calculate energies
+			U = totalPotentialEnergy();
+			K = totalKineticEnergy();
+			//rescal_V(current_E);
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
+			cout << "E = " << U + K << endl;
+			cout << "t = " << t << endl;
+		}
+
+		// use velocity verlet to advance time
+
+		// update positions
+		for (ci=0; ci<NCELLS; ci++){
+			cell(ci).verletPositionUpdate(dt0 * t_scale);
+			cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		calculateForces();
+
+		// update velocities
+		for (ci=0; ci<NCELLS; ci++)
+			cell(ci).verletVelocityUpdate(dt0 * t_scale);
+		count ++;
+	}
+}
+
+void cellPacking2D::rescal_V(double E){
+	conserve_momentum();
+	rescaleVelocities(E - totalPotentialEnergy());
+}
+
+double cellPacking2D::cal_temp(double scaled_v){
+
+	for (int ci=0; ci<NCELLS; ci++){
+		for (int d=0; d<NDIM; d++){
+			if (d == 0)
+				cell(ci).setCVel(d,scaled_v);
+			else
+				cell(ci).setCVel(d,0);
+		}
+	}
+	return totalKineticEnergy();
+}
 
 

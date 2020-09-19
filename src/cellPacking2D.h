@@ -347,6 +347,10 @@ public:
 	void conserve_momentum();
 	double scale_v(double v0);
 
+	void cell_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	double cal_temp(double scaled_v);
+	void rescal_V(double E);
+
 
 	void relaxP(double Ktolerance, double Ptolerance) {
 		fireMinimizeP(Ptolerance, Ktolerance);
