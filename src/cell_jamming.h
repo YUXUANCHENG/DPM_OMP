@@ -1062,11 +1062,12 @@ public:
 			double calA0 = 1.18;
 			//double kb = 0.0001 * (i + 1);
 			//double kb = 0.00001 * pow(i + 1,2);
-			double kb = 0.00005 * pow(i + 1,2);
-			double kl = ratio * kb;
+			double kb = 0.00001 * pow(i + 1,2);
+			//double kl = ratio * kb;
+			double kl = 0.1;
 
-			double phi_max = 0.93;
-			//double phi_max = 0.92;
+			//double phi_max = 0.93;
+			double phi_max = 0.90;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
@@ -1086,8 +1087,8 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.65;
-			//phiDisk = 0.60;
+			//phiDisk = 0.65;
+			phiDisk = 0.62;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -1119,7 +1120,8 @@ public:
 
 				//v0 = 0.04;
 				//double v0 = 0.002 + double(j) * 0.002;
-				double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
+				//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
+				double v0 = 0.0004 * double(i) + double(j+1) * 0.002;
 #pragma omp critical
 				{
 					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;

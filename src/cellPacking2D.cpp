@@ -4209,7 +4209,8 @@ void cellPacking2D::conserve_momentum() {
 	double v_temp = 0.0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
-		system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+		system_mass += cell(ci).getNV();
 	}
 
 	for (int ci = 0; ci < NCELLS; ci++) {
@@ -4254,10 +4255,11 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	int print_frequency = floor(T/ (dt0 * t_scale * frames));
 
 	// Scale velocity by avg cell radius
+	int dof = 5;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
 	double current_U = totalPotentialEnergy();
-	double current_E = current_K + current_U;
+	double current_E = dof * current_K + current_U;
 	// Reset velocity
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
@@ -4267,11 +4269,12 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 		}
 	}
 	conserve_momentum();
-	rescaleVelocities(current_K);
+	rescaleVelocities(dof * current_K);
 
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
+		rescal_V(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
 			// calculate energies
@@ -4283,7 +4286,8 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 			printCalA();
 			printContact();
 			printV();
-			cout << "E = " << U + K << endl;
+			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E = " << U + K << " K = " << K << endl;
 			cout << "t = " << t << endl;
 		}
 

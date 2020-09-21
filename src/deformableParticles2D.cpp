@@ -2261,7 +2261,8 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM(double dt0, double Dr,
 	double r1;
 
 	// get segment mass
-	segmentMass = PI * pow(0.5 * del * l0, 2);
+	//segmentMass = PI * pow(0.5 * del * l0, 2);
+	segmentMass = 1.0;
 
 	r1 = 1.0 - 2.0 * (double)rand() / (RAND_MAX + 1.0);
 
@@ -2298,7 +2299,8 @@ void deformableParticles2D::activeVerletVelocityUpdateCOM_brownian(double dt0, d
 
 
 	// get segment mass
-	segmentMass = PI * pow(0.5 * del * l0, 2);
+	//segmentMass = PI * pow(0.5 * del * l0, 2);
+	segmentMass = 1.0;
 
 	c_psi += sqrt( dt0 * Dr * 2) * random_angle;
 
@@ -2358,7 +2360,8 @@ double deformableParticles2D::cal_mean_v(int d){
 
 double deformableParticles2D::momentum(int d) {
 	double momentum = 0;
-	double segmentMass = PI * pow(0.5 * del * l0, 2);
+	//double segmentMass = PI * pow(0.5 * del * l0, 2);
+	double segmentMass = 1.0;
 
 	// update vertex velocities
 	for (int i = 0; i < NV; i++) {
