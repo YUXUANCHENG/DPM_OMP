@@ -932,9 +932,10 @@ public:
 			//double kb = 0.0001 * (i + 1);
 			//double kb = 0.00001 * pow(i + 1,2);
 			double kb = 0.00005 * pow(i + 1,2);
-			double kl = ratio * kb;
+			//double kl = ratio * kb;
+			double kl = 0.1;
 
-			double phi_max = 0.94;
+			double phi_max = 0.93;
 			//double phi_max = 0.92;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
@@ -1039,7 +1040,8 @@ public:
 		// system size
 		int NCELLS = 16;
 		int NV = 16;
-		int seed = 5;
+		//int seed = 5;
+		int seed = 1;
 		double Lini = 1.0;
 
 		// activity
@@ -1067,7 +1069,7 @@ public:
 			double kl = 0.1;
 
 			//double phi_max = 0.93;
-			double phi_max = 0.90;
+			double phi_max = 0.85;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
@@ -1088,7 +1090,7 @@ public:
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 			//phiDisk = 0.65;
-			phiDisk = 0.62;
+			phiDisk = 0.60;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);

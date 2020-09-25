@@ -4193,11 +4193,13 @@ void cellPacking2D::printContact() {
 void cellPacking2D::printV() {
 	double v_x = 0;
 	double v_y = 0;
+	double energy = 0.0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
 		v_x = cell(ci).cal_mean_v(0);
 		v_y = cell(ci).cal_mean_v(1);
-		vPrintObject << v_x << "," << v_y << endl;
+		energy = 0.5 * (v_x*v_x + v_y*v_y) * cell(ci).getNV();
+		vPrintObject << v_x << "," << v_y <<  "," << energy/cell(ci).totalKineticEnergy() << endl;
 	}
 }
 
@@ -4268,8 +4270,7 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 			cell(ci).setCVel(d,rv);
 		}
 	}
-	conserve_momentum();
-	rescaleVelocities(dof * current_K);
+	rescal_V(current_E);
 
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
