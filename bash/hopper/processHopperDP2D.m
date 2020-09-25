@@ -7,7 +7,7 @@ function processHopperDP2D(N,simstrpattern,savestr)
 %   -- speed data
 
 % get files
-flist   = dir([simstrpattern '*']);
+flist   = dir([simstrpattern '*.pos']);
 NF      = length(flist);
 if NF == 0
     fprintf('\t ** ERROR: no files found for simstrpattern = %s, ending.\n',simstrpattern);
@@ -22,13 +22,13 @@ end
 rmvf = false(NF,1);
 
 % simulation info
+simFile = cell(NF,1);
 NFRAMES = zeros(NF,1);
 hopperInfo = zeros(NF,4);
 
 % particle statistics
-calA = cell(NF,N);
-calA0 = cell(NF,N);
-speed = cell(NF,N);
+calA = cell(NF,1);
+calA0 = cell(NF,1);
 
 % wall forces
 wallFrc = cell(NF,4);
@@ -50,14 +50,15 @@ for ff = 1:NF
         continue;
     else
         fprintf('\t** Reading in %s\n',fname);
+        simFile{ff} = fname;
     end
     
     % read in data
     dpHopperPosData = readDPHopperData(fstr);
     
     % -- get number of frames in simulation
-    NF              = dpHopperPosData.NF;
-    NFRAMES(ff)     = NF;
+    NT              = dpHopperPosData.NFRAMES;
+    NFRAMES(ff)     = NT;
     
     % -- get hopper geometry
     w               = dpHopperPosData.w;
@@ -70,42 +71,60 @@ for ff = 1:NF
     hopperInfo(ff,3) = L;
     hopperInfo(ff,4) = th;
     
-    % -- get outflow statistics
-    fprintf('\t ** -- Computing outflow statistics\n');
-    cxpos = dpHopperPosData.cxpos;
+    % -- get particle info
+    fprintf('\t ** -- Computing particle information\n');
+    
+    nv          = dpHopperPosData.nv;
+    nv          = nv(1,:);
+    xpos        = dpHopperPosData.xpos;
+    ypos        = dpHopperPosData.ypos;
+    a0          = dpHopperPosData.a0;
+    l0          = dpHopperPosData.l0;
+    
+    
+    % save shape data and com position data
+    calA0tmp    = zeros(NT,N);
+    calAtmp     = zeros(NT,N);
+    cxpos       = zeros(NT,N);
+    for tt = 1:NT
+        for nn = 1:N
+            % vertex positions
+            x = xpos{tt,nn};
+            y = ypos{tt,nn};
+            
+            % shape info
+            nvtmp = nv(nn);
+            a0tmp = a0(tt,nn);
+            l0tmp = l0(tt,nn);
+            
+            % area
+            atmp = polyarea(x,y);
+            
+            % perimeter
+            lvx = x([2:end 1]) - x;
+            lvy = y([2:end 1]) - y;
+            l = sqrt(lvx.^2 + lvy.^2);
+            ptmp = sum(l);
+            
+            % shape parameters
+            calAtmp(tt,nn) = ptmp^2/(4.0*pi*atmp);
+            calA0tmp(tt,nn) = (nvtmp*l0tmp)^2/(4.0*pi*a0tmp);
+            
+            % cxpos
+            cxpos(tt,nn) = mean(x);
+        end
+    end
+    calA{ff} = calAtmp;
+    calA0{ff} = calA0tmp;
     
     % Loop over time, find outflow events
-    dnout = zeros(NF-1,1);
-    for tt = 2:NF
+    fprintf('\t ** -- Computing outflow statistics\n');
+    dnout = zeros(NT-1,1);
+    for tt = 2:NT
         flowedOut = (cxpos(tt,:) > L & cxpos(tt-1,:) < L);
         dnout(tt-1) = sum(flowedOut);
     end
     nout{ff} = cumsum(dnout);
-    
-    % -- get particle info
-    fprintf('\t ** -- Computing particle information\n');
-    nv          = dpHopperPosData.nv;
-    nv          = nv(1,:);
-    calAtmp     = dpHopperPosData.calA;
-    calA0tmp    = dpHopperPosData.calA0;
-    xvel        = dpHopperPosData.xvel;
-    yvel        = dpHopperPosData.yvel;
-    for nn = 1:N
-        % get shapes
-        calA{ff,nn}     = calAtmp(:,nn);
-        calA0{ff,nn}    = calA0tmp(:,nn);
-        
-        % get speeds
-        speednn = zeros(NT,1);
-        for tt = 1:NT
-            vcomx           = sum(xvel{tt,nn})/nv(nn);
-            vcomy           = sum(yvel{tt,nn})/nv(nn);
-            speednn(tt)     = sqrt(vcomx^2 + vcomy^2);
-        end
-        
-        % save speed
-        speed{ff,nn}    = speednn;
-    end
     
     % -- get wall forces
     fprintf('\t ** -- Saving wall forces\n');
@@ -120,14 +139,22 @@ for ff = 1:NF
 end
 
 % remove extra slots
+simFile(rmvf)       = [];
 NFRAMES(rmvf)       = [];
 hopperInfo(rmvf,:)  = [];
 calA(rmvf,:)        = [];
 calA0(rmvf,:)       = [];
-speed(rmvf,:)       = [];
 wallFrc(rmvf,:)     = [];
 nout(rmvf,:)        = [];
 
 %% Save to matfile
 save(savestr,...
-    'wallFrc','speed','nout','calA0','calA','hopperInfo','NFRAMES');
+    'simFile','wallFrc','nout','calA0','calA','hopperInfo','NFRAMES');
+
+end
+
+
+
+
+
+
