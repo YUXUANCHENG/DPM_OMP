@@ -4341,6 +4341,8 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 
 	// Scale velocity by avg cell radius
 	int dof = 5;
+	int factor = 100;
+	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
 	double current_U = totalPotentialEnergy();
