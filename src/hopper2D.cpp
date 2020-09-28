@@ -213,6 +213,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	vrmin = 0.5*cell(0).getl0();
 	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	L.at(0) = Ltmp;
+	L.at(1) = Ltmp;
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++)
 			cell(ci).setL(d,Ltmp);
