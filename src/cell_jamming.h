@@ -1259,16 +1259,17 @@ public:
 
 	void gravity()
 	{
-
+		int i = 0;
 		// output files
-		string positionF = "position.txt";
-		string energyF = "energy.txt";
-		string jammingF = "jam.txt";
-		string lengthscaleF = "length.txt";
-		string phiF = "phi.txt";
-		string calAF = "calA.txt";
-		string contactF = "contact.txt";
-		string vF = "v.txt";
+		string extend = "_jammed_" + to_string(i) + ".txt";
+		//string positionF = "position" + extend;
+		string energyF = "energy" + extend;
+		string jammingF = "jam" + extend;
+		string lengthscaleF = "length" + extend;
+		string phiF = "phi" + extend;
+		string calAF = "calA" + extend;
+		string contactF = "contact" + extend;
+		string vF = "v" + extend;
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
