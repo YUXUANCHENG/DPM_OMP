@@ -280,6 +280,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
 		}
 	}
+	printJammedConfig_yc();
+	printCalA();
+	printContact();
 }
 
 
