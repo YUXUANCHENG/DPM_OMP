@@ -279,7 +279,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			for (d=0; d<NDIM; d++)
 				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
 		}
+		cell(ci).printlengthscale(lengthscalePrintObject);
 	}
+	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 	printJammedConfig_yc();
 	printCalA();
 	printContact();
