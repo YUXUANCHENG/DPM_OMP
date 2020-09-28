@@ -341,7 +341,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 			cout << "	* Fcheck 	= " << Fcheck << endl;
 			cout << "	* dt 		= " << dt << endl;
 			cout << "	* alpha 	= " << alpha << endl;
-			cout << "	* P 		= " << P << endl;
+			//cout << "	* P 		= " << P << endl;
 			cout << "	* npPMIN 	= " << npPMIN << endl;
 			cout << endl << endl;
 		}
@@ -632,7 +632,7 @@ void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int
 		cell(ci).shapeForces();
 
 		// gravity force (in +x direction)
-		cell(ci).gravityForces(g,0);
+		cell(ci).gravityForces(g,1);
 	}
 
 	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls
@@ -1855,7 +1855,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 				for (vi=0; vi<nvtmp; vi++)
 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + (utmp/nvtmp));
 			}
-
+			/*
 			// print if object has been opened already
 			if (packingPrintObject.is_open()){
 				cout << "	* Printing DP center positions to file" << endl;
@@ -1866,7 +1866,12 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 				cout << "	* Printing DP energy to file" << endl;
 				energyPrintObject << totalPotentialEnergy() << " " << totalKineticEnergy() << endl;
 			}
-			
+			*/
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
 			cout << "	* Run data:" << endl;
 			cout << "	* U 		= " << totalPotentialEnergy() << endl;
 			cout << "	* K 		= " << totalKineticEnergy() << endl;

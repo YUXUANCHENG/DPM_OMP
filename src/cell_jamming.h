@@ -1274,13 +1274,15 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 2;
+		int NCELLS = 4;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
 		gam = 0.1;
 		kl = 0.1;
+		const int NT = 2e5;			// number of time steps for flow simulation
+		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius 		= 0.5;			// radius fo smaller particles (diameter is length unit)
 		const double sizeRatio 			= 1.4;			// ratio of small diameter to large diameter
 		const double w0 				= 10.0;			// width of hopper reservoir (in units of small diameter)
@@ -1291,7 +1293,7 @@ public:
 
 		Lini = 0.1*w0;
 
-		timeStepMag = 0.001;
+		timeStepMag = 0.01;
 
 		vector<double> radii(NCELLS,0.0);
 		for (int ci=0; ci<NCELLS; ci++){
