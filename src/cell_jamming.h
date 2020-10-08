@@ -1275,7 +1275,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 4;
+		int NCELLS = 2;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
@@ -1349,7 +1349,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				double g = 0.01;
+				double g = 0.1;
 				cout << "	** Running hopper NVE with g = " << g << endl;
 				// packingObject.hopperDPNVE(w0,w,th,g,T);
 				cell_group.flowHopperDP(w0,w,th,g,b);
