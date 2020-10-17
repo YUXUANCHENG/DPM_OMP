@@ -4277,12 +4277,14 @@ void cellPacking2D::printV() {
 	double v_x = 0;
 	double v_y = 0;
 	double energy = 0.0;
+	double tot_k_energy = 0.0;
 
 	for (int ci = 0; ci < NCELLS; ci++) {
 		v_x = cell(ci).cal_mean_v(0);
 		v_y = cell(ci).cal_mean_v(1);
 		energy = 0.5 * (v_x*v_x + v_y*v_y) * cell(ci).getNV();
-		vPrintObject << v_x << "," << v_y <<  "," << energy/cell(ci).totalKineticEnergy() << endl;
+		tot_k_energy = cell(ci).totalKineticEnergy();
+		vPrintObject << v_x << "," << v_y <<  "," << energy/tot_k_energy << "," << tot_k_energy << endl;
 	}
 }
 
@@ -4341,7 +4343,8 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 
 	// Scale velocity by avg cell radius
 	int dof = 5;
-	int factor = 100;
+	//int factor = 100;
+	int factor = 1;
 	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);

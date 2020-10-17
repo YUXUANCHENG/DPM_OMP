@@ -21,9 +21,9 @@ int main(int argc, char const *argv[]){
 	//main_function.test_ground_shape();
 	//main_function.const_ground_shape();
 	//main_function.const_ground_shape_arg(argv);
-	//main_function.cell_NVE_arg(argv);
+	main_function.cell_NVE_arg(argv);
 	//main_function.mesaure_ground_shape();
-	main_function.gravity();
+	//main_function.gravity();
 
 
 	system("pause");
