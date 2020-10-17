@@ -4420,3 +4420,100 @@ double cellPacking2D::cal_temp(double scaled_v){
 }
 
 
+void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	// local variables
+	int ci, vi, d;
+	int count = 0;
+	double U, K, rv;
+	int print_frequency = floor(T / (dt0 * t_scale * frames));
+
+	// Scale velocity by avg cell radius
+	int dof = 2;
+	//int factor = 100;
+	int factor = 1;
+	dof *= factor;
+	double scaled_v = scale_v(v0);
+	double current_K = cal_temp(scaled_v);
+	double current_U = totalPotentialEnergy();
+	double current_E = dof * current_K + current_U;
+	// Reset velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (d = 0; d < NDIM; d++) {
+			// get random direction
+			rv = (double)rand() / (RAND_MAX + 1.0);
+			cell(ci).setCVel(d, rv);
+		}
+	}
+	rescal_V(current_E);
+	vector<double> lenscales(NCELLS, 0.0);
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		lenscales.at(ci) = sqrt(cell(ci).area() / PI);
+	}
+
+	// run NVE for allotted time
+	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
+
+		rescal_V(current_E);
+		// print data first to get the initial condition
+		if (count % print_frequency == 0) {
+			// calculate energies
+			U = totalPotentialEnergy();
+			K = totalKineticEnergy();
+			//rescal_V(current_E);
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
+			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "t = " << t << endl;
+		}
+
+		// use velocity verlet to advance time
+
+		// update positions
+		spPosVerlet();
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		spForces(lenscales);
+		calculateForces();
+
+		// update velocities
+		sp_VelVerlet(lenscales);
+		count++;
+	}
+}
+
+void cellPacking2D::sp_VelVerlet(vector<double>& radii) {
+	// local variables
+	int ci, vi, d;
+	double veltmp, aold, anew;
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		// loop over velocities
+		for (d = 0; d < NDIM; d++) {
+			// get current velocity
+			veltmp = cell(ci).cvel(d);
+
+			// calculate old com acceleration
+			aold = cell(ci).vacc(0, d);
+
+			// get new accelation
+			anew = cell(ci).cforce(d) / cell(ci).getNV();
+
+			// update velocity
+			veltmp += 0.5 * dt * (anew + aold);
+
+			// set new velocity and acceleration
+			cell(ci).setCVel(d, veltmp);
+			for (vi = 0; vi < cell(ci).getNV(); vi++)
+				cell(ci).setVAcc(vi, d, anew);
+		}
+	}
+}
