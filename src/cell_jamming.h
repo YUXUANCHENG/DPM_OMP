@@ -1215,7 +1215,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.55;
+			phiDisk = 0.7;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;

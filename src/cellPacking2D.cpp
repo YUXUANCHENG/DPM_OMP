@@ -3372,7 +3372,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 		cell(ci).regularPolygon();
 
 		// perturb vertex positions a little bit
-		cell(ci).vertexPerturbation(0.1);
+		//cell(ci).vertexPerturbation(0.1);
 		cell(ci).printlengthscale(lengthscalePrintObject);
 	}
 
@@ -4430,9 +4430,15 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	vector<double> lenscales(NCELLS, 0.0);
 
 	for (ci = 0; ci < NCELLS; ci++) {
-		lenscales.at(ci) = sqrt(cell(ci).area() / PI);
+		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
+		calAPrintObject << lenscales.at(ci) << endl;
+		cell(ci).setCForce(0,0.0);
+		cell(ci).setCForce(1,0.0);
+		for (vi=0; vi<cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi,0.0);
+		
 	}
-	spForces(lenscales);
+	sp_Forces(lenscales);
 
 	// Scale velocity by avg cell radius
 	int dof = 2;
@@ -4482,7 +4488,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		resetContacts();
 
 		// calculate forces
-		spForces(lenscales);
+		sp_Forces(lenscales);
 		//calculateForces();
 
 		// update velocities
@@ -4516,6 +4522,67 @@ void cellPacking2D::sp_VelVerlet(vector<double>& radii) {
 			cell(ci).setCVel(d, veltmp);
 			for (vi = 0; vi < cell(ci).getNV(); vi++)
 				cell(ci).setVAcc(vi, d, anew);
+		}
+	}
+}
+
+void cellPacking2D::sp_Forces(vector<double>& lenscales){
+	// local variables
+	int ci, cj, vi, d;
+	double contactDistance = 0.0; 
+	double centerDistance = 0.0; 
+	double overlap = 0.0;
+	double uv = 0.0;
+	double ftmp, utmp;
+	vector<double> distanceVec(NDIM,0.0);
+
+	// get disk-disk forces
+	for (ci=0; ci<NCELLS; ci++){
+		for (cj=ci+1; cj<NCELLS; cj++){
+			// contact distance
+			contactDistance = lenscales.at(ci) + lenscales.at(cj);
+
+			// center-to-center distance
+			centerDistance = 0.0;
+			for (d=0; d<NDIM; d++){
+				// vectorial quantity
+				distanceVec.at(d) = cell(ci).cellDistance(cell(cj),d);
+
+				// add to distance
+				centerDistance += pow(distanceVec.at(d),2);
+			}
+
+			// check for contact
+			if (contactDistance*contactDistance > centerDistance){
+				// add to contact checking
+				addContact(ci,cj);
+
+				// get true distance
+				centerDistance = sqrt(centerDistance);
+
+				// overlap scale
+				overlap = centerDistance/contactDistance;
+
+				// force scale
+				ftmp = (1 - overlap);
+
+				// add to potential energy (energy should increase because particles are growing)
+				utmp = 0.5*contactDistance*pow(1 - overlap,2);
+				for (vi=0; vi<cell(ci).getNV(); vi++)
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+				for (vi=0; vi<cell(cj).getNV(); vi++)
+					cell(cj).setUInt(vi,cell(cj).uInt(vi) + utmp/cell(cj).getNV());
+
+				// add to forces
+				for (d=0; d<NDIM; d++){
+					// unit vector
+					uv = distanceVec.at(d)/centerDistance;
+
+					// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+					cell(ci).setCForce(d,cell(ci).cforce(d) - ftmp*uv);
+					cell(cj).setCForce(d,cell(cj).cforce(d) + ftmp*uv);
+				}
+			}
 		}
 	}
 }
