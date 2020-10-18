@@ -3341,7 +3341,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 		a0tmp = lenscales.at(ci)*lenscales.at(ci);
 
 		// initial length of polygon side
-		l0tmp = 2.0*lenscales.at(ci)*sqrt(PI*calA0tmp)/NV;
+		l0tmp = 2.0*lenscales.at(ci)*sqrt(PI*calA0tmp)/nvtmp;
 
 		// set preferred area and length 
 		cell(ci).seta0(a0tmp);
@@ -4427,6 +4427,13 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
 
+	vector<double> lenscales(NCELLS, 0.0);
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		lenscales.at(ci) = sqrt(cell(ci).area() / PI);
+	}
+	spForces(lenscales);
+
 	// Scale velocity by avg cell radius
 	int dof = 2;
 	//int factor = 100;
@@ -4445,12 +4452,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		}
 	}
 	rescal_V(current_E);
-	vector<double> lenscales(NCELLS, 0.0);
-
-	for (ci = 0; ci < NCELLS; ci++) {
-		lenscales.at(ci) = sqrt(cell(ci).area() / PI);
-	}
-
+	
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
@@ -4463,7 +4465,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 			//rescal_V(current_E);
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
-			printCalA();
+			//printCalA();
 			printContact();
 			printV();
 			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
@@ -4481,7 +4483,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 
 		// calculate forces
 		spForces(lenscales);
-		calculateForces();
+		//calculateForces();
 
 		// update velocities
 		sp_VelVerlet(lenscales);
