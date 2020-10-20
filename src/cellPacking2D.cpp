@@ -4342,16 +4342,20 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	int print_frequency = floor(T/ (dt0 * t_scale * frames));
 
 	// Scale velocity by avg cell radius
-	int dof = 5;
+	int dof = 2;
 	//int factor = 100;
-	int factor = 1;
+	int factor = 0;
+	for (ci = 0; ci < NCELLS; ci++) {
+		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+		factor += cell(ci).getNV();
+	}
 	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
 	double current_U = totalPotentialEnergy();
 	double current_E = dof * current_K + current_U;
 	// Reset velocity
-	for (ci=0; ci<NCELLS; ci++){
+	for (ci = 0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
 			// get random direction
 			rv = (double)rand() / (RAND_MAX + 1.0);
