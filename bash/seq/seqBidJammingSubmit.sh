@@ -6,7 +6,7 @@ srcdir=$cellsdir/src
 maindir=$cellsdir/sequential
 
 # directory for all output for cell simulations
-outputdir=/gpfs/project/fas/ohern/jdt45/cells
+outputdir=/gpfs/loomis/project/fas/ohern/jdt45/cells
 
 # directory for simulations specific to jamming
 simtypedir=$outputdir/seqBidCells
@@ -18,7 +18,6 @@ mkdir -p bin
 mkdir -p tasks
 mkdir -p slurm
 mkdir -p out
-
 # inputs
 NCELLS=$1
 NV=$2
@@ -34,7 +33,7 @@ startSeed="${10}"
 # other variables
 dphi=1e-3
 Ptol=1e-8
-Ftol=5e-14
+Ftol=1e-14
 
 let numSeeds=$numSeedsPerRun*$numRuns
 let endSeed=$startSeed+$numSeeds-1
