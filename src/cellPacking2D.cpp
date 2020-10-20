@@ -4356,10 +4356,13 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	double current_E = dof * current_K + current_U;
 	// Reset velocity
 	for (ci = 0; ci<NCELLS; ci++){
-		for (d=0; d<NDIM; d++){
-			// get random direction
-			rv = (double)rand() / (RAND_MAX + 1.0);
-			cell(ci).setCVel(d,rv);
+		for (vi = 0; vi < cell(ci).getNV(); vi ++)
+		{ 
+			for (d=0; d<NDIM; d++){
+				// get random direction
+				rv = (double)rand() / (RAND_MAX + 1.0);
+				cell(ci).setVVel(vi, d, rv);
+			}
 		}
 	}
 	rescal_V(current_E);
