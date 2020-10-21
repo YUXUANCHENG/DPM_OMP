@@ -1480,6 +1480,108 @@ public:
 		cout << "	** FINISHED **   " << endl;
 	};
 
+	void Hopper()
+	{
+		int i = 0;
+		// output files
+		string extend = "_jammed_" + to_string(i) + ".txt";
+		//string positionF = "position" + extend;
+		string energyF = "energy" + extend;
+		string jammingF = "jam" + extend;
+		string lengthscaleF = "length" + extend;
+		string phiF = "phi" + extend;
+		string calAF = "calA" + extend;
+		string contactF = "contact" + extend;
+		string vF = "v" + extend;
+
+		std::ofstream v0PrintObject;
+		v0PrintObject.open("v0.txt");
+
+		// system size
+		int NCELLS = 64;
+		int NV = 16;
+		int seed = 5;
+		double Lini = 1.0;
+
+		gam = 0.1;
+		kl = 0.1;
+		const int NT = 2e5;			// number of time steps for flow simulation
+		const int NPRINT = 1e3;			// number of steps between printing
+		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
+		const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
+		const double w0 = 10.0;			// width of hopper reservoir (in units of small diameter)
+		const double w = 1.5;			// orifice width (in units of small diameter)
+		const double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
+		const double phi0 = 0.4;			// initial packing fraction
+		double b = 0.1;
+
+		Lini = 0.1 * w0;
+
+		timeStepMag = 0.01;
+
+		vector<double> radii(NCELLS, 0.0);
+		for (int ci = 0; ci < NCELLS; ci++) {
+			if (ci % 2 == 0)
+				radii.at(ci) = smallRadius;
+			else
+				radii.at(ci) = smallRadius * sizeRatio;
+		}
+
+		// instantiate object
+		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+		// open position output file
+		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+		phiDisk = 0.3;
+		// Initialze the system as disks
+		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+		cell_group.initializeHopperDP(radii, w0, w, th, Lini, NV);
+
+		// change to DPM
+		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+		// set time scale
+		cell_group.vertexDPMTimeScale(timeStepMag);
+
+		cellPacking2D jammed_state;
+		cell_group.saveState(jammed_state);
+
+		for (int i = 0; i < 1; i++) {
+			for (int j = 0; j < 1; j++) {
+
+				cout << "Loop i, j = " << i << "," << j << endl;
+				v0PrintObject << kl << "," << gam << endl;
+
+				extend = "_" + to_string(i) + to_string(j) + ".txt";
+
+				// output files
+				//string positionF = "position" + extend;
+				string energyF = "energy" + extend;
+				string jammingF = "jam" + extend;
+				string lengthscaleF = "length" + extend;
+				string phiF = "phi" + extend;
+				string calAF = "calA" + extend;
+				string contactF = "contact" + extend;
+				string vF = "v" + extend;
+
+				cell_group.loadState(jammed_state);
+				cell_group.closeF();
+				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				double g = 0.1;
+				cout << "	** Running hopper NVE with g = " << g << endl;
+				// packingObject.hopperDPNVE(w0,w,th,g,T);
+				cell_group.flowHopperDP(w0, w, th, g, b);
+			}
+		}
+
+		cout << "	** FINISHED **   " << endl;
+	};
+
 
 
 	void test_ground_shape()

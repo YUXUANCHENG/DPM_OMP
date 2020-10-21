@@ -638,7 +638,7 @@ void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int
 		cell(ci).shapeForces();
 
 		// gravity force (in +x direction)
-		cell(ci).gravityForces(g,1);
+		cell(ci).gravityForces(g,0);
 	}
 
 	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls
@@ -1892,7 +1892,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 		for (ci=0; ci<NCELLS; ci++){
 			cell(ci).verletPositionUpdate(dt);
 			cell(ci).updateCPos();
-
+			/*
 			// replace in back of hopper
 			if (cell(ci).cpos(0) > L.at(0) + 2.0*sqrt(cell(ci).geta0())){
 				// find minimum xcoordinate
@@ -1926,6 +1926,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 				}
 				cell(ci).updateCPos();
 			}
+			*/
 		}
 		
 
