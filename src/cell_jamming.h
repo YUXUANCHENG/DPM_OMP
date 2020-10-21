@@ -1061,7 +1061,7 @@ public:
 
 
 			//double calA0 = 1.12;
-			double calA0 = 1.18;
+			double calA0 = 1.0;
 			//double kb = 0.0001 * (i + 1);
 			//double kb = 0.00001 * pow(i + 1,2);
 			double kb = 0.00001 * pow(i + 1,2);
