@@ -4499,7 +4499,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		//calculateForces();
 
 		// update velocities
-		sp_VelVerlet(lenscales);
+		sp_VelVerlet();
 		count++;
 	}
 }
