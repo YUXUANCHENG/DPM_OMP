@@ -76,6 +76,7 @@ private:
 	double strain;
 
 public:
+	int inside_hopper = 1;
 	// constructors
 	deformableParticles2D();
 	deformableParticles2D(int n);

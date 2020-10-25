@@ -620,25 +620,28 @@ void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int
 
 	// loop over cells and cell pairs, calculate shape and interaction forces
 	for (ci=0; ci<NCELLS; ci++){
-		// loop over pairs, add info to contact matrix
-		for (cj=ci+1; cj<NCELLS; cj++){
-			// calculate forces, add to number of vertex-vertex contacts
-			inContact = cell(ci).vertexForce(cell(cj),sigmaXX,sigmaXY,sigmaYX,sigmaYY);
-			if (inContact > 0){
-				// add to cell-cell contacts
-				addContact(ci,cj);
-				Ncc++;
+		if (cell(ci).inside_hopper)
+		{	
+			// loop over pairs, add info to contact matrix
+			for (cj = ci + 1; cj < NCELLS; cj++) {
+				// calculate forces, add to number of vertex-vertex contacts
+				inContact = cell(ci).vertexForce(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				if (inContact > 0) {
+					// add to cell-cell contacts
+					addContact(ci, cj);
+					Ncc++;
 
-				// increment vertex-vertex contacts
-				Nvv += inContact;
+					// increment vertex-vertex contacts
+					Nvv += inContact;
+				}
 			}
+
+			// forces on vertices due to shape
+			cell(ci).shapeForces();
+
+			// gravity force (in +x direction)
+			cell(ci).gravityForces(g, 0);
 		}
-
-		// forces on vertices due to shape
-		cell(ci).shapeForces();
-
-		// gravity force (in +x direction)
-		cell(ci).gravityForces(g,0);
 	}
 
 	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls
@@ -1800,6 +1803,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 	double Pvirial, K;
 	double aH, aR, aT;
 	double cxtmp, cytmp, xi, xip1, yi, yip1, utmp;
+	int empty_hopper = 0;
 
 	// replacement check
 	double minx, dx, dy, wmax, wmin;
@@ -1891,8 +1895,15 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 
 		// VV position update
 		for (ci=0; ci<NCELLS; ci++){
-			cell(ci).verletPositionUpdate(dt);
-			cell(ci).updateCPos();
+			if (cell(ci).inside_hopper)
+			{ 
+				empty_hopper = 0;
+				cell(ci).verletPositionUpdate(dt);
+				cell(ci).updateCPos();
+				// if still inside hopper
+				if (cell(ci).cpos(0) > L.at(0) * 1.2)
+					cell(ci).inside_hopper = 0;
+			}
 			/*
 			// replace in back of hopper
 			if (cell(ci).cpos(0) > L.at(0) + 2.0*sqrt(cell(ci).geta0())){
@@ -1930,7 +1941,8 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 			*/
 		}
 		
-
+		if (empty_hopper == 1)
+			break;
 		// calculate forces
 		hopperForcesDP(w0, w, th, g, closed);
 
