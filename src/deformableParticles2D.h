@@ -78,6 +78,9 @@ private:
 public:
 	int inside_hopper = 1;
 	double torque = 0.0;
+	double angularV = 0.0;
+	double b = 0.0;
+	double inertia = 0.0;
 	// constructors
 	deformableParticles2D();
 	deformableParticles2D(int n);
@@ -229,7 +232,7 @@ public:
 
 		}
 	};
-
+	void cal_inertia();
 	double calA();
 	void printlengthscale(std::ofstream& lengthscalePrintObject) {
 

@@ -2537,3 +2537,12 @@ double deformableParticles2D::momentum(int d) {
 
 	return momentum;
 }
+
+void deformableParticles2D::cal_inertia()
+{
+	inertia = 0;
+	for (int i = 0; i < NV; i++)
+	{
+		inertia += 1.0 * pow(vrel(i, 0), 2) + pow(vrel(i, 1), 2);
+	}
+}

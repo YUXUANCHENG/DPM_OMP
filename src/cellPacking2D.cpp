@@ -4504,7 +4504,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	}
 }
 
-void cellPacking2D::sp_VelVerlet(vector<double>& radii) {
+void cellPacking2D::sp_VelVerlet() {
 	// local variables
 	int ci, vi, d;
 	double veltmp, aold, anew;
@@ -4601,21 +4601,18 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
 
-	vector<double> lenscales(NCELLS, 0.0);
 
 	for (ci = 0; ci < NCELLS; ci++) {
-		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
-		calAPrintObject << lenscales.at(ci) << endl;
 		cell(ci).setCForce(0, 0.0);
 		cell(ci).setCForce(1, 0.0);
 		for (vi = 0; vi < cell(ci).getNV(); vi++)
 			cell(ci).setUInt(vi, 0.0);
-
+		cell(ci).cal_inertia();
 	}
 	bumpy_Forces();
 
 	// Scale velocity by avg cell radius
-	int dof = 2;
+	int dof = 3;
 	//int factor = 100;
 	int factor = NCELLS;
 	dof *= factor;
@@ -4667,7 +4664,7 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 		//calculateForces();
 
 		// update velocities
-		sp_VelVerlet(lenscales);
+		sp_VelVerlet();
 		bumpy_angularV();
 		count++;
 	}
@@ -4724,5 +4721,52 @@ void cellPacking2D::bumpy_Forces() {
 				Nvv += inContact;
 			}
 		}
+	}
+}
+
+void cellPacking2D::bumpyRotation()
+{
+	// local variables
+	int ci, vi, d;
+	double theta, btmp;
+
+	// update com position
+	for (ci = 0; ci < NCELLS; ci++) {
+		// update new position based on acceleration
+		theta = dt * cell(ci).angularV + 0.5 * dt * dt * cell(ci).b;
+
+		// rotate vertex
+		for (vi = 0; vi < cell(ci).getNV(); vi++)
+		{	
+			cell(ci).setVPos(vi, 0, cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta));
+			cell(ci).setVPos(vi, 1, cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta));
+		}		
+	}
+}
+
+void cellPacking2D::bumpy_angularV() {
+	// local variables
+	int ci, vi;
+	double veltmp, aold, anew;
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+	
+		// get current velocity
+		veltmp = cell(ci).angularV;
+
+		// calculate old com acceleration
+		aold = cell(ci).b;
+
+		// get new accelation
+		anew = cell(ci).torque / cell(ci).inertia;
+
+		// update velocity
+		veltmp += 0.5 * dt * (anew + aold);
+
+		// set new velocity and acceleration
+		cell(ci).angularV = veltmp;
+		cell(ci).b = anew;
+		
 	}
 }
