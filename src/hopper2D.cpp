@@ -624,15 +624,18 @@ void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int
 		{	
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < NCELLS; cj++) {
-				// calculate forces, add to number of vertex-vertex contacts
-				inContact = cell(ci).vertexForce(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				if (inContact > 0) {
-					// add to cell-cell contacts
-					addContact(ci, cj);
-					Ncc++;
+				if (cell(cj).inside_hopper)
+				{
+					// calculate forces, add to number of vertex-vertex contacts
+					inContact = cell(ci).vertexForce(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+					if (inContact > 0) {
+						// add to cell-cell contacts
+						addContact(ci, cj);
+						Ncc++;
 
-					// increment vertex-vertex contacts
-					Nvv += inContact;
+						// increment vertex-vertex contacts
+						Nvv += inContact;
+					}
 				}
 			}
 
@@ -1941,7 +1944,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 			*/
 		}
 		
-		if (empty_hopper == 1)
+		if (empty_hopper)
 			break;
 		// calculate forces
 		hopperForcesDP(w0, w, th, g, closed);
