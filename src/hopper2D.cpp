@@ -1905,7 +1905,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 				cell(ci).verletPositionUpdate(dt);
 				cell(ci).updateCPos();
 				// if still inside hopper
-				if (cell(ci).cpos(0) > L.at(0) * 1.2)
+				if (cell(ci).cpos(0) > L.at(0) * 1.5)
 					cell(ci).inside_hopper = 0;
 			}
 			/*

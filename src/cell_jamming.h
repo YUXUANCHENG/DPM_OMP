@@ -1505,7 +1505,7 @@ public:
 
 		//gam = 0.05;
 		//kl = 0.1;
-		gam = 0.5;
+		gam = 0.1;
 		kl = 1.0;
 		const int NT = 1e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
