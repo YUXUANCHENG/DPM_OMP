@@ -1896,7 +1896,7 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 			cout << "	* dt 		= " << dt << endl;
 			cout << endl << endl;
 		}
-
+		empty_hopper = 1;
 		// VV position update
 		for (ci=0; ci<NCELLS; ci++){
 			if (cell(ci).inside_hopper)
