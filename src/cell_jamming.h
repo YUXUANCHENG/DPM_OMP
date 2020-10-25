@@ -1503,13 +1503,15 @@ public:
 		int seed = 5;
 		double Lini = 1.0;
 
-		gam = 0.1;
-		kl = 0.1;
-		const int NT = 2e5;			// number of time steps for flow simulation
+		//gam = 0.05;
+		//kl = 0.1;
+		gam = 0.5;
+		kl = 1.0;
+		const int NT = 1e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
 		const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
-		const double w0 = 10.0;			// width of hopper reservoir (in units of small diameter)
+		const double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
 		const double w = 1.5;			// orifice width (in units of small diameter)
 		const double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
 		const double phi0 = 0.4;			// initial packing fraction
@@ -1517,7 +1519,7 @@ public:
 
 		Lini = 0.1 * w0;
 
-		timeStepMag = 0.01;
+		//timeStepMag = 0.01;
 
 		vector<double> radii(NCELLS, 0.0);
 		for (int ci = 0; ci < NCELLS; ci++) {
@@ -1534,9 +1536,6 @@ public:
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		phiDisk = 0.3;
-		// Initialze the system as disks
-		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeHopperDP(radii, w0, w, th, Lini, NV);
 
 		// change to DPM
@@ -1552,10 +1551,11 @@ public:
 			for (int j = 0; j < 1; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-				v0PrintObject << kl << "," << gam << endl;
+				double g = 0.05;
+				v0PrintObject << kl << "," << gam << "," << g << endl;
 
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
-
+				
 				// output files
 				//string positionF = "position" + extend;
 				string energyF = "energy" + extend;
@@ -1572,7 +1572,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				double g = 0.1;
+				
 				cout << "	** Running hopper NVE with g = " << g << endl;
 				// packingObject.hopperDPNVE(w0,w,th,g,T);
 				cell_group.flowHopperDP(w0, w, th, g, b);

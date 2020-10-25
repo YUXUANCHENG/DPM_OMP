@@ -451,7 +451,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		resetContacts();
 
 		// calculate forces between disks (with door closed)
-		hopperForcesSP(radii,w0,w,th,0.0,closed);
+		hopperForcesSP(radii,w0,w,th,0.01,closed);
 
 		// verlet velocity update
 		hopperVelVerletSP(radii);
@@ -1379,7 +1379,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 // function to run NVE dynamics on DP particles using velocity-verlet to check energy conservation
 void cellPacking2D::hopperDPNVE(double w0, double w, double th, double g, double T0){
 	// local variables
-	int closed = 0;
+	int closed = 1;
 	int t, ci, vi, vip1, nvtmp, d;
 	double Pvirial, K;
 	double aH, aR, aT;
@@ -1405,6 +1405,7 @@ void cellPacking2D::hopperDPNVE(double w0, double w, double th, double g, double
 
 	// loop over time, run NVE dynamics
 	for (t=0; t<NT; t++){
+		if (t > NT/10) closed = 0;
 		// update virial pressure
 		Pvirial = 0.5*(sigmaXX + sigmaYY)/(NCELLS*aT);
 
