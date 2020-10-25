@@ -1411,7 +1411,7 @@ void cellPacking2D::hopperDPNVE(double w0, double w, double th, double g, double
 
 	// loop over time, run NVE dynamics
 	for (t=0; t<NT; t++){
-		if (t > NT/10) closed = 0;
+	
 		// update virial pressure
 		Pvirial = 0.5*(sigmaXX + sigmaYY)/(NCELLS*aT);
 
@@ -1827,11 +1827,12 @@ void cellPacking2D::flowHopperDP(double w0, double w, double th, double g, doubl
 	}
 
 	// outflow point is open
-	closed = 0;
+	closed = 1;
 
 
 	// loop over time, run NVE dynamics
 	for (t=0; t<NT; t++){
+		if (t > NT / 100) closed = 0;
 		// update virial pressure
 		Pvirial = 0.5*(sigmaXX + sigmaYY)/(NCELLS*aT);
 
