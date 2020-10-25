@@ -358,6 +358,8 @@ public:
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_VelVerlet(vector<double>& radii);
 	void sp_Forces(vector<double>& lenscales);
+	void bumpy_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void bumpy_Forces();
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);
 

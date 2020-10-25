@@ -77,6 +77,7 @@ private:
 
 public:
 	int inside_hopper = 1;
+	double torque = 0.0;
 	// constructors
 	deformableParticles2D();
 	deformableParticles2D(int n);
@@ -239,6 +240,8 @@ public:
 	double cal_mean_v(int d);
 
 	double momentum(int d);
+
+	int vertexForce_with_Torque(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 };
 
 

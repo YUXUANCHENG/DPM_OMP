@@ -1587,6 +1587,147 @@ int deformableParticles2D::vertexForce(deformableParticles2D &onTheRight, double
 	return inContact;
 }
 
+int deformableParticles2D::vertexForce_with_Torque(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
+	// return variable
+	int inContact = 0;
+
+	// local variables
+	int i, j, d, dd;
+
+	// -------------------------
+	// 
+	// 	   Distance cutoff
+	//
+	// -------------------------
+
+	// section variables
+	double centerDistance = 0.0; 			// center-to-center distance
+	vector<double> deltaMuNu(NDIM, 0.0);		// vector to store center-to-center distance vector
+	double muREff, nuREff, buffer;			// variables to determine effect cell contact distance
+	double distTmp = 0.0;					// temporary distance, for mimimum image convention (MIC)
+
+	// calculate connecting vector deltaMuNu
+	for (d = 0; d < NDIM; d++) {
+		// get distance
+		distTmp = cellDistance(onTheRight, d);
+
+		// save distance in vector
+		deltaMuNu.at(d) = distTmp;
+
+		// calculate vector norm
+		centerDistance += pow(distTmp, 2);
+	}
+	centerDistance = sqrt(centerDistance);
+
+	// get effect radii
+	muREff = sqrt(area() / PI);
+	nuREff = sqrt(onTheRight.area() / PI);
+	buffer = 0.1 * perimeter();
+
+	// if not close enough, return 0
+	if ((muREff + nuREff + 0.5 * (del * l0 + onTheRight.del * onTheRight.l0) + buffer) < centerDistance)
+		return 0;
+
+
+	// -------------------------
+	// 
+	// 	   Vertex forces
+	//
+	// -------------------------
+
+	double forceScale = kint;				// force scale
+	double energyScale = forceScale;		// energy scale
+	double distScale = 0.0;					// distance scale
+	double p1 = 1.0 + a;					// edge of interaction zone, units of delta
+	double ftmp = 0.0;						// temporary force variable
+	double uTmp = 0.0;						// temporary energy variable
+	double vertexDist = 0.0;				// distance variable
+	vector<double> vertexVec(NDIM, 0.0);		// vector to hold vectorial distance quantity
+	double contactDistance = 0.0;			// contact distance variable
+
+	// loop over vertex pairs, check for contact
+	for (i = 0; i < NV; i++) {
+		for (j = 0; j < onTheRight.NV; j++) {
+
+			// get distance between vertices i and j
+			vertexDist = 0.0;
+			for (d = 0; d < NDIM; d++) {
+				// get distance to nearest image
+				distTmp = distance(onTheRight, j, i, d);
+
+				// add to vertex distance
+				vertexVec.at(d) = distTmp;
+
+				// add to scalar distance
+				vertexDist += distTmp * distTmp;
+			}
+
+			// get contact distance
+			contactDistance = 0.5 * (del * l0 + onTheRight.del * onTheRight.l0);
+
+			// get vertex distance
+			vertexDist = sqrt(vertexDist);
+
+			// check overlap distances
+			if (vertexDist < contactDistance * p1) {
+				// increment number of vertex-vertex contacts
+				inContact++;
+
+				// define scaled distance (x = distance/contact distance)
+				distScale = vertexDist / contactDistance;
+
+				// update force and energy scales
+				forceScale = kint / contactDistance;
+				energyScale = kint;
+
+				// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
+				if (vertexDist < contactDistance) {
+
+					// add to interaction potential
+					uTmp = 0.5 * energyScale * pow(1 - distScale, 2) - (energyScale * a * a) / 6.0;
+
+					setUInt(i, uInt(i) + 0.5 * uTmp);
+					onTheRight.setUInt(j, onTheRight.uInt(j) + 0.5 * uTmp);
+
+					std::vector<double> force(2);
+					std::vector<double> r1(2);
+					std::vector<double> r2(2);
+					// add to vectorial forces
+					for (d = 0; d < NDIM; d++) {
+						// get force value
+						ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+						force[d] = ftmp;
+						r1[d] = vrel(i, d);
+						r2[d] = onTheRight.vrel(j, d);
+						// add to force on i
+						setVForce(i, d, vforce(i, d) + ftmp);
+
+						// subtract off complement from force on j
+						onTheRight.setVForce(j, d, onTheRight.vforce(j, d) - ftmp);
+
+						// add to stress tensor
+						if (d == 0) {
+							sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
+							sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
+						}
+						else {
+							sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
+							sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
+						}
+					}
+
+					// torque calculation
+					torque = r1[0] * force[1] - r1[1] * force[0];
+					onTheRight.torque = - r2[0] * force[1] + r2[1] * force[0];
+				}
+			}
+		}
+	}
+
+	// return if in contact or not
+	return inContact;
+}
+
 int deformableParticles2D::vertexForce(deformableParticles2D &onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY, double aij){
 	// return variable
 	int inContact = 0;

@@ -4593,3 +4593,136 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 		}
 	}
 }
+
+void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	// local variables
+	int ci, vi, d;
+	int count = 0;
+	double U, K, rv;
+	int print_frequency = floor(T / (dt0 * t_scale * frames));
+
+	vector<double> lenscales(NCELLS, 0.0);
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
+		calAPrintObject << lenscales.at(ci) << endl;
+		cell(ci).setCForce(0, 0.0);
+		cell(ci).setCForce(1, 0.0);
+		for (vi = 0; vi < cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi, 0.0);
+
+	}
+	bumpy_Forces();
+
+	// Scale velocity by avg cell radius
+	int dof = 2;
+	//int factor = 100;
+	int factor = NCELLS;
+	dof *= factor;
+	double scaled_v = scale_v(v0);
+	double current_K = cal_temp(scaled_v);
+	double current_U = totalPotentialEnergy();
+	double current_E = dof * current_K + current_U;
+	// Reset velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (d = 0; d < NDIM; d++) {
+			// get random direction
+			rv = (double)rand() / (RAND_MAX + 1.0);
+			cell(ci).setCVel(d, rv);
+		}
+	}
+	rescal_V(current_E);
+
+	// run NVE for allotted time
+	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
+
+		rescal_V(current_E);
+		// print data first to get the initial condition
+		if (count % print_frequency == 0) {
+			// calculate energies
+			U = totalPotentialEnergy();
+			K = totalKineticEnergy();
+			//rescal_V(current_E);
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			//printCalA();
+			printContact();
+			printV();
+			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "t = " << t << endl;
+		}
+
+		// use velocity verlet to advance time
+
+		// update positions
+		spPosVerlet();
+		bumpyRotation();
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		bumpy_Forces();
+		//calculateForces();
+
+		// update velocities
+		sp_VelVerlet(lenscales);
+		bumpy_angularV();
+		count++;
+	}
+}
+
+void cellPacking2D::bumpy_Forces() {
+	// local variables
+	int ci, cj, vi, d, dd, inContact;
+
+	// reset virial stresses to 0
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	// reset contacts before force calculation
+	resetContacts();
+	Ncc = 0;
+	Nvv = 0;
+
+	// reset forces
+	for (ci = 0; ci < NCELLS; ci++) {
+		// reset center of mass forces
+		for (d = 0; d < NDIM; d++)
+		{
+			cell(ci).setCForce(d, 0.0);
+			cell(ci).torque = 0.0;
+		}
+
+		// reset vertex forces and interaction energy
+		for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			// forces
+			for (d = 0; d < NDIM; d++)
+				cell(ci).setVForce(vi, d, 0.0);
+
+			// energies
+			cell(ci).setUInt(vi, 0.0);
+		}
+	}
+
+
+	// loop over cells and cell pairs, calculate shape and interaction forces
+	for (ci = 0; ci < NCELLS; ci++) {
+		// loop over pairs, add info to contact matrix
+		for (cj = ci + 1; cj < NCELLS; cj++) {
+			// calculate forces, add to number of vertex-vertex contacts
+			inContact = cell(ci).vertexForce_with_Torque(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+			if (inContact > 0) {
+				// add to cell-cell contacts
+				setContact(ci, cj, inContact);
+				Ncc++;
+
+				// increment vertex-vertex contacts
+				Nvv += inContact;
+			}
+		}
+	}
+}
