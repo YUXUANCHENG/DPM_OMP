@@ -4603,6 +4603,9 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 
 
 	for (ci = 0; ci < NCELLS; ci++) {
+		cell(ci).setkint(1.0);
+		cell(ci).setdel(1.0);
+		cell(ci).seta(0.0);
 		cell(ci).setCForce(0, 0.0);
 		cell(ci).setCForce(1, 0.0);
 		for (vi = 0; vi < cell(ci).getNV(); vi++)
@@ -4633,7 +4636,7 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
-		rescal_V(current_E);
+		//rescal_V(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
 			// calculate energies

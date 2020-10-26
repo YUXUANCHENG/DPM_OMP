@@ -1717,8 +1717,8 @@ int deformableParticles2D::vertexForce_with_Torque(deformableParticles2D& onTheR
 					}
 
 					// torque calculation
-					torque = r1[0] * force[1] - r1[1] * force[0];
-					onTheRight.torque = - r2[0] * force[1] + r2[1] * force[0];
+					torque += r1[0] * force[1] - r1[1] * force[0];
+					onTheRight.torque += - r2[0] * force[1] + r2[1] * force[0];
 				}
 			}
 		}
