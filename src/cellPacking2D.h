@@ -362,6 +362,7 @@ public:
 	void bumpy_Forces();
 	void bumpyRotation();
 	void bumpy_angularV();
+	double totalRotaionalK();
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);
 

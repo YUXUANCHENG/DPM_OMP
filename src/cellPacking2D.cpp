@@ -4641,7 +4641,7 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 		if (count % print_frequency == 0) {
 			// calculate energies
 			U = totalPotentialEnergy();
-			K = totalKineticEnergy();
+			K = totalKineticEnergy() + totalRotaionalK();
 			//rescal_V(current_E);
 			printJammedConfig_yc();
 			phiPrintObject << phi << endl;
@@ -4671,6 +4671,21 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 		bumpy_angularV();
 		count++;
 	}
+}
+
+double cellPacking2D::totalRotaionalK()
+{
+	// local variables
+	int ci;
+	double val = 0.0;
+
+	// loop over cells, add kinetic energy
+	for (ci = 0; ci < NCELLS; ci++)
+		val += 0.5 * cell(ci).inertia * pow(cell(ci).angularV, 2);
+
+	// return value
+	return val;
+
 }
 
 void cellPacking2D::bumpy_Forces() {
