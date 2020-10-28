@@ -3779,7 +3779,7 @@ void cellPacking2D::spPosVerlet(){
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++){
 			// update new position based on acceleration
-			postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d);
+			postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d)/cell(ci).getNV();
 
 			// translate vertices based on cpos change
 			for (vi=0; vi<cell(ci).getNV(); vi++)
@@ -4342,14 +4342,14 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	int print_frequency = floor(T/ (dt0 * t_scale * frames));
 
 	// Scale velocity by avg cell radius
-	int dof = 2;
+	double dof = 2;
 	//int factor = 100;
 	int factor = 0;
 	for (ci = 0; ci < NCELLS; ci++) {
 		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
 		factor += cell(ci).getNV();
 	}
-	dof *= factor;
+	dof *= factor/NCELLS;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
 	double current_U = totalPotentialEnergy();
@@ -4370,7 +4370,7 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
-		rescal_V(current_E);
+		//rescal_V(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
 			// calculate energies
@@ -4449,8 +4449,8 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 
 	// Scale velocity by avg cell radius
 	int dof = 2;
-	//int factor = 100;
-	int factor = NCELLS;
+	int factor = 1;
+	//int factor = NCELLS;
 	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
@@ -4469,7 +4469,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
-		rescal_V(current_E);
+		//rescal_V(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
 			// calculate energies
@@ -4481,7 +4481,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 			//printCalA();
 			printContact();
 			printV();
-			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
 			cout << "E = " << U + K << " K = " << K << endl;
 			cout << "t = " << t << endl;
 		}
@@ -4571,14 +4571,14 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 				overlap = centerDistance/contactDistance;
 
 				// force scale
-				ftmp = (1 - overlap);
+				ftmp = (1 - overlap) / contactDistance;
 
 				// add to potential energy (energy should increase because particles are growing)
-				utmp = 0.5*contactDistance*pow(1 - overlap,2);
+				utmp = 0.5*pow(1 - overlap,2);
 				for (vi=0; vi<cell(ci).getNV(); vi++)
-					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + 0.5 * utmp/cell(ci).getNV());
 				for (vi=0; vi<cell(cj).getNV(); vi++)
-					cell(cj).setUInt(vi,cell(cj).uInt(vi) + utmp/cell(cj).getNV());
+					cell(cj).setUInt(vi,cell(cj).uInt(vi) + 0.5 * utmp/cell(cj).getNV());
 
 				// add to forces
 				for (d=0; d<NDIM; d++){
@@ -4616,8 +4616,8 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 
 	// Scale velocity by avg cell radius
 	int dof = 3;
-	//int factor = 100;
-	int factor = NCELLS;
+	int factor = 1;
+	//int factor = NCELLS;
 	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
@@ -4648,7 +4648,7 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 			//printCalA();
 			printContact();
 			printV();
-			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
 			cout << "E = " << U + K << " K = " << K << endl;
 			cout << "t = " << t << endl;
 		}
