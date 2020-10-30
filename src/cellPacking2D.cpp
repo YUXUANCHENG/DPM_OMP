@@ -829,8 +829,10 @@ double cellPacking2D::totalKineticEnergy(){
 
 	// loop over cells, add kinetic energy
 	for (ci=0; ci<NCELLS; ci++)
-		val += cell(ci).totalKineticEnergy();
-
+	{
+		if (cell(ci).inside_hopper)
+			val += cell(ci).totalKineticEnergy();
+	}
 	// return value
 	return val;
 }

@@ -1606,7 +1606,7 @@ public:
 		stringstream indexss(index_str);
 		indexss >> index;
 
-		for (int i = index; i < index + 1; i++) {
+		int i = index;
 		// output files
 		string extend = "_jammed_" + to_string(i) + ".txt";
 		//string positionF = "position" + extend;
@@ -1620,6 +1620,8 @@ public:
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
+		std::ofstream clogPrintObject;
+		clogPrintObject.open("clog.txt");
 
 		// system size
 		int NCELLS = 64;
@@ -1704,10 +1706,15 @@ public:
 				
 				
 				// packingObject.hopperDPNVE(w0,w,th,g,T);
-				local_cell_group.flowHopperDP(w0, w, th, g, b);
+				int result = local_cell_group.flowHopperDP(w0, w, th, g, b);
+		#pragma omp critical
+			{	
+				clogPrintObject << result << endl;
+			}			
 			}
-		}
 		cout << "	** FINISHED **   " << endl;
+		clogPrintObject.close();
+		v0PrintObject.close();
 	};
 
 
