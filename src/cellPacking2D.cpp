@@ -4649,7 +4649,7 @@ void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, doubl
 			printContact();
 			printV();
 			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
-			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "E = " << U + K << " K = " << K << " Kr = " << totalRotaionalK() << endl;
 			cout << "t = " << t << endl;
 		}
 

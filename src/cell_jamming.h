@@ -1348,9 +1348,6 @@ public:
 			//cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
-			cellPacking2D jammed_state;
-			cell_group.saveState(jammed_state);
-
 #pragma omp parallel for 
 			for (int j = 0; j < 10; j++) {
 
@@ -1594,9 +1591,22 @@ public:
 		cout << "	** FINISHED **   " << endl;
 	};
 
-	void Hopper()
+	void Hopper(char const* argv[])
 	{
-		int i = 0;
+#pragma omp parallel
+		{
+			int ID = omp_get_thread_num();
+
+			cout << "hello " << ID << endl;
+
+		}
+
+		int index;
+		string index_str = argv[1];
+		stringstream indexss(index_str);
+		indexss >> index;
+
+		for (int i = index; i < index + 1; i++) {
 		// output files
 		string extend = "_jammed_" + to_string(i) + ".txt";
 		//string positionF = "position" + extend;
@@ -1621,6 +1631,7 @@ public:
 		//kl = 0.1;
 		gam = 0.1;
 		kl = 1.0;
+		ka = 10.0;
 		const int NT = 1e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
@@ -1645,6 +1656,7 @@ public:
 
 		// instantiate object
 		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+		seed = i;
 		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
 
 		// open position output file
@@ -1658,16 +1670,18 @@ public:
 		// set time scale
 		cell_group.vertexDPMTimeScale(timeStepMag);
 
-		cellPacking2D jammed_state;
-		cell_group.saveState(jammed_state);
-
-		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 1; j++) {
-
+		#pragma omp parallel for 
+			for (int j = 0; j < 10; j++) {
+				
 				cout << "Loop i, j = " << i << "," << j << endl;
+				double gam = 0.1 * (j + 1);
 				double g = 0.05;
+				
+		#pragma omp critical
+			{
+				cout << "	** Running hopper NVE with g = " << g << endl;
 				v0PrintObject << kl << "," << gam << "," << g << endl;
-
+			}
 				extend = "_" + to_string(i) + to_string(j) + ".txt";
 				
 				// output files
@@ -1680,19 +1694,19 @@ public:
 				string contactF = "contact" + extend;
 				string vF = "v" + extend;
 
-				cell_group.loadState(jammed_state);
-				cell_group.closeF();
-				cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+				cellPacking2D local_cell_group;
+				cell_group.saveState(local_cell_group);
+				local_cell_group.closeF();
+				local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+				local_cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
 				
-				cout << "	** Running hopper NVE with g = " << g << endl;
+				
 				// packingObject.hopperDPNVE(w0,w,th,g,T);
-				cell_group.flowHopperDP(w0, w, th, g, b);
+				local_cell_group.flowHopperDP(w0, w, th, g, b);
 			}
 		}
-
 		cout << "	** FINISHED **   " << endl;
 	};
 
