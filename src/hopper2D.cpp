@@ -1954,7 +1954,7 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 		if (clogged() && closed == 0)
 		{
 			clog_count ++;
-			if (clog_count > 100)
+			if (clog_count > 1000)
 			{
 				return 1;
 				break;
@@ -1977,7 +1977,7 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 
 bool cellPacking2D::clogged()
 {
-	if (totalKineticEnergy() < 1e-16)
+	if (totalKineticEnergy() < 1e-20)
 		return true;
 	else 
 		return false;

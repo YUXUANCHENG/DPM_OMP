@@ -170,9 +170,11 @@ public:
 	// system-wide calculations
 	int totalNumberOfContacts();			// calculate total number of contacts
 	double packingFraction();				// calculate system packing fraction
-	double totalPotentialEnergy();			// calculate total potential energy
+	double totalPotentialEnergy();
+	double totalPotentialEnergy_probe();				// calculate total potential energy
 	double interactionPotentialEnergy();	// calculate only interaction potential energy
-	double totalKineticEnergy();			// calculate total kinetic energy
+	double totalKineticEnergy();
+	double totalKineticEnergy_probe();			// calculate total kinetic energy
 	double maxForceMagnitude();				// calculate magnitude of largest force
 	double maxNetForceMagnitude();			// calculate magnitude of largest net force on any cell
 	double forceRMS(); 						// RMS net force
@@ -197,6 +199,7 @@ public:
 	void setAsphericity(int ci, double val);
 	void scaleLengths(double val);
 	void rescaleVelocities(double temperature);
+	void rescaleVelocities_probe(double temperature);
 	int removeRattlers(int krcrs);
 
 	/**************************
@@ -352,12 +355,16 @@ public:
 	void printContact();
 	void printV();
 	void conserve_momentum();
+	void conserve_momentum_probe();
 	double scale_v(double v0);
 
 	void cell_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void add_drag(int index, double force);
 	void sp_VelVerlet();
 	void sp_Forces(vector<double>& lenscales);
+	void sp_Forces_probe(vector<double>& lenscales);
 	void bumpy_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void bumpy_Forces();
 	void bumpyRotation();
@@ -365,6 +372,7 @@ public:
 	double totalRotaionalK();
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);
+	void rescal_V_probe(double E);
 	bool clogged();
 
 

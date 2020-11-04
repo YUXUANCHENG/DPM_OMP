@@ -803,6 +803,18 @@ double cellPacking2D::totalPotentialEnergy(){
 	return val;
 }
 
+double cellPacking2D::totalPotentialEnergy_probe(){
+	// local variables
+	int ci;
+	double val = 0.0;
+
+	// loop over cells, add potential energy
+	for (ci=1; ci<NCELLS; ci++)
+		val += cell(ci).totalPotentialEnergy();
+
+	// return value
+	return val;
+}
 
 // Calculate interaction potential between cells
 double cellPacking2D::interactionPotentialEnergy(){
@@ -837,6 +849,20 @@ double cellPacking2D::totalKineticEnergy(){
 	return val;
 }
 
+double cellPacking2D::totalKineticEnergy_probe(){
+	// local variables
+	int ci;
+	double val = 0.0;
+
+	// loop over cells, add kinetic energy
+	for (ci=1; ci<NCELLS; ci++)
+	{
+		if (cell(ci).inside_hopper)
+			val += cell(ci).totalKineticEnergy();
+	}
+	// return value
+	return val;
+}
 
 // Calculate magnitude of largest force
 double cellPacking2D::maxForceMagnitude(){
@@ -1135,6 +1161,26 @@ void cellPacking2D::rescaleVelocities(double temperature){
 
 	// rescale
 	for (ci=0; ci<NCELLS; ci++){
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVVel(vi,d,vscale*cell(ci).vvel(vi,d));
+		}
+	}
+}
+
+void cellPacking2D::rescaleVelocities_probe(double temperature){
+	// local variables
+	int ci, vi, d;
+	double currentTemp, vscale;
+
+	// get current temperature
+	currentTemp = totalKineticEnergy_probe();
+
+	// get vscale
+	vscale = sqrt(temperature/currentTemp);
+
+	// rescale
+	for (ci=1; ci<NCELLS; ci++){
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			for (d=0; d<NDIM; d++)
 				cell(ci).setVVel(vi,d,vscale*cell(ci).vvel(vi,d));
@@ -4321,18 +4367,49 @@ void cellPacking2D::conserve_momentum() {
 
 }
 
+void cellPacking2D::conserve_momentum_probe() {
+	double factor = 0.0;
+	double system_p[2] = {0.0, 0.0};
+	double system_mass = 0.0;
+	double v_temp = 0.0;
+
+	for (int ci = 1; ci < NCELLS; ci++) {
+		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+		system_mass += cell(ci).getNV();
+	}
+
+	for (int ci = 1; ci < NCELLS; ci++) {
+		for (int d = 0; d < NDIM; d++){
+			system_p[d] += cell(ci).momentum(d);
+		}
+	}
+
+	for (int ci = 1; ci < NCELLS; ci++) {
+		for (int vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (int d = 0; d < NDIM; d++) {
+
+				v_temp = cell(ci).vvel(vi, d) - system_p[d]/system_mass;
+				cell(ci).setVVel(vi, d, v_temp);
+			}
+		}
+	}
+
+
+}
+
 double cellPacking2D::scale_v(double v0) {
 
-	double area0 = 0;
+	//double area0 = 0;
 	double scaled_v;
-
+	/*
 	for (int ci = 0; ci < NCELLS; ci++) {
 		area0 += cell(ci).geta0();
 	}
 
 	area0 /= NCELLS;
 	scaled_v = v0 * sqrt(area0 / PI);
-
+	*/
+	scaled_v = v0 * L.at(0);
 	return scaled_v;
 }
 
@@ -4413,6 +4490,11 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 void cellPacking2D::rescal_V(double E){
 	conserve_momentum();
 	rescaleVelocities(E - totalPotentialEnergy());
+}
+
+void cellPacking2D::rescal_V_probe(double E){
+	conserve_momentum_probe();
+	rescaleVelocities_probe(E);
 }
 
 double cellPacking2D::cal_temp(double scaled_v){
@@ -4506,6 +4588,96 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	}
 }
 
+void cellPacking2D::add_drag(int index, double force)
+{
+	cell(index).setCForce(0, cell(index).cforce(0) + force);
+	/*
+	for (int ci = 0; ci < NCELLS; ci++) 
+	{
+		if (ci != index )
+			cell(ci).setCForce(0, cell(ci).cforce(0) - force/(NCELLS -1));
+	}
+	*/
+}
+
+void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	// local variables
+	int ci, vi, d;
+	int count = 0;
+	double U, K, rv;
+	int print_frequency = floor(T / (dt0 * t_scale * frames));
+
+	vector<double> lenscales(NCELLS, 0.0);
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
+		calAPrintObject << lenscales.at(ci) << endl;
+		cell(ci).setCForce(0,0.0);
+		cell(ci).setCForce(1,0.0);
+		for (vi=0; vi<cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi,0.0);
+		
+	}
+	sp_Forces(lenscales);
+
+	// Scale velocity by avg cell radius
+	int dof = 2;
+	int factor = 1;
+	//int factor = NCELLS;
+	dof *= factor;
+	double scaled_v = scale_v(v0);
+	double current_K = cal_temp(scaled_v);
+	double current_U = totalPotentialEnergy_probe();
+	double current_E = dof * current_K + current_U;
+	// Reset velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (d = 0; d < NDIM; d++) {
+			// get random direction
+			rv = (double)rand() / (RAND_MAX + 1.0);
+			cell(ci).setCVel(d, rv);
+		}
+	}
+	rescal_V(current_E);
+	
+	// run NVE for allotted time
+	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
+
+		rescal_V_probe(current_E);
+		// print data first to get the initial condition
+		if (count % print_frequency == 0) {
+			// calculate energies
+			U = totalPotentialEnergy_probe();
+			K = totalKineticEnergy_probe();
+			//rescal_V(current_E);
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			//printCalA();
+			printContact();
+			printV();
+			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
+			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "t = " << t << endl;
+		}
+
+		// use velocity verlet to advance time
+
+		// update positions
+		spPosVerlet();
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		sp_Forces_probe(lenscales);
+		add_drag(0,1e-4);
+		//calculateForces();
+
+		// update velocities
+		sp_VelVerlet();
+		count++;
+	}
+}
+
 void cellPacking2D::sp_VelVerlet() {
 	// local variables
 	int ci, vi, d;
@@ -4582,6 +4754,69 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 				for (vi=0; vi<cell(cj).getNV(); vi++)
 					cell(cj).setUInt(vi,cell(cj).uInt(vi) + 0.5 * utmp/cell(cj).getNV());
 
+				// add to forces
+				for (d=0; d<NDIM; d++){
+					// unit vector
+					uv = distanceVec.at(d)/centerDistance;
+
+					// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+					cell(ci).setCForce(d,cell(ci).cforce(d) - ftmp*uv);
+					cell(cj).setCForce(d,cell(cj).cforce(d) + ftmp*uv);
+				}
+			}
+		}
+	}
+}
+
+void cellPacking2D::sp_Forces_probe(vector<double>& lenscales){
+	// local variables
+	int ci, cj, vi, d;
+	double contactDistance = 0.0; 
+	double centerDistance = 0.0; 
+	double overlap = 0.0;
+	double uv = 0.0;
+	double ftmp, utmp;
+	vector<double> distanceVec(NDIM,0.0);
+
+	// get disk-disk forces
+	for (ci=0; ci<NCELLS; ci++){
+		for (cj=ci+1; cj<NCELLS; cj++){
+			// contact distance
+			contactDistance = lenscales.at(ci) + lenscales.at(cj);
+
+			// center-to-center distance
+			centerDistance = 0.0;
+			for (d=0; d<NDIM; d++){
+				// vectorial quantity
+				distanceVec.at(d) = cell(ci).cellDistance(cell(cj),d);
+
+				// add to distance
+				centerDistance += pow(distanceVec.at(d),2);
+			}
+
+			// check for contact
+			if (contactDistance*contactDistance > centerDistance){
+				// add to contact checking
+				addContact(ci,cj);
+
+				// get true distance
+				centerDistance = sqrt(centerDistance);
+
+				// overlap scale
+				overlap = centerDistance/contactDistance;
+
+				// force scale
+				ftmp = (1 - overlap) / contactDistance;
+
+				// add to potential energy (energy should increase because particles are growing)
+				utmp = 0.5*pow(1 - overlap,2);
+				if (ci != 0 && cj != 0)
+				{
+					for (vi=0; vi<cell(ci).getNV(); vi++)
+						cell(ci).setUInt(vi,cell(ci).uInt(vi) + 0.5 * utmp/cell(ci).getNV());
+					for (vi=0; vi<cell(cj).getNV(); vi++)
+						cell(cj).setUInt(vi,cell(cj).uInt(vi) + 0.5 * utmp/cell(cj).getNV());
+				}
 				// add to forces
 				for (d=0; d<NDIM; d++){
 					// unit vector
