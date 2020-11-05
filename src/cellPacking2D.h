@@ -359,9 +359,11 @@ public:
 	double scale_v(double v0);
 
 	void cell_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void add_drag(int index, double force);
+	void add_drag_cell(int index, double force);
 	void sp_VelVerlet();
 	void sp_Forces(vector<double>& lenscales);
 	void sp_Forces_probe(vector<double>& lenscales);

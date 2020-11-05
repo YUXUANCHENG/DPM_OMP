@@ -4600,6 +4600,12 @@ void cellPacking2D::add_drag(int index, double force)
 	*/
 }
 
+void cellPacking2D::add_drag_cell(int index, double force)
+{
+	for (int i = 0; i < cell(index).getNV(); i++)
+		cell(index).setVForce(i, 0, cell(index).vforce(i, 0) + force/cell(index).getNV());
+}
+
 void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 	// local variables
 	int ci, vi, d;
@@ -4669,12 +4675,87 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 
 		// calculate forces
 		sp_Forces_probe(lenscales);
-		add_drag(0,1e-4);
+		add_drag_cell(0,1e-4);
 		//calculateForces();
 
 		// update velocities
 		sp_VelVerlet();
 		count++;
+	}
+}
+
+void cellPacking2D::cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames){
+	// local variables
+	int ci, vi, d;
+	int count = 0;
+	double U,K,rv;
+	int print_frequency = floor(T/ (dt0 * t_scale * frames));
+
+	// Scale velocity by avg cell radius
+	double dof = 2;
+	//int factor = 100;
+	int factor = 0;
+	for (ci = 0; ci < NCELLS; ci++) {
+		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
+		factor += cell(ci).getNV();
+	}
+	dof *= factor/NCELLS;
+	double scaled_v = scale_v(v0);
+	double current_K = cal_temp(scaled_v);
+	double current_U = totalPotentialEnergy();
+	double current_E = dof * current_K + current_U;
+	// Reset velocity
+	for (ci = 0; ci<NCELLS; ci++){
+		for (vi = 0; vi < cell(ci).getNV(); vi ++)
+		{ 
+			for (d=0; d<NDIM; d++){
+				// get random direction
+				rv = (double)rand() / (RAND_MAX + 1.0);
+				cell(ci).setVVel(vi, d, rv);
+			}
+		}
+	}
+	rescal_V(current_E);
+
+	// run NVE for allotted time
+	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
+
+		rescal_V_probe(current_E);
+		// print data first to get the initial condition
+		if (count % print_frequency == 0) {
+			// calculate energies
+			U = totalPotentialEnergy_probe();
+			K = totalKineticEnergy_probe();
+			//rescal_V(current_E);
+			printJammedConfig_yc();
+			phiPrintObject << phi << endl;
+			printCalA();
+			printContact();
+			printV();
+			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
+			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "t = " << t << endl;
+		}
+
+		// use velocity verlet to advance time
+
+		// update positions
+		for (ci=0; ci<NCELLS; ci++){
+			cell(ci).verletPositionUpdate(dt0 * t_scale);
+			cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces
+		calculateForces();
+		add_drag(0,1e-4);
+
+		// update velocities
+		for (ci=0; ci<NCELLS; ci++)
+			cell(ci).verletVelocityUpdate(dt0 * t_scale);
+		count ++;
 	}
 }
 
