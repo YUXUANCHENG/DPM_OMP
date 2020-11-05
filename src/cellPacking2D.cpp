@@ -4675,7 +4675,7 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 
 		// calculate forces
 		sp_Forces_probe(lenscales);
-		add_drag_cell(0,1e-4);
+		add_drag(0,1e-4);
 		//calculateForces();
 
 		// update velocities
@@ -4750,7 +4750,7 @@ void cellPacking2D::cell_NVE_probe(double T, double v0, double Dr, double vtau, 
 
 		// calculate forces
 		calculateForces();
-		add_drag(0,1e-4);
+		add_drag_cell(0,1e-4);
 
 		// update velocities
 		for (ci=0; ci<NCELLS; ci++)
