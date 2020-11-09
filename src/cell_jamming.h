@@ -1069,8 +1069,8 @@ public:
 			double kl = 0.1;
 
 			//double phi_max = 0.93;
-			//double phi_max = 0.88;
-			double phi_max = 0.7;
+			double phi_max = 0.5;
+			//double phi_max = 0.7;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
@@ -1091,8 +1091,8 @@ public:
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 			//phiDisk = 0.65;
-			//phiDisk = 0.63;
-			phiDisk = 0.50;
+			phiDisk = 0.4;
+			//phiDisk = 0.50;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -1644,15 +1644,15 @@ public:
 	// main function
 	void test()
 	{
-		// output files
-		string positionF = "position.txt";
-		string energyF = "energy.txt";
-		string jammingF = "jam.txt";
-		string lengthscaleF = "length.txt";
-		string phiF = "phi.txt";
-		string calAF = "calA.txt";
-		string contactF = "contact.txt";
-		string vF = "v.txt";
+		string extend = "_jammed_" + to_string(0) + ".txt";
+		//string positionF = "position" + extend;
+		string energyF = "energy" + extend;
+		string jammingF = "jam" + extend;
+		string lengthscaleF = "length" + extend;
+		string phiF = "phi" + extend;
+		string calAF = "calA" + extend;
+		string contactF = "contact" + extend;
+		string vF = "v" + extend;
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
@@ -1664,7 +1664,8 @@ public:
 		double Lini = 1.0;
 
 		// activity
-		double T = 10.0;
+		double T = 1000000.0;
+		int frames = 50000;
 		double v0 = 1.0;
 		double Dr = 10.0;
 		double vtau = 1e-2;
@@ -1679,7 +1680,7 @@ public:
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		phiDisk = 0.3;
+		phiDisk = 0.2;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -1709,12 +1710,12 @@ public:
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 				//v0 = 0.1;
-				v0 = 0.1 + double(i) * 0.1;
+				v0 = 0.0002+ double(i) * 0.0002;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
-				kl = 0.5;
+				//kl = 0.5;
 				//ka = 10;
-				kb = 0.1 + double(j) * 0.01;
+				//kb = 0.1 + double(j) * 0.01;
 				//kb should be 0 ~ 0.03
 				v0PrintObject << v0 << "," << Dr << "," << kb << endl;
 
@@ -1736,8 +1737,9 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
-				cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
+				//cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 				//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+				cell_group.cell_NVE(T, v0, Dr, vtau, t_scale, frames);
 			}
 		}
 
