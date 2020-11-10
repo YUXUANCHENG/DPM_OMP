@@ -4193,7 +4193,7 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 	// Mersenne twister PRNG, initialized with seed from previous random device instance
 	std::mt19937 gen(rd());
-
+	std::normal_distribution<double> dist(0, 1);
 	double random_angle;
 
 	// Scale velocity by avg cell radius
@@ -4223,7 +4223,6 @@ void cellPacking2D::activityCOM_brownian(double T, double v0, double Dr, double 
 
 		// update velocities
 		for (ci = 0; ci < NCELLS; ci++) {
-			std::normal_distribution<double> dist(0, 1);
 
 			// get random number with normal distribution using gen as random source
 			random_angle = dist(gen);
@@ -4494,7 +4493,7 @@ void cellPacking2D::rescal_V(double E){
 
 void cellPacking2D::rescal_V_probe(double E){
 	conserve_momentum_probe();
-	rescaleVelocities_probe(E);
+	//rescaleVelocities_probe(E);
 }
 
 double cellPacking2D::cal_temp(double scaled_v){
@@ -4612,6 +4611,15 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 	int count = 0;
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
+	double drag = 0.1;
+	double KbT = 0;
+
+	// random device class instance, source of 'true' randomness for initializing random seed
+	std::random_device rd;
+
+	// Mersenne twister PRNG, initialized with seed from previous random device instance
+	std::mt19937 gen(rd());
+	std::normal_distribution<double> dist(0, 1);
 
 	vector<double> lenscales(NCELLS, 0.0);
 
@@ -4675,12 +4683,47 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 
 		// calculate forces
 		sp_Forces_probe(lenscales);
-		add_drag(0,1e-4);
+		add_drag(0,1e-3);
 		//calculateForces();
 
 		// update velocities
-		sp_VelVerlet();
+		//sp_VelVerlet();
+		sp_VelVerlet_Langevin(drag, KbT, dist(gen));
 		count++;
+	}
+}
+
+void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, double random_n) {
+	// local variables
+	int ci, vi, d;
+	double veltmp, aold, anew;
+	// random device class instance, source of 'true' randomness for initializing random seed
+	std::random_device rd;
+
+	// Mersenne twister PRNG, initialized with seed from previous random device instance
+	std::mt19937 gen(rd());
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		// loop over velocities
+		for (d = 0; d < NDIM; d++) {
+			// get current velocity
+			veltmp = cell(ci).cvel(d);
+
+			// calculate old com acceleration
+			aold = cell(ci).vacc(0, d);
+
+			// get new accelation
+			anew = cell(ci).cforce(d) / cell(ci).getNV();
+
+			// update velocity
+			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * random_n);
+
+			// set new velocity and acceleration
+			cell(ci).setCVel(d, veltmp);
+			for (vi = 0; vi < cell(ci).getNV(); vi++)
+				cell(ci).setVAcc(vi, d, anew);
+		}
 	}
 }
 
