@@ -4611,14 +4611,14 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 	int count = 0;
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
-	double drag = 0.1;
+	double drag = 1e-1;
 	double KbT = 0;
-
 	// random device class instance, source of 'true' randomness for initializing random seed
 	std::random_device rd;
 
 	// Mersenne twister PRNG, initialized with seed from previous random device instance
 	std::mt19937 gen(rd());
+	//std::default_random_engine gen;
 	std::normal_distribution<double> dist(0, 1);
 
 	vector<double> lenscales(NCELLS, 0.0);
@@ -4656,7 +4656,7 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
-		rescal_V_probe(current_E);
+		//rescal_V_probe(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
 			// calculate energies
@@ -4683,25 +4683,22 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 
 		// calculate forces
 		sp_Forces_probe(lenscales);
-		add_drag(0,1e-3);
+		//add_drag(0,1e-3);
 		//calculateForces();
-
+		KbT = 2 * current_E / (dof * NCELLS);
 		// update velocities
 		//sp_VelVerlet();
-		sp_VelVerlet_Langevin(drag, KbT, dist(gen));
+		sp_VelVerlet_Langevin(drag, KbT, dist, gen);
 		count++;
 	}
 }
 
-void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, double random_n) {
+void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen) {
 	// local variables
 	int ci, vi, d;
 	double veltmp, aold, anew;
-	// random device class instance, source of 'true' randomness for initializing random seed
-	std::random_device rd;
 
-	// Mersenne twister PRNG, initialized with seed from previous random device instance
-	std::mt19937 gen(rd());
+
 
 	// update com velocity
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -4717,8 +4714,11 @@ void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, double random
 			anew = cell(ci).cforce(d) / cell(ci).getNV();
 
 			// update velocity
-			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * random_n);
-
+			//if (ci != 0)
+				veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * dist(gen));
+			//else
+			//	veltmp += 0.5 * dt * (anew + aold);
+			
 			// set new velocity and acceleration
 			cell(ci).setCVel(d, veltmp);
 			for (vi = 0; vi < cell(ci).getNV(); vi++)

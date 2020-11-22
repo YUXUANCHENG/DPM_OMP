@@ -1431,7 +1431,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 64;
 		int NV = 16;
 		//int seed = 5;
 		int seed = 1;
@@ -1453,7 +1453,7 @@ public:
 
 			//double phi_max = 0.93;
 			//double phi_max = 0.88;
-			double phi_max = 0.8;
+			//double phi_max = 0.8;
 
 			// output files
 			string extend = "_jammed_" + to_string(i) + ".txt";
@@ -1472,7 +1472,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.7;
+			phiDisk = 0.6;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -1890,12 +1890,14 @@ public:
 		//gam = 0.05;
 		//kl = 0.1;
 		//gam = 0.1;
-		kl = 0.5;
+		//kl = 0.5;
+		kl = 5;
 		ka = 10.0;
 		const int NT = 1e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
-		const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
+		//const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
+		const double sizeRatio = 1;
 		const double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
 		const double w = 1.5;			// orifice width (in units of small diameter)
 		const double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
@@ -1934,7 +1936,8 @@ public:
 			for (int j = 0; j < 10; j++) {
 				
 				cout << "Loop i, j = " << i << "," << j << endl;
-				double gam = 0.02 + 0.02 * (j);
+				//double gam = 0.05 + 0.02 * (j);
+				double gam = 0.5 + 0.2 * (j);
 				double g = 0.05;
 				
 				cout << "	** Running hopper NVE with g = " << g << endl;
@@ -1971,6 +1974,122 @@ public:
 		v0PrintObject.close();
 	};
 
+	void Hopper_width(char const* argv[])
+	{
+		int index_i, index_j;
+		string index_i_str = argv[1];
+		string index_j_str = argv[2];
+		stringstream index_i_ss(index_i_str);
+		stringstream index_j_ss(index_j_str);
+		index_i_ss >> index_i;
+		index_j_ss >> index_j;
+
+		cout << "Loop i, j = " << index_i << "," << index_j << endl;
+
+		std::ofstream v0PrintObject;
+		v0PrintObject.open("v0.txt");
+		//std::ofstream clogPrintObject;
+		//clogPrintObject.open("clog.txt");
+
+		// system size
+		int NCELLS = 64;
+		int NV = 16;
+	
+		double Lini = 1.0;
+
+		//gam = 0.05;
+		//kl = 0.1;
+		//gam = 0.1;
+		//kl = 0.5;
+		kl = 1;
+		ka = 10.0;
+		const int NT = 1e6;			// number of time steps for flow simulation
+		const int NPRINT = 1e3;			// number of steps between printing
+		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
+		const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
+		//const double sizeRatio = 1;
+		const double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
+		
+		const double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
+		const double phi0 = 0.4;			// initial packing fraction
+		double b = 0.1;
+
+		Lini = 0.1 * w0;
+
+		//timeStepMag = 0.01;
+
+		vector<double> radii(NCELLS, 0.0);
+		for (int ci = 0; ci < NCELLS; ci++) {
+			if (ci % 2 == 0)
+				radii.at(ci) = smallRadius;
+			else
+				radii.at(ci) = smallRadius * sizeRatio;
+		}
+
+		double w_scale = 0.5 + 0.2 * index_j;			// orifice width (in units of mean diameter)
+		double w = w_scale * (1 + sizeRatio) / 2;
+		// output files
+		string extend = "_jammed_" + to_string(index_i) + ".txt";
+		//string positionF = "position" + extend;
+		string energyF = "energy" + extend;
+		string jammingF = "jam" + extend;
+		string lengthscaleF = "length" + extend;
+		string phiF = "phi" + extend;
+		string calAF = "calA" + extend;
+		string contactF = "contact" + extend;
+		string vF = "v" + extend;
+
+		// instantiate object
+		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+		int seed = index_i;
+		cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+		// open position output file
+		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+		cell_group.initializeHopperDP(radii, w0, w, th, Lini, NV);
+
+		// change to DPM
+		cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+		// set time scale
+		cell_group.vertexDPMTimeScale(timeStepMag);
+
+		//double gam = 0.05 + 0.02 * (j);
+		//double gam = 0.5 + 0.2 * (j);
+		double gam = 0;
+		double g = 0.05;
+		
+		cout << "	** Running hopper NVE with g = " << g << endl;
+		extend = "_" + to_string(index_i) + to_string(index_j) + ".txt";
+		
+		// output files
+		//string positionF = "position" + extend;
+		energyF = "energy" + extend;
+		jammingF = "jam" + extend;
+		lengthscaleF = "length" + extend;
+		phiF = "phi" + extend;
+		calAF = "calA" + extend;
+		contactF = "contact" + extend;
+		vF = "v" + extend;
+
+		
+		cell_group.closeF();
+		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+		//cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+		//cell_group.relaxF(Ktolerance, Ftolerance, Ptolerance);
+		
+		
+		// packingObject.hopperDPNVE(w0,w,th,g,T);
+		int result = cell_group.flowHopperDP(w0, w, th, g, b);
+
+		v0PrintObject << kl << "," << gam << "," << g << "," << w_scale << "," << result << endl;
+		
+		cout << "	** FINISHED **   " << endl;
+		//clogPrintObject.close();
+		v0PrintObject.close();
+	};
 
 
 	void test_ground_shape()

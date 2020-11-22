@@ -365,7 +365,7 @@ public:
 	void add_drag(int index, double force);
 	void add_drag_cell(int index, double force);
 	void sp_VelVerlet();
-	void sp_VelVerlet_Langevin(double drag, double KbT, double random_n);
+	void sp_VelVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen);
 	void sp_Forces(vector<double>& lenscales);
 	void sp_Forces_probe(vector<double>& lenscales);
 	void bumpy_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
