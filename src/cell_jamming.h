@@ -1586,7 +1586,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.5;
+			phiDisk = 0.7;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -1633,7 +1633,7 @@ public:
 				cell_group.saveState(local_cell_group);
 				local_cell_group.closeF();
 				local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-				local_cell_group.bumpy_NVE(T, v0, Dr, vtau, t_scale, frames);
+				local_cell_group.bumpy_NVE(phiDisk, T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}

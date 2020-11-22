@@ -4955,13 +4955,21 @@ void cellPacking2D::sp_Forces_probe(vector<double>& lenscales){
 	}
 }
 
-void cellPacking2D::bumpy_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+void cellPacking2D::bumpy_NVE(double phiTarget, double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 	// local variables
 	int ci, vi, d;
 	int count = 0;
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
 
+	double phi = packingFraction();
+	// compute length scaler based on deltaPhi
+	double dr = sqrt((phi - 0.01)/phi);
+	// loop until phi is the correct value
+	while (phi > phiTarget){
+		// scale lengths
+		scaleLengths(dr);
+	}
 
 	for (ci = 0; ci < NCELLS; ci++) {
 		cell(ci).setkint(1.0);
