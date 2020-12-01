@@ -2001,9 +2001,9 @@ public:
 		//kl = 0.1;
 		//gam = 0.1;
 		//kl = 0.5;
-		kl = 1;
-		ka = 10.0;
-		const int NT = 1e6;			// number of time steps for flow simulation
+		kl = 1.0;
+		ka = 1.0;
+		const int NT = 5e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
 		const double sizeRatio = 1.4;			// ratio of small diameter to large diameter
@@ -2026,7 +2026,8 @@ public:
 				radii.at(ci) = smallRadius * sizeRatio;
 		}
 
-		double w_scale = 0.5 + 0.2 * index_j;			// orifice width (in units of mean diameter)
+		//double w_scale = 0.5 + 0.2 * index_j;			// orifice width (in units of mean diameter)
+		double w_scale = 0.5 + 0.05 * index_j;
 		double w = w_scale * (1 + sizeRatio) / 2;
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";

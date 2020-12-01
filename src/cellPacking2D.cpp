@@ -4518,9 +4518,10 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
 
 	vector<double> lenscales(NCELLS, 0.0);
-
+	double sum_a = 0;
 	for (ci = 0; ci < NCELLS; ci++) {
 		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
+		sum_a += cell(ci).geta0();
 		calAPrintObject << lenscales.at(ci) << endl;
 		cell(ci).setCForce(0,0.0);
 		cell(ci).setCForce(1,0.0);
@@ -4528,6 +4529,9 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 			cell(ci).setUInt(vi,0.0);
 		
 	}
+
+	cout << "phi = " << sum_a/(L.at(0) * L.at(1)) << endl;
+
 	sp_Forces(lenscales);
 
 	// Scale velocity by avg cell radius
@@ -4969,6 +4973,7 @@ void cellPacking2D::bumpy_NVE(double phiTarget, double T, double v0, double Dr, 
 	while (phi > phiTarget){
 		// scale lengths
 		scaleLengths(dr);
+		phi = packingFraction();
 	}
 
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -5017,6 +5022,7 @@ void cellPacking2D::bumpy_NVE(double phiTarget, double T, double v0, double Dr, 
 			//printCalA();
 			printContact();
 			printV();
+			cout << "phi = " << packingFraction() << endl;
 			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
 			cout << "E = " << U + K << " K = " << K << " Kr = " << totalRotaionalK() << endl;
 			cout << "t = " << t << endl;
@@ -5116,6 +5122,7 @@ void cellPacking2D::bumpyRotation()
 	// local variables
 	int ci, vi, d;
 	double theta, btmp;
+	double xtemp, ytemp;
 
 	// update com position
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -5125,8 +5132,10 @@ void cellPacking2D::bumpyRotation()
 		// rotate vertex
 		for (vi = 0; vi < cell(ci).getNV(); vi++)
 		{	
-			cell(ci).setVPos(vi, 0, cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta));
-			cell(ci).setVPos(vi, 1, cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta));
+			xtemp = cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta);
+			ytemp = cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta);
+			cell(ci).setVPos(vi, 0, xtemp);
+			cell(ci).setVPos(vi, 1, ytemp);
 		}		
 	}
 }

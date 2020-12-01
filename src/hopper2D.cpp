@@ -1972,12 +1972,12 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 		for (ci=0; ci<NCELLS; ci++)
 			cell(ci).verletVelocityUpdate(dt,b);
 	}
-	return 0;
+	return 1;
 }
 
 bool cellPacking2D::clogged()
 {
-	if (totalKineticEnergy() < 1e-20)
+	if (totalKineticEnergy() < 1e-17)
 		return true;
 	else 
 		return false;
