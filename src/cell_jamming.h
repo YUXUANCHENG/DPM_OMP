@@ -1069,8 +1069,8 @@ public:
 			double kl = 0.1;
 
 			//double phi_max = 0.93;
-			double phi_max = 0.5;
-			//double phi_max = 0.7;
+			//double phi_max = 0.5;
+			double phi_max = 0.7;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
@@ -1091,8 +1091,8 @@ public:
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 			//phiDisk = 0.65;
-			phiDisk = 0.4;
-			//phiDisk = 0.50;
+			//phiDisk = 0.4;
+			phiDisk = phi_max;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);

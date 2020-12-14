@@ -2477,6 +2477,15 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 	double dr, phiNew, dphi, Fcheck, Kcheck;
 	int kmax, k;
 
+	double phi = packingFraction();
+	// compute length scaler based on deltaPhi
+	dr = sqrt((phi - 0.01)/phi);
+	// loop until phi is the correct value
+	while (phi > phiTarget){
+		// scale lengths
+		scaleLengths(dr);
+		phi = packingFraction();
+	}
 	// get initial packing fraction
 	phi = packingFraction();
 
