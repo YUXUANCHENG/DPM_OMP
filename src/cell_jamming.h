@@ -1333,10 +1333,6 @@ public:
 
 		for (int i = index; i < index + 1; i++) {
 
-			//double phi_max = 0.93;
-			//double phi_max = 0.88;
-			double phi_max = 0.8;
-
 			// output files
 			string extend = "_jammed_" + to_string(i) + ".txt";
 			//string positionF = "position" + extend;

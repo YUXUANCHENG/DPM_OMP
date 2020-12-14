@@ -4456,10 +4456,12 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 			K = totalKineticEnergy();
 			//rescal_V(current_E);
 			printJammedConfig_yc();
+			phi = packingFraction();
 			phiPrintObject << phi << endl;
 			printCalA();
 			printContact();
 			printV();
+			cout << "phi = " << phi << endl;
 			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
 			cout << "E = " << U + K << " K = " << K << endl;
 			cout << "t = " << t << endl;
@@ -5018,11 +5020,12 @@ void cellPacking2D::bumpy_NVE(double phiTarget, double T, double v0, double Dr, 
 			K = totalKineticEnergy() + totalRotaionalK();
 			//rescal_V(current_E);
 			printJammedConfig_yc();
+			phi = packingFraction();
 			phiPrintObject << phi << endl;
 			//printCalA();
 			printContact();
 			printV();
-			cout << "phi = " << packingFraction() << endl;
+			cout << "phi = " << phi << endl;
 			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
 			cout << "E = " << U + K << " K = " << K << " Kr = " << totalRotaionalK() << endl;
 			cout << "t = " << t << endl;
