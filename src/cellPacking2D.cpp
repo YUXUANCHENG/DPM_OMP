@@ -2478,10 +2478,18 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 	int kmax, k;
 
 	double phi = packingFraction();
+	double temp_phiTarget;
+	if (phiTarget < 0.85)
+		temp_phiTarget = phiTarget;
+	else
+		{
+			temp_phiTarget = 0.851;
+			deltaPhi = 0.005;
+		}
 	// compute length scaler based on deltaPhi
 	dr = sqrt((phi - 0.01)/phi);
 	// loop until phi is the correct value
-	while (phi > phiTarget){
+	while (phi > temp_phiTarget){
 		// scale lengths
 		scaleLengths(dr);
 		phi = packingFraction();
@@ -3561,7 +3569,7 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 	double alpha 			= alpha0;
 	double alphat 			= alpha;
 	double t 				= 0.0;
-	double Ftol 			= 1e-10;
+	double Ftol 			= 1e-16;
 	double Ktol 			= 1e-20;
 	bool converged 			= false;
 
@@ -3724,6 +3732,229 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 
 		// calculate forces between disks
 		spForces(lenscales);
+
+		// verlet velocity update
+		spVelVerlet(lenscales);
+
+		// update t
+		t += dt;
+
+		// track energy and forces
+		F = forceRMS();
+		K = totalKineticEnergy();
+
+		// scale P and K for convergence checking
+		Fcheck = F;
+		Kcheck = K/NCELLS;
+
+		// update if Pvirial under tol
+		if (Fcheck < Ftol)
+			npPMIN++;
+		else
+			npPMIN = 0;
+
+		// check for convergence
+		converged = (Fcheck < Ftol && npPMIN > NMIN && Kcheck < Ktol);
+
+		if (converged){
+			cout << "	** FIRE has converged!" << endl;
+			cout << "	** Kcheck of Sp particles = " << Kcheck << endl;
+			cout << "	** Fcheck of Sp particles = " << Fcheck << endl;
+			cout << "	** itr = " << itr << ", t = " << t << endl;
+			cout << "	** Breaking out of FIRE protocol." << endl;
+			break;
+		}
+	}
+
+	// reset dt to be original value before ending function
+	dt = dt0;
+
+	// if no convergence, just stop
+	if (itr == itrMax)
+		cout << "	** FIRE not converged in itrMax = " << itr << " force evaluations" << endl;
+}
+
+void cellPacking2D::fireMinimize_disk(vector<double>& lenscales){
+	// HARD CODE IN FIRE PARAMETERS
+	const double alpha0 	= 0.1;
+	const double finc 		= 1.01;
+	const double fdec 		= 0.5;
+	const double falpha 	= 0.99;
+	const double dtmax 		= 10*dt0;
+	const double dtmin 		= 0.02*dt0;
+	const int NMIN 			= 100;
+	const int NNEGMAX 		= 2000;
+	const int NDELAY 		= 1000;
+	int npPos				= 0;
+	int npNeg 				= 0;
+	int npPMIN				= 0;
+	int closed 				= 1;
+	double alpha 			= alpha0;
+	double alphat 			= alpha;
+	double t 				= 0.0;
+	double Ftol 			= 1e-16;
+	double Ktol 			= 1e-20;
+	bool converged 			= false;
+
+	// local variables
+	int ci,vi,d,itr,itrMax;
+	double P,vstarnrm,fstarnrm,vtmp,ftmp,ptmp;
+	double F, K, Fcheck, Kcheck, Pvirial;
+
+	// reset time step
+	dt = dt0;
+
+	// reset velocities to 0
+	for (ci=0; ci<NCELLS; ci++){
+		for (d=0; d<NDIM; d++){
+			cell(ci).setCVel(d,0.0);
+			cell(ci).setCForce(d,0.0);
+		}
+	}
+
+	// initialize forces (neglect damping forces, only interactions)
+	resetContacts();
+	sp_Forces(lenscales);
+
+	// update force RMS
+	F = forceRMS();
+
+	// update kinetic energy based on com velocity
+	K = 0.0;
+	for (ci=0; ci<NCELLS; ci++)
+		K += 0.5*(PI*pow(lenscales.at(ci),2))*sqrt(pow(cell(ci).cvel(0),2) + pow(cell(ci).cvel(1),2));
+
+	// iterate through MD time until system converged
+	itrMax = 5e5;
+	for (itr=0; itr<itrMax; itr++){
+
+		// output some information to console
+		if (itr % NPRINT == 0){
+			cout << "===================================================" << endl << endl;
+			cout << " 	FIRE MINIMIZATION, itr = " << itr << endl << endl;
+			cout << "===================================================" << endl;
+
+			// print if object has been opened already
+			if (packingPrintObject.is_open()){
+				cout << "	* Printing SP center positions to file" << endl;
+				printSystemPositions();
+			}
+			
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing SP energy to file" << endl;
+				printSystemEnergy();
+			}
+			
+			cout << "	* Run data:" << endl;
+			cout << "	* K 		= " << K << endl;
+			cout << "	* F 		= " << F << endl;
+			cout << "	* phi 		= " << phi << endl;
+			cout << "	* dt 		= " << dt << endl;
+			cout << "	* alpha 	= " << alpha << endl;
+			//cout << "	* P 		= " << P << endl;
+			cout << endl << endl;
+		}
+
+		// Step 1. calculate P and norms
+		P = 0.0;
+		vstarnrm = 0.0;
+		fstarnrm = 0.0;
+		for (ci=0; ci<NCELLS; ci++){
+			for (d=0; d<NDIM; d++){
+				// get tmp variables
+				ftmp = cell(ci).cforce(d);
+				vtmp = cell(ci).cvel(d);
+
+				// calculate based on all vertices on all cells
+				P += ftmp*vtmp;
+				vstarnrm += vtmp*vtmp;
+				fstarnrm += ftmp*ftmp;
+			}
+		}
+
+		// get norms
+		vstarnrm = sqrt(vstarnrm);
+		fstarnrm = sqrt(fstarnrm);
+
+
+		// Step 2. Adjust simulation based on net motion of system
+		if (P > 0){
+			// increment pos counter
+			npPos++;
+
+			// reset neg counter
+			npNeg = 0;
+
+			// update alpha_t for next time
+			alphat = alpha;
+
+			// alter sim if enough positive steps taken
+			if (npPos > NMIN){
+				// change time step
+				if (dt*finc < dtmax)
+					dt *= finc;
+				else
+					dt = dtmax;
+
+				// decrease alpha
+				alpha *= falpha;
+			}
+		}
+		else{
+			// reset pos counter
+			npPos = 0;
+
+			// rest neg counter
+			npNeg++;
+
+			// check for stuck sim
+			if (npNeg > NNEGMAX)
+				break;
+
+			// decrease time step if past initial delay
+			if (itr > NMIN){
+				// decrease time step 
+				if (dt*fdec > dtmin)
+					dt *= fdec;
+				else
+					dt = dtmin;
+
+				// change alpha
+				alpha = alpha0;
+				alphat = alpha;
+			}
+
+			// take half step backwards
+			for (ci=0; ci<NCELLS; ci++){
+				for (d=0; d<NDIM; d++)
+					cell(ci).setCPos(d,cell(ci).cpos(d) - 0.5*dt*cell(ci).cvel(d));
+			}
+
+			// reset velocities to 0
+			for (ci=0; ci<NCELLS; ci++){
+				for (d=0; d<NDIM; d++)
+					cell(ci).setCVel(d,0.0);
+			}
+		}
+
+		// update velocities if forces are acting
+		if (fstarnrm > 0){
+			for (ci=0; ci<NCELLS; ci++){
+				for (d=0; d<NDIM; d++){
+					vtmp = (1 - alphat)*cell(ci).cvel(d) + alphat*(cell(ci).cforce(d)/fstarnrm)*vstarnrm;
+					cell(ci).setCVel(d,vtmp);
+				}
+			}
+		}
+
+		// verlet position update
+		spPosVerlet();
+
+		// reset contacts before force calculation
+		resetContacts();
+
+		// calculate forces between disks
+		sp_Forces(lenscales);
 
 		// verlet velocity update
 		spVelVerlet(lenscales);
@@ -4427,9 +4658,11 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	int count = 0;
 	double U,K,rv;
 	int print_frequency = floor(T/ (dt0 * t_scale * frames));
+	bool reset = true;
 
 	// Scale velocity by avg cell radius
-	double dof = 2;
+	//double dof = 2;
+	double dof = 4;
 	//int factor = 100;
 	int factor = 0;
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -4457,6 +4690,15 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	// run NVE for allotted time
 	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
 
+/*
+		if(t > T/100 && reset)
+		{
+			current_U = totalPotentialEnergy();
+			current_E = dof * current_K + current_U;
+			rescal_V(current_E);
+			reset = false;
+		}
+*/
 		//rescal_V(current_E);
 		// print data first to get the initial condition
 		if (count % print_frequency == 0) {
@@ -4464,15 +4706,18 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 			U = totalPotentialEnergy();
 			K = totalKineticEnergy();
 			//rescal_V(current_E);
-			printJammedConfig_yc();
-			phi = packingFraction();
-			phiPrintObject << phi << endl;
-			printCalA();
-			printContact();
-			printV();
+			//if (!reset)
+			{
+				printJammedConfig_yc();
+				phi = packingFraction();
+				phiPrintObject << phi << endl;
+				printCalA();
+				printContact();
+				printV();
+			}
 			cout << "phi = " << phi << endl;
-			cout << "E_INIT = " << current_E << " K_INIT = " << current_K << endl;
-			cout << "E = " << U + K << " K = " << K << endl;
+			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
+			cout << "E = " << U + K << " K = " << K << " U = " << U <<endl;
 			cout << "t = " << t << endl;
 		}
 
@@ -4527,7 +4772,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	int count = 0;
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
-
+	
 	vector<double> lenscales(NCELLS, 0.0);
 	double sum_a = 0;
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -4537,17 +4782,40 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		cell(ci).setCForce(0,0.0);
 		cell(ci).setCForce(1,0.0);
 		for (vi=0; vi<cell(ci).getNV(); vi++)
-			cell(ci).setUInt(vi,0.0);
-		
+			cell(ci).setUInt(vi,0.0);		
 	}
+
+	if (phi > 0.85)
+	{
+		// loop until phi is the correct value
+		for (int i = 0; i < 100; i++){
+			// scale lengths
+			scaleLengths(0.999);
+		}
+		// loop until phi is the correct value
+		for (int i = 0; i < 100; i++){
+			// scale lengths
+			scaleLengths(1/0.999);
+
+			// relax shapes (energies calculated in relax function)
+			fireMinimize_disk(lenscales);
+		}
+	}
+
 
 	cout << "phi = " << sum_a/(L.at(0) * L.at(1)) << endl;
 
+	for (ci = 0; ci < NCELLS; ci++) {
+		cell(ci).setCForce(0,0.0);
+		cell(ci).setCForce(1,0.0);
+		for (vi=0; vi<cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi,0.0);		
+	}
 	sp_Forces(lenscales);
-
+	cout << "forceRMS = " << forceRMS() << endl;
 	// Scale velocity by avg cell radius
 	int dof = 2;
-	int factor = 1;
+	int factor = 2;
 	//int factor = NCELLS;
 	dof *= factor;
 	double scaled_v = scale_v(v0);

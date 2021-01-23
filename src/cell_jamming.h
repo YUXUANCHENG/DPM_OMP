@@ -1040,6 +1040,7 @@ public:
 		// system size
 		int NCELLS = 16;
 		int NV = 16;
+		//int NV = 32;
 		//int seed = 5;
 		int seed = 1;
 		double Lini = 1.0;
@@ -1068,9 +1069,8 @@ public:
 			//double kl = ratio * kb;
 			double kl = 0.1;
 
-			//double phi_max = 0.93;
-			//double phi_max = 0.5;
-			double phi_max = 0.7;
+			double phi_max = 0.9;
+			//double phi_max = 0.7;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files
@@ -1350,7 +1350,8 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.7;
+			//phiDisk = 0.7;
+			phiDisk = 0.9;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -1582,7 +1583,8 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.7;
+			//phiDisk = 0.7;
+			phiDisk = 0.4;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -1970,7 +1972,7 @@ public:
 		v0PrintObject.close();
 	};
 
-	void Hopper_width(char const* argv[])
+	void  Hopper_width(char const* argv[])
 	{
 		int index_i, index_j;
 		string index_i_str = argv[1];
@@ -1995,8 +1997,6 @@ public:
 
 		//gam = 0.05;
 		//kl = 0.1;
-		//gam = 0.1;
-		//kl = 0.5;
 		kl = 1.0;
 		ka = 1.0;
 		const int NT = 5e6;			// number of time steps for flow simulation
@@ -2022,8 +2022,13 @@ public:
 				radii.at(ci) = smallRadius * sizeRatio;
 		}
 
-		//double w_scale = 0.5 + 0.2 * index_j;			// orifice width (in units of mean diameter)
-		double w_scale = 0.5 + 0.05 * index_j;
+		double w_scale = 0.5 + 0.1 * index_j;			// orifice width (in units of mean diameter)
+		//double w_scale = 0.5 + 0.05 * index_j;
+		//double gam = 0.5 + 0.2 * (j);
+		double gam = 0;
+		//double g = 0.05;
+		double kl = 5, g = 0.02;
+
 		double w = w_scale * (1 + sizeRatio) / 2;
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -2051,11 +2056,6 @@ public:
 
 		// set time scale
 		cell_group.vertexDPMTimeScale(timeStepMag);
-
-		//double gam = 0.05 + 0.02 * (j);
-		//double gam = 0.5 + 0.2 * (j);
-		double gam = 0;
-		double g = 0.05;
 		
 		cout << "	** Running hopper NVE with g = " << g << endl;
 		extend = "_" + to_string(index_i) + to_string(index_j) + ".txt";

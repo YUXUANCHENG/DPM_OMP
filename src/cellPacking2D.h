@@ -272,6 +272,7 @@ public:
 	// Repulsive SP particle functions
 	void fireMinimizeSP(std::vector<double>& lenscales);
 	void fireMinimizeSP(std::vector<double>& radii, double attractiveParam);
+	void fireMinimize_disk(vector<double>& lenscales);
 	void spForces(std::vector<double>& lenscales);
 	void spAttractiveForces(std::vector<double>& radii, double attractiveParam);
 	void spPosVerlet();
