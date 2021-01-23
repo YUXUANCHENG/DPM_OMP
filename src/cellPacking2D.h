@@ -273,6 +273,7 @@ public:
 	void fireMinimizeSP(std::vector<double>& lenscales);
 	void fireMinimizeSP(std::vector<double>& radii, double attractiveParam);
 	void fireMinimize_disk(vector<double>& lenscales);
+	void fireMinimize_bummpy();
 	void spForces(std::vector<double>& lenscales);
 	void spAttractiveForces(std::vector<double>& radii, double attractiveParam);
 	void spPosVerlet();
@@ -360,6 +361,7 @@ public:
 	double scale_v(double v0);
 
 	void cell_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void random_shape_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
