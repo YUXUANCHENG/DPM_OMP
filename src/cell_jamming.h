@@ -1069,7 +1069,7 @@ public:
 			//double kl = ratio * kb;
 			double kl = 0.1;
 
-			double phi_max = 0.9;
+			double phi_max = 0.85;
 			//double phi_max = 0.7;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
@@ -1207,7 +1207,7 @@ public:
 			double kl = 0.1;
 
 			double phi_max = 0.9;
-			//double phi_max = 0.7;
+			//double phi_max = 0.4;
 			//double phi_max = cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
 
 			// output files

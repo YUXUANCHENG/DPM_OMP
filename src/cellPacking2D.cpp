@@ -2483,7 +2483,7 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 		temp_phiTarget = phiTarget;
 	else
 		{
-			temp_phiTarget = 0.851;
+			temp_phiTarget = 0.85+ 1e-4;
 			deltaPhi = 0.005;
 		}
 	// compute length scaler based on deltaPhi
@@ -5009,6 +5009,7 @@ void cellPacking2D::random_shape_NVE(double T, double v0, double Dr, double vtau
 			// calculate energies
 			U = totalPotentialEnergy();
 			K = totalKineticEnergy();
+			phi = packingFraction();
 			cout << "phi = " << phi << endl;
 			cout << "E_INIT = " << current_E << " U_INIT = " << current_U << endl;
 			cout << "E = " << U + K << " K = " << K << " U = " << U <<endl;
@@ -5038,6 +5039,10 @@ void cellPacking2D::random_shape_NVE(double T, double v0, double Dr, double vtau
 		cell(ci).seta(0.0);
 		cell(ci).setCForce(0, 0.0);
 		cell(ci).setCForce(1, 0.0);
+		cell(ci).setkl(0);
+		cell(ci).setka(0);
+		cell(ci).setgam(0);
+		cell(ci).setkb(0);
 		for (vi = 0; vi < cell(ci).getNV(); vi++)
 			cell(ci).setUInt(vi, 0.0);
 		cell(ci).cal_inertia();
@@ -5046,14 +5051,14 @@ void cellPacking2D::random_shape_NVE(double T, double v0, double Dr, double vtau
 	bumpy_Forces();
 
 	// Scale velocity by avg cell radius
-	int dof = 3;
-	int factor = 2;
+	dof = 3;
+	factor = 1;
 	//int factor = NCELLS;
 	dof *= factor;
-	double scaled_v = scale_v(v0);
-	double current_K = cal_temp(scaled_v);
-	double current_U = totalPotentialEnergy();
-	double current_E = dof * current_K + current_U;
+	scaled_v = scale_v(v0);
+	current_K = cal_temp(scaled_v);
+	current_U = totalPotentialEnergy();
+	current_E = dof * current_K + current_U;
 	// Reset velocity
 	for (ci = 0; ci < NCELLS; ci++) {
 		for (d = 0; d < NDIM; d++) {
@@ -5077,7 +5082,7 @@ void cellPacking2D::random_shape_NVE(double T, double v0, double Dr, double vtau
 			printJammedConfig_yc();
 			phi = packingFraction();
 			phiPrintObject << phi << endl;
-			//printCalA();
+			printCalA();
 			printContact();
 			printV();
 			cout << "phi = " << phi << endl;
@@ -5207,7 +5212,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 			K = totalKineticEnergy();
 			//rescal_V(current_E);
 			printJammedConfig_yc();
-			phiPrintObject << phi << endl;
+			phiPrintObject << sum_a/(L.at(0) * L.at(1)) << endl;
 			//printCalA();
 			printContact();
 			printV();
@@ -5487,6 +5492,7 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 	double overlap = 0.0;
 	double uv = 0.0;
 	double ftmp, utmp;
+	double factor = 10;
 	vector<double> distanceVec(NDIM,0.0);
 
 	// get disk-disk forces
@@ -5517,10 +5523,10 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 				overlap = centerDistance/contactDistance;
 
 				// force scale
-				ftmp = (1 - overlap) / contactDistance;
+				ftmp = factor * (1 - overlap) / contactDistance;
 
 				// add to potential energy (energy should increase because particles are growing)
-				utmp = 0.5*pow(1 - overlap,2);
+				utmp = factor * 0.5*pow(1 - overlap,2);
 				for (vi=0; vi<cell(ci).getNV(); vi++)
 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + 0.5 * utmp/cell(ci).getNV());
 				for (vi=0; vi<cell(cj).getNV(); vi++)
