@@ -9,7 +9,6 @@
 // include file
 #include "deformableParticles2D.h"
 #include "cellPacking2D.h"
-#include "random"
 
 // namespace
 using namespace Eigen;
@@ -4888,7 +4887,6 @@ void cellPacking2D::cell_NVE(double T, double v0, double Dr, double vtau, double
 	// Scale velocity by avg cell radius
 	//double dof = 2;
 	double dof = 4;
-	//int factor = 100;
 	int factor = 0;
 	for (ci = 0; ci < NCELLS; ci++) {
 		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);

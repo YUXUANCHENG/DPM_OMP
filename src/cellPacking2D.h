@@ -28,9 +28,11 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
+#include <random>
+
 
 class cellPacking2D{
-private:
+public:
 
 	// int scalars
 	int NDIM;						// spatial dimension (will always be 2)
@@ -73,7 +75,6 @@ private:
 	std::ofstream contactPrintObject;
 	std::ofstream vPrintObject;
 
-public:
 
 	// Constructors and Destructors
 	void defaultvars();
@@ -82,6 +83,12 @@ public:
 	cellPacking2D(int ncells, int ntumor, int tumorNV, int adiposeNV, double tumorCalA, double adiposeCalA, int s);
 	cellPacking2D(std::string& inputFile, double T0, double s);
 	~cellPacking2D();
+
+	// new interface
+
+	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
+	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
+	virtual void resetV();
 
 	// operators
 	void operator=(cellPacking2D& onTheRight);	// assign one configuration to another object
@@ -221,7 +228,7 @@ public:
 
 	// FIRE 2.0 relaxation functions
 	void fireMinimizeP(double Ptol, double Ktol);
-	void fireMinimizeF(double Ftol, double& Ftest, double& Ktest);
+	virtual void fireMinimizeF(double Ftol, double& Ftest, double& Ktest);
 
 
 	/**************************
