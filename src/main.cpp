@@ -22,11 +22,11 @@ int main(int argc, char const *argv[]){
 	//main_function.const_ground_shape();
 	//main_function.const_ground_shape_arg(argv);
 	//main_function.cell_NVE_arg(argv);
-	main_function.sp_NVE_arg(argv);
+	//main_function.sp_NVE_arg(argv);
 	//main_function.random_NVE_arg(argv);
 	//main_function.Hopper(argv);
 	//main_function.Hopper_width(argv);
-	//main_function.sp_NVE_probe_arg(argv);
+	main_function.sp_NVE_probe_arg(argv);
 	//main_function.cell_NVE_probe_arg(argv);
 	//main_function.bumpy_NVE_arg(argv);
 	//main_function.mesaure_ground_shape();

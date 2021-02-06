@@ -1565,7 +1565,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 64;
+		int NCELLS = 16;
 		int NV = 16;
 		//int seed = 5;
 		int seed = 1;
@@ -1606,7 +1606,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.6;
+			phiDisk = 0.9;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;

@@ -5264,8 +5264,9 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 	int count = 0;
 	double U, K, rv;
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
-	double drag = 1e-1;
+	double drag = 1e-2;
 	double KbT = 0;
+	double sum_a = 0;
 	// random device class instance, source of 'true' randomness for initializing random seed
 	std::random_device rd;
 
@@ -5278,13 +5279,41 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 
 	for (ci = 0; ci < NCELLS; ci++) {
 		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
+		sum_a += cell(ci).geta0();
 		calAPrintObject << lenscales.at(ci) << endl;
 		cell(ci).setCForce(0,0.0);
 		cell(ci).setCForce(1,0.0);
 		for (vi=0; vi<cell(ci).getNV(); vi++)
-			cell(ci).setUInt(vi,0.0);
-		
+			cell(ci).setUInt(vi,0.0);		
 	}
+
+	if (phi > 0.85)
+	{
+		// loop until phi is the correct value
+		for (int i = 0; i < 100; i++){
+			// scale lengths
+			scaleLengths(0.999);
+		}
+		// loop until phi is the correct value
+		for (int i = 0; i < 100; i++){
+			// scale lengths
+			scaleLengths(1/0.999);
+
+			// relax shapes (energies calculated in relax function)
+			fireMinimize_disk(lenscales);
+		}
+	}
+
+
+	cout << "phi = " << sum_a/(L.at(0) * L.at(1)) << endl;
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		cell(ci).setCForce(0,0.0);
+		cell(ci).setCForce(1,0.0);
+		for (vi=0; vi<cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi,0.0);		
+	}
+
 	sp_Forces(lenscales);
 
 	// Scale velocity by avg cell radius
@@ -5294,7 +5323,8 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 	dof *= factor;
 	double scaled_v = scale_v(v0);
 	double current_K = cal_temp(scaled_v);
-	double current_U = totalPotentialEnergy_probe();
+	//double current_U = totalPotentialEnergy_probe();
+	double current_U = totalPotentialEnergy();
 	double current_E = dof * current_K + current_U;
 	// Reset velocity
 	for (ci = 0; ci < NCELLS; ci++) {
@@ -5338,10 +5368,11 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 		sp_Forces_probe(lenscales);
 		//add_drag(0,1e-3);
 		//calculateForces();
-		KbT = 2 * current_E / (dof * NCELLS);
+		KbT = 2 * (dof * current_K) / (dof * NCELLS);
 		// update velocities
 		//sp_VelVerlet();
 		sp_VelVerlet_Langevin(drag, KbT, dist, gen);
+		conserve_momentum();
 		count++;
 	}
 }
