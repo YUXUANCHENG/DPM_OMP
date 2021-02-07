@@ -119,7 +119,7 @@ public:
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			particles.initializeGel(NV, phiDisk, sizedev, del);
-			particles.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+			//particles.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 			particles.vertexDPMTimeScale(timeStepMag);
 			particles.qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
 			particles.findJamming(deltaPhi, Ftolerance, Ptolerance);

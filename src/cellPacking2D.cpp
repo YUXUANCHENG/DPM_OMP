@@ -5673,6 +5673,8 @@ void cellPacking2D::bumpy_NVE(double phiTarget, double T, double v0, double Dr, 
 		}
 	}
 
+	for (ci = 0; ci < NCELLS; ci++)
+		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
 
 	for (ci = 0; ci < NCELLS; ci++) {

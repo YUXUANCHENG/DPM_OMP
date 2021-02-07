@@ -3,7 +3,7 @@
 void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 
 	cellPacking2D::initializeGel(NV, phiDisk, sizeDispersion, delval);
-
+	int ci;
 	double phi = packingFraction();
 	// compute length scaler based on deltaPhi
 	double dr = sqrt((phi - 0.01) / phi);
@@ -24,14 +24,18 @@ void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double 
 		for (int i = 0; i < 100; i++) {
 			// scale lengths
 			scaleLengths(1 / 0.999);
-			for (int ci = 0; ci < NCELLS; ci++)
+			for (ci = 0; ci < NCELLS; ci++)
 				cell(ci).cal_inertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
 		}
 	}
+
+	for (ci = 0; ci < NCELLS; ci++)
+		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
-	for (int ci = 0; ci < NCELLS; ci++) {
+
+	for (ci = 0; ci < NCELLS; ci++) {
 		cell(ci).setkint(1.0);
 		cell(ci).setdel(1.0);
 		cell(ci).seta(0.0);
@@ -39,7 +43,6 @@ void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double 
 		cell(ci).setCForce(1, 0.0);
 		for (int vi = 0; vi < cell(ci).getNV(); vi++)
 			cell(ci).setUInt(vi, 0.0);
-		cell(ci).cal_inertia();
 	}
 	bumpy_Forces();
 }
