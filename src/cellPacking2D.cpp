@@ -4020,7 +4020,7 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 	// local variables
 	int ci,vi,d,itr,itrMax;
-	double P,vstarnrm,fstarnrm,vtmp,ftmp,ptmp;
+	double P,Pr,vstarnrm,fstarnrm,vtmp,ftmp,ptmp;
 	double F, K, Fcheck, Kcheck, Pvirial;
 
 	// reset time step
@@ -4078,6 +4078,7 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 		// Step 1. calculate P and norms
 		P = 0.0;
+		Pr = 0.0;
 		vstarnrm = 0.0;
 		fstarnrm = 0.0;
 		for (ci=0; ci<NCELLS; ci++){
@@ -4091,6 +4092,12 @@ void cellPacking2D::fireMinimize_bummpy(){
 				vstarnrm += vtmp*vtmp;
 				fstarnrm += ftmp*ftmp;
 			}
+			Pr += cell(ci).angularV * cell(ci).b;
+		}
+
+		if (Pr < 0) {
+			for (ci = 0; ci < NCELLS; ci++)
+				cell(ci).angularV = 0.0;
 		}
 
 		// get norms
