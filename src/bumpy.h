@@ -11,7 +11,7 @@ public:
 	void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval);
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
 	virtual void resetV();
-	virtual void fireMinimizeF();
+	virtual void fireMinimizeF(double Ftol, double& Ftest, double& Ktest);
 };
 
 #endif

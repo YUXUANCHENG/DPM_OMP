@@ -83,6 +83,6 @@ void Bumpy::NVEsimulation(double T, double v0, double t_scale, int frames) {
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
 
-void Bumpy::fireMinimizeF() {
+void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 	fireMinimize_bummpy();
 }
