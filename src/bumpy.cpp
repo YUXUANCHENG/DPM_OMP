@@ -3,7 +3,18 @@
 void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 
 	cellPacking2D::initializeGel(NV, phiDisk, sizeDispersion, delval);
+
 	int ci;
+	for (ci = 0; ci < NCELLS; ci++) {
+		cell(ci).setkint(1.0);
+		cell(ci).setdel(1.0);
+		cell(ci).seta(0.0);
+		cell(ci).setCForce(0, 0.0);
+		cell(ci).setCForce(1, 0.0);
+		for (int vi = 0; vi < cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi, 0.0);
+	}
+
 	double phi = packingFraction();
 	// compute length scaler based on deltaPhi
 	double dr = sqrt((phi - 0.01) / phi);
@@ -34,17 +45,6 @@ void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double 
 	for (ci = 0; ci < NCELLS; ci++)
 		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
-
-	for (ci = 0; ci < NCELLS; ci++) {
-		cell(ci).setkint(1.0);
-		cell(ci).setdel(1.0);
-		cell(ci).seta(0.0);
-		cell(ci).setCForce(0, 0.0);
-		cell(ci).setCForce(1, 0.0);
-		for (int vi = 0; vi < cell(ci).getNV(); vi++)
-			cell(ci).setUInt(vi, 0.0);
-	}
-	bumpy_Forces();
 }
 
 void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E, double init_U) {
@@ -84,5 +84,7 @@ void Bumpy::NVEsimulation(double T, double v0, double t_scale, int frames) {
 }
 
 void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
+	for (int ci = 0; ci < NCELLS; ci++)
+		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
 }

@@ -2510,7 +2510,7 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 
 		// scale lengths
 		scaleLengths(dr);
-
+	
 		// relax shapes (energies calculated in relax function)
 		fireMinimizeF(Ftol, Fcheck, Kcheck);
 		
@@ -3956,7 +3956,7 @@ void cellPacking2D::fireMinimize_disk(vector<double>& lenscales){
 		sp_Forces(lenscales);
 
 		// verlet velocity update
-		spVelVerlet(lenscales);
+		sp_VelVerlet();
 
 		// update t
 		t += dt;
@@ -4043,7 +4043,7 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 	// update kinetic energy based on com velocity
 	K = 0.0;
-	K = totalKineticEnergy();
+	K = totalKineticEnergy() + totalRotaionalK();
 
 	// iterate through MD time until system converged
 	itrMax = 5e5;
@@ -4153,6 +4153,7 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 			// reset velocities to 0
 			for (ci=0; ci<NCELLS; ci++){
+				cell(ci).angularV = 0.0;
 				for (d=0; d<NDIM; d++)
 					cell(ci).setCVel(d,0.0);
 			}
@@ -4177,7 +4178,6 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 		// calculate forces
 		bumpy_Forces();
-		//calculateForces();
 
 		// update velocities
 		sp_VelVerlet();
@@ -4188,7 +4188,7 @@ void cellPacking2D::fireMinimize_bummpy(){
 
 		// track energy and forces
 		F = forceRMS();
-		K = totalKineticEnergy();
+		K = totalKineticEnergy() + totalRotaionalK();
 
 		// scale P and K for convergence checking
 		Fcheck = F;
@@ -5817,6 +5817,12 @@ void cellPacking2D::bumpy_Forces() {
 			}
 		}
 	}
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (d = 0; d < NDIM; d++)
+			cell(ci).setCForce(d, cell(ci).cforce(d));
+	}
+
 }
 
 void cellPacking2D::bumpyRotation()

@@ -115,7 +115,7 @@ public:
 
 			// open position output file
 			particles.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			phiDisk = 0.85;
+			phiDisk = 0.78;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			particles.initializeGel(NV, phiDisk, sizedev, del);

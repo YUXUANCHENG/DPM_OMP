@@ -1697,8 +1697,8 @@ int deformableParticles2D::vertexForce_with_Torque(deformableParticles2D& onTheR
 						// get force value
 						ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
 						force[d] = ftmp;
-						r1[d] = vrel(i, d);
-						r2[d] = onTheRight.vrel(j, d);
+						r1[d] = vrel(i, d) + vertexVec.at(d)/2;
+						r2[d] = onTheRight.vrel(j, d) - vertexVec.at(d)/2;
 						// add to force on i
 						setVForce(i, d, vforce(i, d) + ftmp);
 
