@@ -125,6 +125,7 @@ public:
 
 class Bumpy_CLI : public DPM_CLI {
 public:
+
 	virtual void createParticles(char const* argv[])
 	{
 		_createParticles<Bumpy>(argv);

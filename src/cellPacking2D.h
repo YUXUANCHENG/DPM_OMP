@@ -256,7 +256,7 @@ public:
 
 	// Gelation functions
 	void twoParticleContact(int NV);
-	void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval);
+	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval);
 	void qsIsoGelRatchet(double phiGel, double deltaPhi, double plThresh, double dl0, double calA0max, double timeStepMag);
 	void ratchetPerimeter(double plThresh, double dl0, double calA0max);
 	void cellRK4();
