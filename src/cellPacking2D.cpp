@@ -4014,8 +4014,8 @@ void cellPacking2D::fireMinimize_bummpy(){
 	double alpha 			= alpha0;
 	double alphat 			= alpha;
 	double t 				= 0.0;
-	double Ftol 			= 1e-16;
-	double Ktol 			= 1e-20;
+	double Ftol 			= 1e-10;
+	double Ktol 			= 1e-16;
 	bool converged 			= false;
 
 	// local variables
