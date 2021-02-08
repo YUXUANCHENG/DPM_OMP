@@ -61,18 +61,18 @@ public:
 	double Dr;
 	double vtau = 1e-2;
 	double t_scale = 1.00;
+	std::ofstream v0PrintObject;
+	int index_i;
 
 	cellPacking2D* particles;
 
 	template <class Ptype = cellPacking2D>
 	void _createParticles(char const* argv[])
 	{
-		int index_i;
 		string index_str = argv[1];
 		stringstream indexss(index_str);
 		indexss >> index_i;
 
-		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 		//double ratio = 100.0;
 		kb = 0.00001 * pow(index_i + 1, 2);
@@ -112,14 +112,62 @@ public:
 	}
 
 	void findJamming(char const* argv[]) {
+		qscompress(argv);
+		particles->findJamming(deltaPhi, Ftolerance, Ptolerance);
+	}
+
+	void qscompress(char const* argv[]) {
 		createParticles(argv);
 		prepareSystem();
-		particles->findJamming(deltaPhi, Ftolerance, Ptolerance);
+	}
+
+	void toDeltaPhi(double delta) {
+		double phi = particles->getphi();
+		particles->qsIsoCompression(phi + delta, deltaPhi, Ftolerance);
+	}
+
+	template <class Ptype = cellPacking2D>
+	void _NVE() {
+#pragma omp parallel for 
+		for (int j = 0; j < 10; j++) {
+
+			cout << "Loop i, j = " << index_i << "," << j << endl;
+			//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
+			//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
+			double v0 = double(j + 1) * 0.0002;
+#pragma omp critical
+			{
+				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
+			}
+			// output files
+			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
+			string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
+			produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+
+			Ptype local_cell_group;
+			particles->saveState(local_cell_group);
+			local_cell_group.closeF();
+			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
+		}
 	}
 
 	virtual void createParticles(char const* argv[])
 	{
 		_createParticles<cellPacking2D>(argv);
+	}
+
+	virtual void NVEvsDPhi(char const* argv[])
+	{
+		findJamming(argv);
+		toDeltaPhi(0.03);
+		_NVE<cellPacking2D>();
+	}
+
+	virtual void NVE(char const* argv[])
+	{
+		qscompress(argv);
+		_NVE<cellPacking2D>();
 	}
 };
 
@@ -137,6 +185,19 @@ public:
 		particles->initializeGel(NV, phiDisk, sizedev, del);
 		particles->vertexDPMTimeScale(timeStepMag);
 		//particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+	}
+
+	virtual void NVEvsDPhi(char const* argv[])
+	{
+		findJamming(argv);
+		toDeltaPhi(0.03);
+		_NVE<Bumpy>();
+	}
+
+	virtual void NVE(char const* argv[])
+	{
+		qscompress(argv);
+		_NVE<Bumpy>();
 	}
 };
 
