@@ -73,6 +73,8 @@ public:
 		stringstream indexss(index_str);
 		indexss >> index_i;
 
+		seed = index_i;
+
 		v0PrintObject.open("v0.txt");
 		//double ratio = 100.0;
 		kb = 0.00001 * pow(index_i + 1, 2);

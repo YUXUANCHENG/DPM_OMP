@@ -198,6 +198,7 @@ void deformableParticles2D::operator=(deformableParticles2D& onTheRight){
 	del 	= onTheRight.del;
 	a 		= onTheRight.a;
 	strain 	= onTheRight.strain;
+	inertia = onTheRight.inertia;
 
 	// set box lengths equal
 	for (int d=0; d<NDIM; d++){

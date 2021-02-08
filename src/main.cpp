@@ -35,7 +35,7 @@ int main(int argc, char const *argv[]){
 
 	Bumpy_CLI cli;
 	//cli.findJamming(argv);
-	cli.NVEvsDPhi(argv);
+	cli.NVE(argv);
 
 	system("pause");
 	return 0;
