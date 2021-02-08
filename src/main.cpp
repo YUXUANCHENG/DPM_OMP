@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]){
 	//main_function.gravity();
 
 	Bumpy_CLI cli;
-	cli.find_jamming(argv);
+	cli.findJamming(argv);
 
 	system("pause");
 	return 0;
