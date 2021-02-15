@@ -55,6 +55,19 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "clocale": "cpp",
+        "cstdarg": "cpp",
+        "cwctype": "cpp",
+        "strstream": "cpp",
+        "*.tcc": "cpp",
+        "bitset": "cpp",
+        "deque": "cpp",
+        "numeric": "cpp",
+        "array": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "hashtable": "cpp",
+        "typeindex": "cpp"
     }
 }

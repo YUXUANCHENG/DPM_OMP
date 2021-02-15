@@ -204,7 +204,7 @@ public:
 	void BrownianPositionUpdate(double dt);
 	void verletVelocityUpdate(double dt);
 	void verletVelocityUpdate(double dt, double dampingParam);
-	void velVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen);
+	void velVerlet_Langevin(double dt, double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen);
 
 	// print functions
 	void printVertexPositions(std::ofstream& vertexPrintObject, int cellID);

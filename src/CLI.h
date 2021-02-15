@@ -150,7 +150,8 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
+			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
+			local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
 		}
 	}
 

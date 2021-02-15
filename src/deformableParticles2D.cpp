@@ -2281,7 +2281,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt){
 	}
 }
 
-void deformableParticles2D::velVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen) {
+void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen) {
 	// local variables
 	int i, d;
 	double veltmp, aold, anew;
@@ -2302,9 +2302,8 @@ void deformableParticles2D::velVerlet_Langevin(double drag, double KbT, std::nor
 			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt) * dist(gen));
 			
 			// set new velocity and acceleration
-			cell(ci).setCVel(d, veltmp);
-			for (vi = 0; vi < cell(ci).getNV(); vi++)
-				cell(ci).setVAcc(vi, d, anew);
+			setVVel(i,d,veltmp);
+			setVAcc(i,d,anew);
 		}
 	}
 }

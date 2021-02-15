@@ -2,6 +2,7 @@
 #define NVE_H
 
 #include "cellPacking2D.h"
+#include <random>
 
 class DPMNVEsimulator{
 public:
@@ -79,6 +80,7 @@ public:
 		cellpointer = cell;
 		dof = 3;
 	}
+	BumpyNVEsimulator() = default;
 
 	virtual void NVERoutine() {
 		// update positions
@@ -112,41 +114,45 @@ public:
 
 class BumpyLangevin : public BumpyNVEsimulator {
 public:
-	std::random_device rd;
 	// Mersenne twister PRNG, initialized with seed from previous random device instance
 	std::mt19937 gen;
-	std::normal_distribution<double> dist(0, 1);
+	std::normal_distribution<double> dist;
 
 	BumpyLangevin(cellPacking2D* cell){
 		cellpointer = cell;
 		dof = 3;
+		std::random_device rd;
 		gen = std::mt19937(rd());
+		dist = std::normal_distribution<double>(0, 1);
 	}
+	BumpyLangevin() = default;
 
 	virtual void verletVelocityUpdate(){
 		cellpointer->sp_VelVerlet_Langevin(1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->bumpy_angularV();
 	}
-}
+};
 
 class DPMLangevin : public DPMNVEsimulator {
 public:
-	std::random_device rd;
 	// Mersenne twister PRNG, initialized with seed from previous random device instance
 	std::mt19937 gen;
-	std::normal_distribution<double> dist(0, 1);
+	std::normal_distribution<double> dist;
 
-	BumpyLangevin(cellPacking2D* cell){
+	DPMLangevin(cellPacking2D* cell){
 		cellpointer = cell;
 		dof = 2;
+		std::random_device rd;
 		gen = std::mt19937(rd());
+		dist = std::normal_distribution<double>(0, 1);
 	}
+	DPMLangevin() = default;
 
 	virtual void verletVelocityUpdate(){
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
-			cellpointer->cell(ci).velVerlet_Langevin(1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen)
+			cellpointer->cell(ci).velVerlet_Langevin(cellpointer->dt, 1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->conserve_momentum();
 	}
-}
+};
 
 #endif
