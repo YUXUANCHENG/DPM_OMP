@@ -387,7 +387,6 @@ public:
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);
 	void rescal_V_probe(double E);
-	bool clogged();
 
 
 	void relaxP(double Ktolerance, double Ptolerance) {

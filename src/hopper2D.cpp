@@ -1806,8 +1806,8 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 	double Pvirial, K;
 	double aH, aR, aT;
 	double cxtmp, cytmp, xi, xip1, yi, yip1, utmp;
-	int empty_hopper = 0;
 	int clog_count = 0;
+	int N_inside = 0;
 
 	// replacement check
 	double minx, dx, dy, wmax, wmin;
@@ -1895,14 +1895,16 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 			cout << "	* Ftop  	= " << sqrt(sigmaXX*sigmaXX + sigmaXY*sigmaXY) << endl;
 			cout << "	* Fbottom  	= " << sqrt(sigmaYX*sigmaYX + sigmaYY*sigmaYY) << endl;
 			cout << "	* dt 		= " << dt << endl;
+			cout << "   # inside    = " << N_inside << endl;
 			cout << endl << endl;
 		}
-		empty_hopper = 1;
+
+		N_inside = 0;
 		// VV position update
 		for (ci=0; ci<NCELLS; ci++){
 			if (cell(ci).inside_hopper)
 			{ 
-				empty_hopper = 0;
+				N_inside ++;
 				cell(ci).verletPositionUpdate(dt);
 				cell(ci).updateCPos();
 				// if still inside hopper
@@ -1946,24 +1948,18 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 			*/
 		}
 		
-		if (empty_hopper)
+		if (N_inside == 0)
 		{	
 			return 0;
-			break;
 		}
-		if (clogged() && closed == 0)
+		if (totalKineticEnergy() < 1e-16 * N_inside && closed == 0)
 		{
 			clog_count ++;
-			if (clog_count > 1000)
-			{
+			if (clog_count > 100)
 				return 1;
-				break;
-			}
 		}
 		else
-		{
 			clog_count = 0;
-		}
 		
 		// calculate forces
 		hopperForcesDP(w0, w, th, g, closed);
@@ -1975,13 +1971,6 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 	return 1;
 }
 
-bool cellPacking2D::clogged()
-{
-	if (totalKineticEnergy() < 1e-17)
-		return true;
-	else 
-		return false;
-}
 // calculate packing fraction in hopper geometry (GIVEN RADII)
 double cellPacking2D::hopperPackingFraction(vector<double>& radii, double w0, double w, double th){
 	// local variables
