@@ -5377,7 +5377,6 @@ void cellPacking2D::sp_NVE_probe(double T, double v0, double Dr, double vtau, do
 		// update velocities
 		//sp_VelVerlet();
 		sp_VelVerlet_Langevin(drag, KbT, dist, gen);
-		conserve_momentum();
 		count++;
 	}
 }
@@ -5386,9 +5385,6 @@ void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, std::normal_d
 	// local variables
 	int ci, vi, d;
 	double veltmp, aold, anew;
-
-
-
 	// update com velocity
 	for (ci = 0; ci < NCELLS; ci++) {
 		// loop over velocities
@@ -5403,10 +5399,7 @@ void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, std::normal_d
 			anew = cell(ci).cforce(d) / cell(ci).getNV();
 
 			// update velocity
-			//if (ci != 0)
-				veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * dist(gen));
-			//else
-			//	veltmp += 0.5 * dt * (anew + aold);
+			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * dist(gen));
 			
 			// set new velocity and acceleration
 			cell(ci).setCVel(d, veltmp);
@@ -5414,6 +5407,7 @@ void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, std::normal_d
 				cell(ci).setVAcc(vi, d, anew);
 		}
 	}
+	conserve_momentum();
 }
 
 void cellPacking2D::cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames){

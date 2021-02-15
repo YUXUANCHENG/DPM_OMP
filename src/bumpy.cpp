@@ -83,6 +83,11 @@ void Bumpy::NVEsimulation(double T, double v0, double t_scale, int frames) {
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
 
+void Bumpy::LangevinSimulation(double T, double v0, double t_scale, int frames) {
+	BumpyLangevin simulator = BumpyLangevin(this);
+	simulator.NVEsimulation(T, v0, t_scale, frames);
+}
+
 void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 	for (int ci = 0; ci < NCELLS; ci++)
 		cell(ci).cal_inertia();

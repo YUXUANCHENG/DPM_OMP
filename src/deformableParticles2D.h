@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <random>
+
 using namespace std;
 
 class deformableParticles2D{
@@ -202,7 +204,8 @@ public:
 	void BrownianPositionUpdate(double dt);
 	void verletVelocityUpdate(double dt);
 	void verletVelocityUpdate(double dt, double dampingParam);
-	
+	void velVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen);
+
 	// print functions
 	void printVertexPositions(std::ofstream& vertexPrintObject, int cellID);
 	void printVertexPositions(std::ofstream& vertexPrintObject, int cellID, int frame);

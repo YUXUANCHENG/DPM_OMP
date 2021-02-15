@@ -88,6 +88,7 @@ public:
 
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
+	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual void resetV();
 
 	// operators

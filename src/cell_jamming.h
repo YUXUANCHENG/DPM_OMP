@@ -1654,7 +1654,7 @@ public:
 
 				cellPacking2D local_cell_group;
 				cell_group.saveState(local_cell_group);
-				local_cell_group.closeF();
+				local_cell_group.closeF(); 
 				local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 				local_cell_group.sp_NVE_probe(T, v0, Dr, vtau, t_scale, frames);
 
@@ -2133,9 +2133,9 @@ public:
 		double Lini = 1.0;
 
 		//gam = 0.05;
-		//kl = 0.1;
-		kl = 1.0;
-		ka = 1.0;
+		kl = 10.0;
+		ka = 10.0;
+		kb = 10.0;
 		const int NT = 5e6;			// number of time steps for flow simulation
 		const int NPRINT = 1e3;			// number of steps between printing
 		const double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
@@ -2163,8 +2163,7 @@ public:
 		//double w_scale = 0.5 + 0.05 * index_j;
 		//double gam = 0.5 + 0.2 * (j);
 		double gam = 0;
-		//double g = 0.05;
-		double kl = 5, g = 0.02;
+		double g = 0.05;
 
 		double w = w_scale * (1 + sizeRatio) / 2;
 		// output files

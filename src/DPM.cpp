@@ -37,3 +37,8 @@ void cellPacking2D::NVEsimulation(double T, double v0, double t_scale, int frame
 	DPMNVEsimulator simulator = DPMNVEsimulator(this);
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
+
+void cellPacking2D::LangevinSimulation(double T, double v0, double t_scale, int frames) {
+	DPMLangevin simulator = DPMLangevin(this);
+	simulator.NVEsimulation(T, v0, t_scale, frames);
+}
