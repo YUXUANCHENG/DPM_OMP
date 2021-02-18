@@ -2159,7 +2159,7 @@ public:
 				radii.at(ci) = smallRadius * sizeRatio;
 		}
 
-		double w_scale = 0.5 + 0.1 * index_j;			// orifice width (in units of mean diameter)
+		double w_scale = 1.5 + 0.05 * index_j;			// orifice width (in units of mean diameter)
 		//double w_scale = 0.5 + 0.05 * index_j;
 		//double gam = 0.5 + 0.2 * (j);
 		double gam = 0;

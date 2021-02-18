@@ -47,10 +47,14 @@ public:
 		int print_frequency = floor(T / (cellpointer->dt0 * t_scale * frames));
 
 		for (double t = 0.0; t < T; t = t + cellpointer->dt0 * t_scale) {
-			cellpointer->printRoutine(count, print_frequency, t, init_E, init_U);
+			printRoutine(count, print_frequency, t);
 			NVERoutine();
 			count++;
 		}
+	}
+
+	virtual void printRoutine(int count, int print_frequency, double t){
+		cellpointer->printRoutine(count, print_frequency, t, init_E, init_U);
 	}
 
 	virtual void injectT(double v0) {
@@ -131,6 +135,10 @@ public:
 		cellpointer->sp_VelVerlet_Langevin(1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->bumpy_angularV();
 	}
+	virtual void printRoutine(int count, int print_frequency, double t){
+		if (count % print_frequency == 0)
+			cout << "t = " << t << endl;
+	}
 };
 
 class DPMLangevin : public DPMNVEsimulator {
@@ -152,6 +160,10 @@ public:
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
 			cellpointer->cell(ci).velVerlet_Langevin(cellpointer->dt, 1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->conserve_momentum();
+	}
+	virtual void printRoutine(int count, int print_frequency, double t){
+		if (count % print_frequency == 0)
+			cout << "t = " << t << endl;
 	}
 };
 

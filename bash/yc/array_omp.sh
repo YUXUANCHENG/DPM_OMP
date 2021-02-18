@@ -13,7 +13,7 @@ jobnumber=10;
 
 # run compiler
 rm -f $binf
-g++ --std=c++11 -fopenmp -I $srcdir $srcdir/*.cpp -o $binf 
+g++ -O3 --std=c++11 -fopenmp -I $srcdir $srcdir/*.cpp -o $binf 
 
 taskf=$workdir/task.txt
 rm -f $taskf
