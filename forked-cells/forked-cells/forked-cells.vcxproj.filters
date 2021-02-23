@@ -29,6 +29,9 @@
     <ClInclude Include="..\..\src\NVE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\bumpyEllipse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\active2D.cpp">

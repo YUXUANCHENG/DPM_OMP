@@ -90,6 +90,7 @@ public:
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual void resetV();
+	virtual void setRatio(double ratio) { ; };
 
 	// operators
 	void operator=(cellPacking2D& onTheRight);	// assign one configuration to another object
@@ -247,7 +248,7 @@ public:
 	void enthalpyMin(double dphi0, double Ftol, double Ptol);
 
 	// compress isotropically to a target packing fraction
-	void qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
+	virtual void qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
 
 	// compute the instantaneous shear modulus
 	double shearModulus();

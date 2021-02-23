@@ -333,6 +333,39 @@ void deformableParticles2D::regularPolygon(){
 	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(),2.0)/(4.0*PI*polygonArea()) << ", compare to " << NV*tan(PI/NV)/PI << endl;
 }
 
+// initialize vertex positions so cell begins as ellipses
+void deformableParticles2D::ellipse(double ratio){
+	// local variables
+	int i;
+	double angleArg = 0.0;
+	double a = sqrt(ratio * a0 / PI);;
+	double b = a / ratio;
+	double k, x, y, sign;
+
+	// check if NV has been set > 0
+	if (NV <= 0){
+		cout << "	ERROR: in regularPolygon(), NV = " << NV << ", so not set properly. Ending." << endl;
+		exit(1);
+	}
+	else if (a0 < 0.1){
+		cout << "	ERROR: in regularPolygon(), a0 = " << a0 << ", so too small and not set properly. Ending." << endl;
+		exit(1);
+	}
+
+	// loop over vertices, set positions using rotations
+	for (i=0; i<NV; i++){
+		angleArg = (2.0*PI*i)/NV;
+		k = tan(angleArg);
+		sign = cos(angleArg) / (abs(cos(angleArg)) + 1e-30);
+		x = sign * a / sqrt(1 + ratio * ratio * k * k);
+		y = k * x;
+		setVRel(i,0,x);
+		setVRel(i,1,y);
+	}
+	// output
+	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(),2.0)/(4.0*PI*polygonArea()) << ", compare to " << NV*tan(PI/NV)/PI << endl;
+}
+
 // perturb vertex positions
 void deformableParticles2D::vertexPerturbation(double dscale){
 	// local variables

@@ -5,6 +5,7 @@
 #include "cellPacking2D.h"
 #include "bumpy.h"
 #include "deformableParticles2D.h"
+#include "bumpyEllipse.h"
 #include <sstream>
 #include <cmath>
 #include <omp.h>
@@ -54,6 +55,8 @@ public:
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
+
+	double Phi_to_PhiJ = 0.03;
 
 	// activity
 	double T = 1000000.0;
@@ -163,7 +166,7 @@ public:
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
-		toDeltaPhi(0.03);
+		toDeltaPhi(Phi_to_PhiJ);
 		_NVE<cellPacking2D>();
 	}
 
@@ -187,13 +190,13 @@ public:
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		particles->initializeGel(NV, phiDisk, sizedev, del);
 		particles->vertexDPMTimeScale(timeStepMag);
-		//particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+		particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
 	}
 
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
-		toDeltaPhi(0.03);
+		toDeltaPhi(Phi_to_PhiJ);
 		_NVE<Bumpy>();
 	}
 
@@ -201,6 +204,39 @@ public:
 	{
 		qscompress(argv);
 		_NVE<Bumpy>();
+	}
+};
+
+class BumpyEllipse_CLI : public Bumpy_CLI {
+public:
+
+	double ratio = 1.2;
+
+	virtual void createParticles(char const* argv[])
+	{
+		_createParticles<BumpyEllipse>(argv);
+	}
+
+	virtual void prepareSystem() {
+		// Initialze the system as disks
+		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+		particles->setRatio(ratio);
+		particles->initializeGel(NV, phiDisk, sizedev, del);
+		particles->vertexDPMTimeScale(timeStepMag);
+		particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+	}
+
+	virtual void NVEvsDPhi(char const* argv[])
+	{
+		findJamming(argv);
+		toDeltaPhi(Phi_to_PhiJ);
+		_NVE<BumpyEllipse>();
+	}
+
+	virtual void NVE(char const* argv[])
+	{
+		qscompress(argv);
+		_NVE<BumpyEllipse>();
 	}
 };
 

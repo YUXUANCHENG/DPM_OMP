@@ -1,9 +1,6 @@
 #include "bumpy.h"
 
-void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
-
-	cellPacking2D::initializeGel(NV, phiDisk, sizeDispersion, delval);
-
+void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance) {
 	int ci;
 	for (ci = 0; ci < NCELLS; ci++) {
 		cell(ci).setkint(1.0);
@@ -17,14 +14,21 @@ void Bumpy::initializeGel(int NV, double phiDisk, double sizeDispersion, double 
 
 	double phi = packingFraction();
 	// compute length scaler based on deltaPhi
-	double dr = sqrt((phi - 0.01) / phi);
+	double dr = sqrt((phi + 0.001) / phi);
 	// loop until phi is the correct value
+	while (phi < phiDisk) {
+		// scale lengths
+		scaleLengths(dr);
+		phi = packingFraction();
+	}
+	dr = sqrt((phi - 0.001) / phi);
 	while (phi > phiDisk) {
 		// scale lengths
 		scaleLengths(dr);
 		phi = packingFraction();
 	}
-	if (phi > 0.85)
+
+	if (phi > 0.6)
 	{
 		// loop until phi is the correct value
 		for (int i = 0; i < 100; i++) {
