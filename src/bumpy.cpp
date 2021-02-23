@@ -79,8 +79,9 @@ void Bumpy::resetV() {
 }
 
 void Bumpy::NVEsimulation(double T, double v0, double t_scale, int frames) {
+	LangevinSimulation(2000, v0, t_scale, 20);
 	BumpyNVEsimulator simulator = BumpyNVEsimulator(this);
-	simulator.NVEsimulation(T, v0, t_scale, frames);
+	simulator.NVEsimulationNoInjection(T, v0, t_scale, frames);
 }
 
 void Bumpy::LangevinSimulation(double T, double v0, double t_scale, int frames) {
