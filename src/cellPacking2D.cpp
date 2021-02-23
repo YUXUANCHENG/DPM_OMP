@@ -2476,7 +2476,8 @@ void cellPacking2D::qsIsoCompression(double phiTarget, double deltaPhi, double F
 	double dr, phiNew, dphi, Fcheck, Kcheck;
 	int kmax, k;
 
-	double phi = packingFraction();
+	//double phi = packingFraction();
+	phi = packingFraction();
 	double temp_phiTarget;
 	if (phiTarget < 0.85)
 		temp_phiTarget = phiTarget;

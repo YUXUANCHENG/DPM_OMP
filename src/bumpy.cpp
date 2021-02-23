@@ -12,7 +12,8 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 			cell(ci).setUInt(vi, 0.0);
 	}
 
-	double phi = packingFraction();
+	//double phi = packingFraction();
+	phi = packingFraction();
 	// compute length scaler based on deltaPhi
 	double dr = sqrt((phi + 0.001) / phi);
 	// loop until phi is the correct value
@@ -43,6 +44,7 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 				cell(ci).cal_inertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
+			phi = packingFraction();
 		}
 	}
 
