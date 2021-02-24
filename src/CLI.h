@@ -6,6 +6,7 @@
 #include "bumpy.h"
 #include "deformableParticles2D.h"
 #include "bumpyEllipse.h"
+#include "bumpyDimer.h"
 #include <sstream>
 #include <cmath>
 #include <omp.h>
@@ -237,6 +238,30 @@ public:
 	{
 		qscompress(argv);
 		_NVE<BumpyEllipse>();
+	}
+};
+
+class BumpyDimer_CLI : public BumpyEllipse_CLI {
+public:
+
+	virtual void createParticles(char const* argv[])
+	{
+		double phiDisk = 0.7;
+		ratio = 1.6;
+		_createParticles<BumpyDimer>(argv);
+	}
+
+	virtual void NVEvsDPhi(char const* argv[])
+	{
+		findJamming(argv);
+		toDeltaPhi(Phi_to_PhiJ);
+		_NVE<BumpyDimer>();
+	}
+
+	virtual void NVE(char const* argv[])
+	{
+		qscompress(argv);
+		_NVE<BumpyDimer>();
 	}
 };
 

@@ -96,6 +96,7 @@ public:
 	void initializeCell();
 	void regularPolygon();
 	void ellipse(double ratio);
+	void dimer(double ratio);
 	void vertexPerturbation(double dscale);
 
 	// getters (simple access)

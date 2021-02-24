@@ -1,21 +1,19 @@
-#ifndef BUMPYELLIPSES_H
-#define BUMPYELLIPSES_H
+#ifndef BUMPYDIMER_H
+#define BUMPYDIMER_H
 
-#include "bumpy.h"
+#include "bumpyEllipse.h"
 #include "NVE.h"
 #include "cellPacking2D.h"
-#include "deformableParticles2D.h"
 
-const double PI = 4 * atan(1);
-
-class BumpyEllipse : public Bumpy {
+class BumpyDimer : public BumpyEllipse {
 public:
-	double ratio_a_b = 1;
+	double ratio_a_b = 1.4;
 
-	using Bumpy::Bumpy;
-	virtual void setRatio(double ratio) {
-		ratio_a_b = ratio;
+	using BumpyEllipse::BumpyEllipse;
+	virtual void setShape(int ci) {
+		cell(ci).dimer(ratio_a_b);
 	}
+
 	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		// local variables
 		int ci, vi, d, nvtmp;
@@ -25,7 +23,7 @@ public:
 		double xmin, xmax, ymin, ymax;
 		double r1, r2, g1, areaSum;
 		double rtmp, a0tmp, l0tmp, p0tmp;
-
+		double angle = acos(ratio_a_b - 1);
 		// seed random number generator
 		////drand48()(23562457*seed);
 
@@ -97,8 +95,8 @@ public:
 			a0tmp = lenscales.at(ci) * lenscales.at(ci);
 
 			// initial length of polygon side
-			double ration_square = ratio_a_b* ratio_a_b;
-			l0tmp = (2 * PI * diskradii.at(ci) * sqrt((1 + ration_square)/ (2 * ration_square))) / nvtmp;
+			double ration_square = ratio_a_b * ratio_a_b;
+			l0tmp = ((4 * PI - 4 * angle) * pow(diskradii.at(ci), 2)) / nvtmp;
 
 			// set preferred area and length 
 			cell(ci).seta0(a0tmp);
@@ -126,7 +124,7 @@ public:
 			cell(ci).setCPos(1, ypos);
 
 			// initialize vertices as a regular polygon
-			cell(ci).ellipse(ratio_a_b);
+			cell(ci).dimer(ratio_a_b);
 
 			// perturb vertex positions a little bit
 			//cell(ci).vertexPerturbation(0.1);
@@ -149,33 +147,17 @@ public:
 
 	}
 
-	void breakAlignment() {
-		double theta;
-		double xtemp, ytemp;
-
-		for (int ci = 0; ci < NCELLS; ci++) {
-			// update new position based on acceleration
-			theta = 2* PI * (double)rand() / (RAND_MAX + 1.0);
-
-			// rotate vertex
-			for (int vi = 0; vi < cell(ci).getNV(); vi++)
-			{
-				xtemp = cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta);
-				ytemp = cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta);
-				cell(ci).setVPos(vi, 0, xtemp);
-				cell(ci).setVPos(vi, 1, ytemp);
-			}
-		}
-	}
+	
 };
 
 // initialize vertex positions so cell begins as ellipses
-void deformableParticles2D::ellipse(double ratio) {
+void deformableParticles2D::dimer(double ratio) {
 	// local variables
-	int i;
+	int i, j;
 	double angleArg = 0.0;
 	double a = sqrt(ratio * a0 / PI);;
 	double b = a / ratio;
+	double angle = acos(ratio - 1);
 	double k, x, y, sign;
 
 	// check if NV has been set > 0
@@ -189,14 +171,16 @@ void deformableParticles2D::ellipse(double ratio) {
 	}
 
 	// loop over vertices, set positions using rotations
-	for (i = 0; i < NV; i++) {
-		angleArg = (2.0 * PI * i) / NV;
-		k = tan(angleArg);
-		sign = cos(angleArg) / (abs(cos(angleArg)) + 1e-30);
-		x = sign * a / sqrt(1 + ratio * ratio * k * k);
-		y = k * x;
-		setVRel(i, 0, x);
-		setVRel(i, 1, y);
+	for (i = 0; i < int (NV / 2); i++) {
+		angleArg = angle + i * 4 * ( PI - angle) / NV;
+		setVRel(i, 0, -(a - b) + b * cos(angleArg));
+		setVRel(i, 1, b * sin(angleArg));
+	}
+	for (i = int(NV / 2); i < NV; i++) {
+		j = i - int(NV / 2);
+		angleArg = PI + angle + j * 4 * (PI - angle) / NV;
+		setVRel(i, 0, (a - b) + b * cos(angleArg));
+		setVRel(i, 1, b * sin(angleArg));
 	}
 	// output
 	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", compare to " << NV * tan(PI / NV) / PI << endl;
