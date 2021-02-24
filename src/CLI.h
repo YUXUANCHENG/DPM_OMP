@@ -24,7 +24,7 @@ public:
 	double timeStepMag = 0.005;		// time step in MD units (zeta * lenscale / forcescale)
 
 	// disk constants
-	double phiDisk = 0.5;			// initial packing fraction of disks
+	double phiDisk = 0.75;			// initial packing fraction of disks
 
 	// compression constants
 	const double phiTarget = 1.03;			// cell packing fraction (regardless of final pressure)
@@ -82,7 +82,6 @@ public:
 		//double ratio = 100.0;
 		kb = 0.00001 * pow(index_i + 1, 2);
 		//double kl = ratio * kb;
-		phiDisk = 0.78;
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -210,10 +209,11 @@ public:
 class BumpyEllipse_CLI : public Bumpy_CLI {
 public:
 
-	double ratio = 1.2;
+	double ratio = 1.4;
 
 	virtual void createParticles(char const* argv[])
 	{
+		double phiDisk = 0.7;
 		_createParticles<BumpyEllipse>(argv);
 	}
 
