@@ -10,9 +10,6 @@ public:
 	double ratio_a_b = 1.8;
 
 	using BumpyEllipse::BumpyEllipse;
-	virtual void setShape(int ci) {
-		cell(ci).dimer(ratio_a_b);
-	}
 
 	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		// local variables
@@ -96,7 +93,7 @@ public:
 
 			// initial length of polygon side
 			double ration_square = ratio_a_b * ratio_a_b;
-			l0tmp = ((4 * PI - 4 * angle) * pow(diskradii.at(ci), 2)) / nvtmp;
+			l0tmp = ((4 * PI - 4 * angle) * diskradii.at(ci) / ratio_a_b) / nvtmp;
 
 			// set preferred area and length 
 			cell(ci).seta0(a0tmp);
