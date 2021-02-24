@@ -132,6 +132,8 @@ public:
 			cell(ci).printlengthscale(lengthscalePrintObject);
 		}
 
+		breakAlignment();
+
 		// set time step
 		vertexDPMTimeScale(0.1);
 
@@ -144,6 +146,25 @@ public:
 		printCalA();
 		printContact();
 
+	}
+
+	void breakAlignment() {
+		double theta;
+		double xtemp, ytemp;
+
+		for (int ci = 0; ci < NCELLS; ci++) {
+			// update new position based on acceleration
+			theta = 2* PI * (double)rand() / (RAND_MAX + 1.0);
+
+			// rotate vertex
+			for (int vi = 0; vi < cell(ci).getNV(); vi++)
+			{
+				xtemp = cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta);
+				ytemp = cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta);
+				cell(ci).setVPos(vi, 0, xtemp);
+				cell(ci).setVPos(vi, 1, ytemp);
+			}
+		}
 	}
 };
 
