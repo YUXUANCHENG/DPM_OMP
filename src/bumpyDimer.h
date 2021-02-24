@@ -78,7 +78,7 @@ public:
 			}
 
 			// number of vertices ( SIGMA SETS # OF VERTS )
-			nvtmp = ceil(lenscales.at(ci) * NV);
+			nvtmp = NV;
 			if (nvtmp > nvmin)
 				cell(ci).setNV(nvtmp);
 			else
