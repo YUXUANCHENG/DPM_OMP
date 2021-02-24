@@ -247,7 +247,7 @@ public:
 	virtual void createParticles(char const* argv[])
 	{
 		double phiDisk = 0.7;
-		ratio = 1.6;
+		ratio = 1.8;
 		_createParticles<BumpyDimer>(argv);
 	}
 
