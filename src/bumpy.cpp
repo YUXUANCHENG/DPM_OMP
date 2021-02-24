@@ -62,7 +62,7 @@ void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E
 		printJammedConfig_yc();
 		phi = packingFraction();
 		phiPrintObject << phi << endl;
-		//printCalA();
+		printCalA();
 		printContact();
 		printV();
 		cout << "phi = " << phi << endl;
