@@ -7,7 +7,7 @@
 
 class BumpyDimer : public BumpyEllipse {
 public:
-	double ratio_a_b = 1.8;
+	double ratio_a_b = 1.6;
 
 	using BumpyEllipse::BumpyEllipse;
 

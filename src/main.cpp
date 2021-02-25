@@ -34,9 +34,9 @@ int main(int argc, char const *argv[]){
 	//main_function.gravity();
 
 	//Bumpy_CLI cli;
-	BumpyDimer_CLI cli;
+	//BumpyDimer_CLI cli;
 	//DPM_CLI cli;
-	//BumpyEllipse_CLI cli;
+	BumpyEllipse_CLI cli;
 	//cli.findJamming(argv);
 	//cli.NVE(argv);
 	cli.NVEvsDPhi(argv);

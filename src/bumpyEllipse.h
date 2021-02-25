@@ -10,7 +10,7 @@ const double PI = 4 * atan(1);
 
 class BumpyEllipse : public Bumpy {
 public:
-	double ratio_a_b = 1;
+	double ratio_a_b = 1.6;
 
 	using Bumpy::Bumpy;
 	virtual void setRatio(double ratio) {

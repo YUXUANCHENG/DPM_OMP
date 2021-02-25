@@ -72,6 +72,21 @@ void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E
 	}
 }
 
+void Bumpy::printV() {
+	double v_x = 0;
+	double v_y = 0;
+	double energy = 0.0;
+	double tot_k_energy = 0.0;
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		v_x = cell(ci).cal_mean_v(0);
+		v_y = cell(ci).cal_mean_v(1);
+		energy = 0.5 * (v_x*v_x + v_y*v_y) * cell(ci).getNV();
+		tot_k_energy = cell(ci).totalKineticEnergy() + 0.5 * cell(ci).inertia * pow(cell(ci).angularV, 2);
+		vPrintObject << v_x << "," << v_y <<  "," << energy/tot_k_energy << "," << tot_k_energy << endl;
+	}
+}
+
 void Bumpy::resetV() {
 	int ci, d;
 	double rv;
