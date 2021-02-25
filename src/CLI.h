@@ -113,7 +113,7 @@ public:
 		particles->initializeGel(NV, phiDisk, sizedev, del);
 		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 		particles->vertexDPMTimeScale(timeStepMag);
-		particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
 	}
 
 	void findJamming(char const* argv[]) {

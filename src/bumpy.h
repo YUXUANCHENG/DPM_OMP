@@ -8,6 +8,7 @@ class Bumpy : public cellPacking2D {
 public:
 	using cellPacking2D::cellPacking2D;
 	void printV();
+	virtual void compressToInitial(double phiTarget, double deltaPhi, double Ftol);
 	virtual void qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);

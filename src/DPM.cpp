@@ -43,3 +43,23 @@ void cellPacking2D::LangevinSimulation(double T, double v0, double t_scale, int 
 	DPMLangevin simulator = DPMLangevin(this);
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
+
+void cellPacking2D::compressToInitial(double phiTarget, double deltaPhi, double Ftol){
+	//double phi = packingFraction();
+	phi = packingFraction();
+	double temp_phiTarget;
+	if (phiTarget < 0.85)
+		temp_phiTarget = phiTarget;
+	else
+		temp_phiTarget = 0.85 + 1e-10;
+	// compute length scaler based on deltaPhi
+	double dr = sqrt((phi - 0.01) / phi);
+	// loop until phi is the correct value
+	while (phi > temp_phiTarget) {
+		// scale lengths
+		scaleLengths(dr);
+		phi = packingFraction();
+	}
+
+	qsIsoCompression(phiTarget, deltaPhi, Ftol);
+}

@@ -249,6 +249,7 @@ public:
 
 	// compress isotropically to a target packing fraction
 	virtual void qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
+	virtual void compressToInitial(double phiTarget, double deltaPhi, double Ftol);
 
 	// compute the instantaneous shear modulus
 	double shearModulus();

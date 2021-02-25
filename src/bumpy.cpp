@@ -2,6 +2,7 @@
 
 void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance) {
 	int ci;
+	double dr;
 	for (ci = 0; ci < NCELLS; ci++) {
 		cell(ci).setkint(1.0);
 		cell(ci).setdel(1.0);
@@ -14,43 +15,56 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 
 	//double phi = packingFraction();
 	phi = packingFraction();
-	// compute length scaler based on deltaPhi
-	double dr = sqrt((phi + 0.001) / phi);
-	// loop until phi is the correct value
-	while (phi < phiDisk) {
-		// scale lengths
-		scaleLengths(dr);
-		phi = packingFraction();
-	}
-	dr = sqrt((phi - 0.001) / phi);
-	while (phi > phiDisk) {
-		// scale lengths
-		scaleLengths(dr);
-		phi = packingFraction();
-	}
 
-	if (phi > 0.6)
-	{
-		// loop until phi is the correct value
-		for (int i = 0; i < 100; i++) {
+	if (phi > phiDisk){
+		dr = sqrt((phi - 0.001) / phi);
+		while (phi > phiDisk) {
 			// scale lengths
-			scaleLengths(0.999);
+			scaleLengths(dr);
+			phi = packingFraction();
 		}
+	}
+	else{
+		// compute length scaler based on deltaPhi
+		dr = sqrt((phi + 0.001) / phi);
 		// loop until phi is the correct value
-		for (int i = 0; i < 100; i++) {
+		while (phi < phiDisk) {
 			// scale lengths
-			scaleLengths(1 / 0.999);
-			for (ci = 0; ci < NCELLS; ci++)
+			scaleLengths(dr);
+			phi = packingFraction();
+			for (int ci = 0; ci < NCELLS; ci++)
 				cell(ci).cal_inertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
-			phi = packingFraction();
 		}
 	}
 
 	for (ci = 0; ci < NCELLS; ci++)
 		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
+}
+
+void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
+	qsIsoCompression(phiTarget, deltaPhi, Ftol);
+	phi = packingFraction();
+	if (phi > 0.6)
+	{
+		// loop until phi is the correct value
+		for (int i = 0; i < 50; i++) {
+			// scale lengths
+			scaleLengths(0.99);
+		}
+		// loop until phi is the correct value
+		for (int i = 0; i < 50; i++) {
+			// scale lengths
+			scaleLengths(1 / 0.99);
+			for (int ci = 0; ci < NCELLS; ci++)
+				cell(ci).cal_inertia();
+			// relax shapes (energies calculated in relax function)
+			fireMinimize_bummpy();
+			phi = packingFraction();
+		}
+	}
 }
 
 void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E, double init_U) {
