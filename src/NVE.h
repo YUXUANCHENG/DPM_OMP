@@ -8,7 +8,7 @@ class DPMNVEsimulator{
 public:
 	cellPacking2D * cellpointer = nullptr;
 	double init_E = 0, init_U = 0, init_K = 0;
-	int dof;
+	int dof = 2;
 
 	DPMNVEsimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -164,6 +164,104 @@ public:
 	virtual void printRoutine(int count, int print_frequency, double t){
 		if (count % print_frequency == 0)
 			cout << "t = " << t << endl;
+	}
+};
+
+class DPMhopperSimulator {
+public:
+	cellPacking2D* cellpointer = nullptr;
+	int closed = 1;
+	int N_inside = 0;
+	int clog_count = 0;
+
+	DPMhopperSimulator(cellPacking2D* cell) {
+		cellpointer = cell;
+	}
+
+	DPMhopperSimulator() = default;
+
+	int hopperFlow(double w0, double w, double th, double g, double b) {
+		int result;
+		for (int t = 0; t < cellpointer->NT; t++) {
+			if (closed == 1 && t > cellpointer->NT / 100) closed = 0;
+			cellpointer->printRoutine(t, cellpointer->NPRINT, t, 0, 0);
+			hopperRoutine(w0, w, th, g, b);
+			result = checkTermination();
+			if (result == 0)
+				return 0;
+			else if (result == 1)
+				return 1;
+		}
+		return 1;
+	}
+
+	int checkTermination() {
+		if (N_inside == 0)
+		{
+			return 0;
+		}
+		if (Ke() < 1e-16 * N_inside && closed == 0)
+		{
+			clog_count++;
+			if (clog_count > 100)
+				return 1;
+		}
+		else
+			clog_count = 0;
+		return 2;
+	}
+
+	virtual double Ke() {
+		return cellpointer->totalKineticEnergy();
+	}
+
+	virtual void hopperRoutine(double w0, double w, double th, double g, double b) {
+		N_inside = 0;
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).inside_hopper)
+			{
+				N_inside++;
+				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
+				cellpointer->cell(ci).updateCPos();
+				// if still inside hopper
+				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5)
+					cellpointer->cell(ci).inside_hopper = 0;
+			}
+		}
+		// reset contacts before force calculation
+		cellpointer->resetContacts();
+		// calculate forces
+		cellpointer->hopperForces(w0, w, th, g, closed);
+		// update velocities
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
+			cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
+	}
+};
+class BumpyHopperSimulator : public DPMhopperSimulator {
+public:
+	virtual double Ke() {
+		return cellpointer->totalKineticEnergy() + cellpointer->totalRotaionalK();
+	}
+	virtual void hopperRoutine(double w0, double w, double th, double g, double b) {
+		N_inside = 0;
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).inside_hopper)
+				N_inside++;
+		}
+		cellpointer->spPosVerlet();
+		cellpointer->bumpyRotation();
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5)
+				cellpointer->cell(ci).inside_hopper = 0;
+		}
+		// reset contacts before force calculation
+		cellpointer->resetContacts();
+		// calculate forces
+		cellpointer->hopperForces(w0, w, th, g, closed);
+		// update velocities
+		cellpointer->sp_VelVerlet(b);
+		cellpointer->bumpy_angularV(b);
+
 	}
 };
 

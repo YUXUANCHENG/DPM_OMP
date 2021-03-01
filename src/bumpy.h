@@ -15,6 +15,8 @@ public:
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
 	virtual void resetV();
 	virtual void fireMinimizeF(double Ftol, double& Ftest, double& Ktest);
+	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
+	virtual void hopperForces(double w0, double w, double th, double g, int closed);
 };
 
 #endif

@@ -148,6 +148,7 @@
     <ClInclude Include="..\..\src\cellPacking2D.h" />
     <ClInclude Include="..\..\src\cell_jamming.h" />
     <ClInclude Include="..\..\src\CLI.h" />
+    <ClInclude Include="..\..\src\CLI_hopper.h" />
     <ClInclude Include="..\..\src\deformableParticles2D.h" />
     <ClInclude Include="..\..\src\NVE.h" />
   </ItemGroup>

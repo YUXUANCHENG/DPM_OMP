@@ -4278,24 +4278,25 @@ void cellPacking2D::spPosVerlet(){
 
 	// update com position
 	for (ci=0; ci<NCELLS; ci++){
-		for (d=0; d<NDIM; d++){
-			// update new position based on acceleration
-			postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d)/cell(ci).getNV();
+		if (cell(ci).inside_hopper){
+			for (d=0; d<NDIM; d++){
+				// update new position based on acceleration
+				postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d)/cell(ci).getNV();
 
-			// translate vertices based on cpos change
-			for (vi=0; vi<cell(ci).getNV(); vi++)
-				cell(ci).setVPos(vi,d,cell(ci).vpos(vi,d) + (postmp - cell(ci).cpos(d)));
+				// translate vertices based on cpos change
+				for (vi=0; vi<cell(ci).getNV(); vi++)
+					cell(ci).setVPos(vi,d,cell(ci).vpos(vi,d) + (postmp - cell(ci).cpos(d)));
 
-			// update new positions
-			cell(ci).setCPos(d,postmp);
+				// update new positions
+				cell(ci).setCPos(d,postmp);
 
-			// set forces to 0
-			cell(ci).setCForce(d,0.0);
+				// set forces to 0
+				cell(ci).setCForce(d,0.0);
+			}
 		}
-
 		// set interaction energy to 0
-		for (vi=0; vi<cell(ci).getNV(); vi++)
-			cell(ci).setUInt(vi,0.0);
+		for (vi = 0; vi < cell(ci).getNV(); vi++)
+			cell(ci).setUInt(vi, 0.0);
 	}
 }
 
@@ -5496,6 +5497,40 @@ void cellPacking2D::sp_VelVerlet() {
 	}
 }
 
+void cellPacking2D::sp_VelVerlet(double b) {
+	// local variables
+	int ci, vi, d;
+	double veltmp, aold, anew;
+	double ftmp, dampNum, dampDenom, dampUpdate;
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		// loop over velocities
+		for (d = 0; d < NDIM; d++) {
+			// get current velocity
+			veltmp = cell(ci).cvel(d);
+
+			// calculate old com acceleration
+			aold = cell(ci).vacc(0, d);
+
+			ftmp = cell(ci).cforce(d) / cell(ci).getNV();
+			dampNum = b * (veltmp - 0.5 * aold * dt);
+			dampDenom = 1.0 + 0.5 * b * dt;
+			dampUpdate = (ftmp - dampNum) / dampDenom;
+			// get new accelation
+			anew = dampUpdate;
+
+			// update velocity
+			veltmp += 0.5 * dt * (anew + aold);
+
+			// set new velocity and acceleration
+			cell(ci).setCVel(d, veltmp);
+			for (vi = 0; vi < cell(ci).getNV(); vi++)
+				cell(ci).setVAcc(vi, d, anew);
+		}
+	}
+}
+
 void cellPacking2D::sp_Forces(vector<double>& lenscales){
 	// local variables
 	int ci, cj, vi, d;
@@ -5741,8 +5776,10 @@ double cellPacking2D::totalRotaionalK()
 
 	// loop over cells, add kinetic energy
 	for (ci = 0; ci < NCELLS; ci++)
-		val += 0.5 * cell(ci).inertia * pow(cell(ci).angularV, 2);
-
+	{	
+		if (cell(ci).inside_hopper)
+			val += 0.5 * cell(ci).inertia * pow(cell(ci).angularV, 2);
+	}
 	// return value
 	return val;
 
@@ -5786,17 +5823,19 @@ void cellPacking2D::bumpy_Forces() {
 
 	// loop over cells and cell pairs, calculate shape and interaction forces
 	for (ci = 0; ci < NCELLS; ci++) {
-		// loop over pairs, add info to contact matrix
-		for (cj = ci + 1; cj < NCELLS; cj++) {
-			// calculate forces, add to number of vertex-vertex contacts
-			inContact = cell(ci).vertexForce_with_Torque(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-			if (inContact > 0) {
-				// add to cell-cell contacts
-				setContact(ci, cj, inContact);
-				Ncc++;
+		if (cell(ci).inside_hopper) {
+			// loop over pairs, add info to contact matrix
+			for (cj = ci + 1; cj < NCELLS; cj++) {
+				// calculate forces, add to number of vertex-vertex contacts
+				inContact = cell(ci).vertexForce_with_Torque(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				if (inContact > 0) {
+					// add to cell-cell contacts
+					setContact(ci, cj, inContact);
+					Ncc++;
 
-				// increment vertex-vertex contacts
-				Nvv += inContact;
+					// increment vertex-vertex contacts
+					Nvv += inContact;
+				}
 			}
 		}
 	}
@@ -5817,17 +5856,19 @@ void cellPacking2D::bumpyRotation()
 
 	// update com position
 	for (ci = 0; ci < NCELLS; ci++) {
-		// update new position based on acceleration
-		theta = dt * cell(ci).angularV + 0.5 * dt * dt * cell(ci).b;
+		if (cell(ci).inside_hopper) {
+			// update new position based on acceleration
+			theta = dt * cell(ci).angularV + 0.5 * dt * dt * cell(ci).b;
 
-		// rotate vertex
-		for (vi = 0; vi < cell(ci).getNV(); vi++)
-		{	
-			xtemp = cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta);
-			ytemp = cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta);
-			cell(ci).setVPos(vi, 0, xtemp);
-			cell(ci).setVPos(vi, 1, ytemp);
-		}		
+			// rotate vertex
+			for (vi = 0; vi < cell(ci).getNV(); vi++)
+			{
+				xtemp = cell(ci).cpos(0) + cell(ci).vrel(vi, 0) * cos(theta) - cell(ci).vrel(vi, 1) * sin(theta);
+				ytemp = cell(ci).cpos(1) + cell(ci).vrel(vi, 0) * sin(theta) + cell(ci).vrel(vi, 1) * cos(theta);
+				cell(ci).setVPos(vi, 0, xtemp);
+				cell(ci).setVPos(vi, 1, ytemp);
+			}
+		}
 	}
 }
 
@@ -5855,5 +5896,37 @@ void cellPacking2D::bumpy_angularV() {
 		cell(ci).angularV = veltmp;
 		cell(ci).b = anew;
 		
+	}
+}
+
+void cellPacking2D::bumpy_angularV(double b) {
+	// local variables
+	int ci, vi;
+	double veltmp, aold, anew;
+	double ftmp, dampNum, dampDenom, dampUpdate;
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+
+		// get current velocity
+		veltmp = cell(ci).angularV;
+
+		// calculate old com acceleration
+		aold = cell(ci).b;
+
+		ftmp = cell(ci).torque / cell(ci).inertia;
+		dampNum = b * (veltmp - 0.5 * aold * dt);
+		dampDenom = 1.0 + 0.5 * b * dt;
+		dampUpdate = (ftmp - dampNum) / dampDenom;
+		// get new accelation
+		anew = dampUpdate;
+
+		// update velocity
+		veltmp += 0.5 * dt * (anew + aold);
+
+		// set new velocity and acceleration
+		cell(ci).angularV = veltmp;
+		cell(ci).b = anew;
+
 	}
 }

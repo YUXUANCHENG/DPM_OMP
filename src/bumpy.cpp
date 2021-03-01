@@ -129,3 +129,32 @@ void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 		cell(ci).cal_inertia();
 	fireMinimize_bummpy();
 }
+
+int Bumpy::hopperSimulation(double w0, double w, double th, double g, double b) {
+	DPMhopperSimulator simulator = DPMhopperSimulator(this);
+	return simulator.hopperFlow(w0, w, th, g, b);
+}
+
+void Bumpy::hopperForces(double w0, double w, double th, double g, int closed){
+	int ci, d;
+	bumpy_Forces();
+	// loop over cells and cell pairs, calculate shape and interaction forces
+	for (ci = 0; ci < NCELLS; ci++) {
+		if (cell(ci).inside_hopper)
+			cell(ci).gravityForces(g, 0); // gravity force (in +x direction)
+	}
+
+	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	// wall forces
+	hopperWallForcesDP(w0, w, th, closed);
+
+	for (ci = 0; ci < NCELLS; ci++) {
+		for (d = 0; d < NDIM; d++)
+			cell(ci).setCForce(d, cell(ci).cforce(d));
+	}
+}

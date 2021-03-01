@@ -35,6 +35,9 @@
     <ClInclude Include="..\..\src\bumpyDimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CLI_hopper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\active2D.cpp">

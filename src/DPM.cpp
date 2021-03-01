@@ -44,6 +44,11 @@ void cellPacking2D::LangevinSimulation(double T, double v0, double t_scale, int 
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
 
+int cellPacking2D::hopperSimulation(double w0, double w, double th, double g, double b) {
+	DPMhopperSimulator simulator = DPMhopperSimulator(this);
+	return simulator.hopperFlow(w0, w, th, g, b);
+}
+
 void cellPacking2D::compressToInitial(double phiTarget, double deltaPhi, double Ftol){
 	//double phi = packingFraction();
 	phi = packingFraction();

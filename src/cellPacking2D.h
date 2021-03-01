@@ -89,6 +89,7 @@ public:
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
+	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };
 
@@ -333,7 +334,7 @@ public:
 	void fireMinimizeHopperSP(std::vector<double>& radii, double w0, double w, double th);
 	void fireMinimizeHopperDP(double w0, double w, double th);
 	void hopperForcesSP(std::vector<double>& radii, double w0, double w, double th, double g, int closed);
-	void hopperForcesDP(double w0, double w, double th, double g, int closed);
+	virtual void hopperForces(double w0, double w, double th, double g, int closed);
 	void hopperWallForcesSP(std::vector<double>& radii, double w0, double w, double th, int closed);
 	void hopperWallForcesDP(double w0, double w, double th, int closed);
 	void hopperSPNVE(std::vector<double>& radii, double w0, double w, double th, double T0);
@@ -378,6 +379,7 @@ public:
 	void add_drag(int index, double force);
 	void add_drag_cell(int index, double force);
 	void sp_VelVerlet();
+	void sp_VelVerlet(double b);
 	void sp_VelVerlet_Langevin(double drag, double KbT, std::normal_distribution<double> & dist, std::mt19937 & gen);
 	void sp_Forces(vector<double>& lenscales);
 	void sp_Forces_probe(vector<double>& lenscales);
@@ -385,6 +387,7 @@ public:
 	void bumpy_Forces();
 	void bumpyRotation();
 	void bumpy_angularV();
+	void bumpy_angularV(double b);
 	double totalRotaionalK();
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);

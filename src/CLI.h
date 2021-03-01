@@ -17,11 +17,11 @@ public:
 	const double PI = 4.0 * atan(1);
 
 	// length paramaters
-	const int NT = 1e7;
-	const int NPRINT = 10000;
+	int NT = 1e7;
+	int NPRINT = 10000;
 
 	// simulation constants
-	const double sizedev = 0.1;			        // std dev of cell sizes
+	double sizedev = 0.1;			        // std dev of cell sizes
 	double timeStepMag = 0.005;		// time step in MD units (zeta * lenscale / forcescale)
 
 	// disk constants
@@ -34,9 +34,8 @@ public:
 	// force parameters
 	double kl = 0.1;				// perimeter force constant
 	double ka = 1.0;				// area force constant
-	double gam = 0.0;				// surface tension force constant
 	double kb = 0.0;				// bending energy constant
-	//const double kb				= 0.1;				// bending energy constant
+	double gam = 0.0;				// surface tension force constant
 
 	const double kint = 1.0;				// interaction energy constant
 	const double del = 1.0;				// width of vertices in units of l0, vertex sep on regular polygon
@@ -66,23 +65,18 @@ public:
 	double vtau = 1e-2;
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
-	int index_i;
+	int index_i, index_j;
 
 	cellPacking2D* particles;
 
 	template <class Ptype = cellPacking2D>
 	void _createParticles(char const* argv[])
 	{
-		string index_str = argv[1];
-		stringstream indexss(index_str);
-		indexss >> index_i;
-
+		setIndex(argv);
 		seed = index_i;
 
 		v0PrintObject.open("v0.txt");
-		//double ratio = 100.0;
-		kb = 0.00001 * pow(index_i + 1, 2);
-		//double kl = ratio * kb;
+		setKB();
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -93,6 +87,18 @@ public:
 		particles = new Ptype(NCELLS, NT, NPRINT, Lini, seed);
 		particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
+	}
+
+	virtual void setKB() {
+		//double ratio = 100.0;
+		kb = 0.00001 * pow(index_i + 1, 2);
+		//double kl = ratio * kb;
+	}
+
+	virtual void setIndex(char const* argv[]) {
+		string index_str = argv[1];
+		stringstream indexss(index_str);
+		indexss >> index_i;
 	}
 
 	void produceFileName(string extend, string& energyF, string& jammingF, string& lengthscaleF,

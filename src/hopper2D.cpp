@@ -585,7 +585,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 // calculate all forces on DP model particles
 // 	** if closed = 1, orifice is closed off by wall
 // 	** g is force strength (i.e. generalized gravity)
-void cellPacking2D::hopperForcesDP(double w0, double w, double th, double g, int closed){
+void cellPacking2D::hopperForces(double w0, double w, double th, double g, int closed){
 	// local variables
 	int ci,cj,vi,d,dd,inContact;
 
@@ -1477,7 +1477,7 @@ void cellPacking2D::hopperDPNVE(double w0, double w, double th, double g, double
 		}
 
 		// calculate forces
-		hopperForcesDP(w0, w, th, g, closed);
+		hopperForces(w0, w, th, g, closed);
 
 		// VV update in FIRE 2.0: Velocity update 2
 		for (ci=0; ci<NCELLS; ci++)
@@ -1962,7 +1962,7 @@ int cellPacking2D::flowHopperDP(double w0, double w, double th, double g, double
 			clog_count = 0;
 		
 		// calculate forces
-		hopperForcesDP(w0, w, th, g, closed);
+		hopperForces(w0, w, th, g, closed);
 
 		// VV update 2 with damping
 		for (ci=0; ci<NCELLS; ci++)
