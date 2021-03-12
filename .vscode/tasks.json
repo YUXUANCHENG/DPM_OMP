@@ -6,7 +6,7 @@
             "label": "C/C++: g++ build active file",
             "command": "/usr/bin/g++",
             "args": [
-                "-g",
+                "-O3",
                 "--std=c++11",
                 "-fopenmp",
                 "${workspaceFolder}/src/*.cpp",

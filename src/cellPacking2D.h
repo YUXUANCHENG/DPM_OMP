@@ -92,6 +92,7 @@ public:
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };
+	void calInertia();
 
 	// operators
 	void operator=(cellPacking2D& onTheRight);	// assign one configuration to another object

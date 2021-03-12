@@ -91,7 +91,10 @@ public:
 
 	virtual void setKB() {
 		//double ratio = 100.0;
-		kb = 0.00001 * pow(index_i + 1, 2);
+		//kb = 0.00001 * pow(index_i + 1, 2);
+		kb = 0.00001;
+		seed = 1;
+		phiDisk = 0.8 + 0.01 * index_i;
 		//double kl = ratio * kb;
 	}
 
@@ -196,7 +199,7 @@ public:
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		particles->initializeGel(NV, phiDisk, sizedev, del);
 		particles->vertexDPMTimeScale(timeStepMag);
-		particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
 	}
 
 	virtual void NVEvsDPhi(char const* argv[])
@@ -216,11 +219,12 @@ public:
 class BumpyEllipse_CLI : public Bumpy_CLI {
 public:
 
-	double ratio = 1.6;
+	double ratio = 1.7;
 
 	virtual void createParticles(char const* argv[])
 	{
-		phiDisk = 0.7;
+		phiDisk = 0.9;
+		//phiDisk = 0.7;
 		_createParticles<BumpyEllipse>(argv);
 	}
 
@@ -230,7 +234,7 @@ public:
 		particles->setRatio(ratio);
 		particles->initializeGel(NV, phiDisk, sizedev, del);
 		particles->vertexDPMTimeScale(timeStepMag);
-		particles->qsIsoCompression(phiDisk, deltaPhi, Ftolerance);
+		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
 	}
 
 	virtual void NVEvsDPhi(char const* argv[])
@@ -252,7 +256,8 @@ public:
 
 	virtual void createParticles(char const* argv[])
 	{
-		phiDisk = 0.6;
+		phiDisk = 0.9;
+		//phiDisk = 0.65;
 		ratio = 1.6;
 		_createParticles<BumpyDimer>(argv);
 	}

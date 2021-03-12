@@ -183,14 +183,12 @@ public:
 	int hopperFlow(double w0, double w, double th, double g, double b) {
 		int result;
 		for (int t = 0; t < cellpointer->NT; t++) {
-			if (closed == 1 && t > cellpointer->NT / 100) closed = 0;
-			cellpointer->printRoutine(t, cellpointer->NPRINT, t, 0, 0);
+			if (closed == 1 && t > cellpointer->NT / 500) closed = 0;
+			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
 			hopperRoutine(w0, w, th, g, b);
 			result = checkTermination();
-			if (result == 0)
-				return 0;
-			else if (result == 1)
-				return 1;
+			if (result < 2)
+				return result;
 		}
 		return 1;
 	}
@@ -239,6 +237,13 @@ public:
 };
 class BumpyHopperSimulator : public DPMhopperSimulator {
 public:
+
+	BumpyHopperSimulator(cellPacking2D* cell) {
+		cellpointer = cell;
+	}
+
+	BumpyHopperSimulator() = default;
+
 	virtual double Ke() {
 		return cellpointer->totalKineticEnergy() + cellpointer->totalRotaionalK();
 	}

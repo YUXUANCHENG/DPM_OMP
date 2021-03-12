@@ -62,7 +62,7 @@ public:
 		particles->closeF();
 	}
 
-	virtual void hopperFLow(char const* argv[])
+	virtual void hopperFlow(char const* argv[])
 	{
 		qscompress(argv);
 		_hopperFlow();
@@ -88,6 +88,10 @@ public:
 	kl = 0;
 	ka = 0;
 	kb = 0;
+	}
+	virtual void prepareSystem() {
+		DPM_Hopper_CLI::prepareSystem();
+		particles->calInertia();
 	}
 
 	virtual void createParticles(char const* argv[])

@@ -5826,15 +5826,17 @@ void cellPacking2D::bumpy_Forces() {
 		if (cell(ci).inside_hopper) {
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < NCELLS; cj++) {
-				// calculate forces, add to number of vertex-vertex contacts
-				inContact = cell(ci).vertexForce_with_Torque(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				if (inContact > 0) {
-					// add to cell-cell contacts
-					setContact(ci, cj, inContact);
-					Ncc++;
+				if (cell(cj).inside_hopper) {
+					// calculate forces, add to number of vertex-vertex contacts
+					inContact = cell(ci).vertexForce_with_Torque(cell(cj), sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+					if (inContact > 0) {
+						// add to cell-cell contacts
+						setContact(ci, cj, inContact);
+						Ncc++;
 
-					// increment vertex-vertex contacts
-					Nvv += inContact;
+						// increment vertex-vertex contacts
+						Nvv += inContact;
+					}
 				}
 			}
 		}
@@ -5929,4 +5931,9 @@ void cellPacking2D::bumpy_angularV(double b) {
 		cell(ci).b = anew;
 
 	}
+}
+
+void cellPacking2D::calInertia(){
+	for (int ci = 0; ci < NCELLS; ci++)
+		cell(ci).cal_inertia();
 }

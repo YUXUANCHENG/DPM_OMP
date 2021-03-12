@@ -32,15 +32,13 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 			// scale lengths
 			scaleLengths(dr);
 			phi = packingFraction();
-			for (int ci = 0; ci < NCELLS; ci++)
-				cell(ci).cal_inertia();
+			calInertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
 		}
 	}
 
-	for (ci = 0; ci < NCELLS; ci++)
-		cell(ci).cal_inertia();
+	calInertia();
 	fireMinimize_bummpy();
 }
 
@@ -58,8 +56,7 @@ void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 		for (int i = 0; i < 50; i++) {
 			// scale lengths
 			scaleLengths(1 / 0.99);
-			for (int ci = 0; ci < NCELLS; ci++)
-				cell(ci).cal_inertia();
+			calInertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
 			phi = packingFraction();
@@ -131,7 +128,7 @@ void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 }
 
 int Bumpy::hopperSimulation(double w0, double w, double th, double g, double b) {
-	DPMhopperSimulator simulator = DPMhopperSimulator(this);
+	BumpyHopperSimulator simulator = BumpyHopperSimulator(this);
 	return simulator.hopperFlow(w0, w, th, g, b);
 }
 
