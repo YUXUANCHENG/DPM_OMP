@@ -35,8 +35,8 @@ int main(int argc, char const *argv[]){
 	//main_function.gravity();
 
 	//Bumpy_CLI cli;
-	//BumpyDimer_CLI cli;
-	DPM_CLI cli;
+	BumpyDimer_CLI<> cli;
+	//DPM_CLI cli;
 	//BumpyEllipse_CLI cli;
 	
 	//DPM_Hopper_CLI cli;

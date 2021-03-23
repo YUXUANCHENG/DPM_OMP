@@ -2,8 +2,8 @@
 #define CLI_HOPPER_H
 
 #include "CLI.h"
-
-class DPM_Hopper_CLI : public DPM_CLI {
+template <class Ptype = cellPacking2D>
+class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
 public:
 
 	double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
@@ -29,6 +29,7 @@ public:
 		Lini = 0.1 * w0;
 		NCELLS = 64;
 		NV = 16;
+		calA0 = 1.0;
 		radii = vector<double>(NCELLS, 0.0);
 		for (int ci = 0; ci < NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -82,8 +83,10 @@ public:
 	}
 };
 
-class Bumpy_Hopper_CLI : public DPM_Hopper_CLI {
+template <class Ptype = Bumpy>
+class Bumpy_Hopper_CLI : public DPM_Hopper_CLI<Ptype> {
 public:
+	//typedef Bumpy particleType;
 	Bumpy_Hopper_CLI() : DPM_Hopper_CLI() {
 	kl = 0;
 	ka = 0;
@@ -93,11 +96,12 @@ public:
 		DPM_Hopper_CLI::prepareSystem();
 		particles->calInertia();
 	}
-
+/*
 	virtual void createParticles(char const* argv[])
 	{
 		_createParticles<Bumpy>(argv);
 	}
+*/
 };
 
 #endif

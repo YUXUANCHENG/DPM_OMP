@@ -11,6 +11,7 @@
 #include <cmath>
 #include <omp.h>
 
+template <class Ptype = cellPacking2D>
 class DPM_CLI {
 public:
 	// define PI
@@ -28,7 +29,7 @@ public:
 	double phiDisk = 0.75;			// initial packing fraction of disks
 
 	// compression constants
-	const double phiTarget = 1.03;			// cell packing fraction (regardless of final pressure)
+	// const double phiTarget = 1.03;			// cell packing fraction (regardless of final pressure)
 	const double deltaPhi = 0.001;		// compression step size
 
 	// force parameters
@@ -42,7 +43,7 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	double calA0 = 1.0;
+	double calA0 = 1.2;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
@@ -69,14 +70,16 @@ public:
 
 	cellPacking2D* particles;
 
-	template <class Ptype = cellPacking2D>
 	void _createParticles(char const* argv[])
 	{
+		
 		setIndex(argv);
-		seed = index_i;
+		//seed = index_i;
 
 		v0PrintObject.open("v0.txt");
 		setKB();
+		setSeed();
+		setPhiDisk();
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -85,16 +88,21 @@ public:
 		// instantiate object
 		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
 		particles = new Ptype(NCELLS, NT, NPRINT, Lini, seed);
+		std::cout << typeid(particles).name() << '\n';
 		particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
 	}
-
+	virtual void setPhiDisk(){
+		phiDisk = 0.75;
+	}
+	virtual void setSeed() {
+		seed = index_i;
+	}
 	virtual void setKB() {
 		//double ratio = 100.0;
-		//kb = 0.00001 * pow(index_i + 1, 2);
-		kb = 0.00001;
-		seed = 1;
-		phiDisk = 0.8 + 0.01 * index_i;
+		kb = 0.00001 * pow(index_i + 1, 2);
+		//kb = 0.0;
+		//phiDisk = 0.8 + 0.01 * index_i;
 		//double kl = ratio * kb;
 	}
 
@@ -140,7 +148,6 @@ public:
 		particles->qsIsoCompression(phi + delta, deltaPhi, Ftolerance);
 	}
 
-	template <class Ptype = cellPacking2D>
 	void _NVE() {
 #pragma omp parallel for 
 		for (int j = 0; j < 10; j++) {
@@ -169,31 +176,33 @@ public:
 
 	virtual void createParticles(char const* argv[])
 	{
-		_createParticles<cellPacking2D>(argv);
+		_createParticles(argv);
 	}
 
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
 		toDeltaPhi(Phi_to_PhiJ);
-		_NVE<cellPacking2D>();
+		_NVE();
 	}
 
 	virtual void NVE(char const* argv[])
 	{
 		qscompress(argv);
-		_NVE<cellPacking2D>();
+		_NVE();
 	}
 };
 
-class Bumpy_CLI : public DPM_CLI {
+template <class Ptype = Bumpy>
+class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
-
+	//typedef Bumpy particleType;
+/*
 	virtual void createParticles(char const* argv[])
 	{
 		_createParticles<Bumpy>(argv);
 	}
-
+*/
 	virtual void prepareSystem() {
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -201,7 +210,7 @@ public:
 		particles->vertexDPMTimeScale(timeStepMag);
 		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
 	}
-
+/*
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
@@ -214,18 +223,25 @@ public:
 		qscompress(argv);
 		_NVE<Bumpy>();
 	}
+*/
 };
 
-class BumpyEllipse_CLI : public Bumpy_CLI {
+template <class Ptype = BumpyEllipse>
+class BumpyEllipse_CLI : public Bumpy_CLI<Ptype> {
 public:
-
+	//typedef BumpyEllipse particleType;
 	double ratio = 1.7;
-
+/*
 	virtual void createParticles(char const* argv[])
 	{
-		phiDisk = 0.9;
-		//phiDisk = 0.7;
+		phiDisk = 0.86;
+		//phiDisk = 0.65;
+		//NV = 32;
 		_createParticles<BumpyEllipse>(argv);
+	}
+*/
+	virtual void setPhiDisk(){
+		phiDisk = 0.86;
 	}
 
 	virtual void prepareSystem() {
@@ -236,7 +252,7 @@ public:
 		particles->vertexDPMTimeScale(timeStepMag);
 		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
 	}
-
+/*
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
@@ -249,19 +265,29 @@ public:
 		qscompress(argv);
 		_NVE<BumpyEllipse>();
 	}
+*/
 };
 
-class BumpyDimer_CLI : public BumpyEllipse_CLI {
+template <class Ptype = BumpyDimer>
+class BumpyDimer_CLI : public BumpyEllipse_CLI<Ptype> {
 public:
-
+	//typedef BumpyDimer particleType;
+/*
 	virtual void createParticles(char const* argv[])
 	{
-		phiDisk = 0.9;
+		phiDisk = 0.86;
 		//phiDisk = 0.65;
 		ratio = 1.6;
 		_createParticles<BumpyDimer>(argv);
 	}
-
+*/
+	virtual void setPhiDisk(){
+		//phiDisk = 0.86;
+		seed = 1;
+		phiDisk = 0.76 + 0.01 * index_i;
+		ratio = 1.6;
+	}
+/*
 	virtual void NVEvsDPhi(char const* argv[])
 	{
 		findJamming(argv);
@@ -274,6 +300,7 @@ public:
 		qscompress(argv);
 		_NVE<BumpyDimer>();
 	}
+*/
 };
 
 #endif
