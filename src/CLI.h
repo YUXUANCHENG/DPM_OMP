@@ -205,10 +205,10 @@ public:
 */
 	virtual void prepareSystem() {
 		// Initialze the system as disks
-		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-		particles->initializeGel(NV, phiDisk, sizedev, del);
-		particles->vertexDPMTimeScale(timeStepMag);
-		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
+		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
+		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
+		this->particles->vertexDPMTimeScale(this->timeStepMag);
+		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
 /*
 	virtual void NVEvsDPhi(char const* argv[])
@@ -241,16 +241,16 @@ public:
 	}
 */
 	virtual void setPhiDisk(){
-		phiDisk = 0.86;
+		this->phiDisk = 0.86;
 	}
 
 	virtual void prepareSystem() {
 		// Initialze the system as disks
-		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-		particles->setRatio(ratio);
-		particles->initializeGel(NV, phiDisk, sizedev, del);
-		particles->vertexDPMTimeScale(timeStepMag);
-		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
+		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
+		this->particles->setRatio(this->ratio);
+		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
+		this->particles->vertexDPMTimeScale(this->timeStepMag);
+		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
 /*
 	virtual void NVEvsDPhi(char const* argv[])
@@ -283,9 +283,10 @@ public:
 */
 	virtual void setPhiDisk(){
 		//phiDisk = 0.86;
-		seed = 1;
-		phiDisk = 0.76 + 0.01 * index_i;
-		ratio = 1.6;
+		this->seed = 1;
+		this->phiDisk = 0.65 + 0.01 * this->index_i;
+		this->ratio = 1.6;
+		this->NV = 16;
 	}
 /*
 	virtual void NVEvsDPhi(char const* argv[])

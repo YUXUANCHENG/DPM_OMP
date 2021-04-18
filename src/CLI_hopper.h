@@ -20,18 +20,18 @@ public:
 	double w;
 
 	DPM_Hopper_CLI() {
-		NT = 5e6;			// number of time steps for flow simulation
-		NPRINT = 1e3;			// number of steps between printing
-		kl = 10.0;
-		ka = 10.0;
-		kb = 10.0;
-		g = 0.05;
-		Lini = 0.1 * w0;
-		NCELLS = 64;
-		NV = 16;
-		calA0 = 1.0;
-		radii = vector<double>(NCELLS, 0.0);
-		for (int ci = 0; ci < NCELLS; ci++) {
+		this->NT = 5e6;			// number of time steps for flow simulation
+		this->NPRINT = 1e3;			// number of steps between printing
+		this->kl = 10.0;
+		this->ka = 10.0;
+		this->kb = 0.01;
+		this->g = 0.05;
+		this->Lini = 0.1 * w0;
+		this->NCELLS = 64;
+		this->NV = 16;
+		this->calA0 = 1.0;
+		this->radii = vector<double>(this->NCELLS, 0.0);
+		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
 				radii.at(ci) = smallRadius;
 			else
@@ -44,8 +44,8 @@ public:
 		string index_j_str = argv[2];
 		stringstream index_i_ss(index_i_str);
 		stringstream index_j_ss(index_j_str);
-		index_i_ss >> index_i;
-		index_j_ss >> index_j;
+		index_i_ss >> this->index_i;
+		index_j_ss >> this->index_j;
 	}
 
 	virtual void setKB() {
@@ -53,33 +53,33 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		w_scale = 1.5 + 0.05 * index_j;
+		w_scale = 0.7 + 0.05 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
-		particles->initializeHopperDP(radii, w0, w, th, Lini, NV);
-		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
-		particles->vertexDPMTimeScale(timeStepMag);
-		particles->closeF();
+		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
+		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
+		this->particles->vertexDPMTimeScale(this->timeStepMag);
+		this->particles->closeF();
 	}
 
 	virtual void hopperFlow(char const* argv[])
 	{
-		qscompress(argv);
+		this->qscompress(argv);
 		_hopperFlow();
 	}
 
 	virtual void _hopperFlow() {
-		extend = "_" + to_string(index_i) + to_string(index_j) + ".txt";
+		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
-		produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 
-		int result = particles->hopperSimulation(w0, w, th, g, b);
-		v0PrintObject << kl << "," << gam << "," << g << "," << w_scale << "," << result << endl;
+		int result = this->particles->hopperSimulation(w0, w, th, g, b);
+		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << endl;
 		cout << "	** FINISHED **   " << endl;
 		//clogPrintObject.close();
-		v0PrintObject.close();
+		this->v0PrintObject.close();
 	}
 };
 
@@ -87,14 +87,14 @@ template <class Ptype = Bumpy>
 class Bumpy_Hopper_CLI : public DPM_Hopper_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
-	Bumpy_Hopper_CLI() : DPM_Hopper_CLI() {
-	kl = 0;
-	ka = 0;
-	kb = 0;
+	Bumpy_Hopper_CLI() : DPM_Hopper_CLI<Ptype>() {
+	this->kl = 0;
+	this->ka = 0;
+	this->kb = 0;
 	}
 	virtual void prepareSystem() {
-		DPM_Hopper_CLI::prepareSystem();
-		particles->calInertia();
+		DPM_Hopper_CLI<Ptype>::prepareSystem();
+		this->particles->calInertia();
 	}
 /*
 	virtual void createParticles(char const* argv[])

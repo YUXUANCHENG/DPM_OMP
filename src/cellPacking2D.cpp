@@ -5190,11 +5190,11 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	rescal_V(current_E);
 	
 	// run NVE for allotted time
-	for (double t = 0.0; t < T; t = t + dt0 * t_scale) {
+	for (double t = 0.0; t < T * 4 ; t = t + dt0 * t_scale) {
 
 		//rescal_V(current_E);
 		// print data first to get the initial condition
-		if (count % print_frequency == 0) {
+		if (t > T * 3 && count % print_frequency == 0) {
 			// calculate energies
 			U = totalPotentialEnergy();
 			K = totalKineticEnergy();
