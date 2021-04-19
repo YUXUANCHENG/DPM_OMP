@@ -9,6 +9,7 @@
 // include file
 #include "deformableParticles2D.h"
 #include "cellPacking2D.h"
+#include <complex>
 
 // namespace
 using namespace Eigen;
@@ -5225,7 +5226,112 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		sp_VelVerlet();
 		count++;
 	}
-	
+
+	int Ntotal = floor(T / (dt0 * t_scale));
+
+
+	std::vector< std::vector<double>> x_com(frames, std::vector<double>(NCELLS, 0));
+	std::vector< std::vector<double>> y_com(frames, std::vector<double>(NCELLS, 0));
+	while (true)
+	{ 
+		int rowIndex = 0;
+		int colIndex = 0;
+		int taos[2];
+		double q = PI / sqrt(L[0] * L[1] * phi / (PI * NCELLS));
+		for (int r = 0; r < 2; r++)
+		{ 
+			for (count = 0; count < Ntotal; count++)
+			{
+				if (count % print_frequency == 0)
+				{
+					for (int i = 0; i < NCELLS; i++)
+					{
+						x_com[rowIndex][i] = cell(i).cpos(0);
+						y_com[rowIndex][i] = cell(i).cpos(1);
+					}
+					rowIndex++;
+				}
+			}
+			taos[r] = calTao(q, Ntotal, rowIndex, NCELLS, x_com, y_com);
+		}
+		if (taos[0] > 0 && taos[1] > 0)
+		{ 
+			double testEq = abs(taos[1] - taos[0]) / taos[0];
+			if (testEq < 0.05)
+				return (taos[1] + taos[0]) / 2;
+		}
+		Ntotal *= 2;
+		print_frequency *= 2;
+	}
+}
+
+
+int calTao(double q, int Ntotal, int frames, int NCELLS, std::vector< std::vector<double>>& x_com, std::vector< std::vector<double>>& y_com)
+{
+	int tao = -1;
+	std::vector<int> timePoints;
+	double logMax = log(Ntotal*9/10);
+	double logInterval = logMax / 100;
+	double currentLogVal = 0;
+	int timePoint = 0;
+	for (int i = 0; i < 100; i++)
+	{
+		timePoint = floor(exp(currentLogVal));
+		if (timePoints.empty()) {
+			timePoints.push_back(timePoint);
+		}
+		else
+		{
+			if (timePoints.back() != timePoint)
+				timePoints.push_back(timePoint);
+		}
+		currentLogVal += logInterval;
+	}
+	std::vector<double> ISF;
+	for (int i = 0; i < timePoints.size(); i++)
+	{
+		int offset = timePoints[i];
+		std::vector< std::vector<double>> dx(frames - offset, std::vector<double>(NCELLS, 0));
+		std::vector< std::vector<double>> dy(frames - offset, std::vector<double>(NCELLS, 0));
+		for (int j = 0; j < frames - offset; j++)
+		{
+			for (int k = 0; k < NCELLS; k++)
+			{
+				dx[j][k] = x_com[j + offset][k] - x_com[j][k];
+				dy[j][k] = y_com[j + offset][k] - y_com[j][k];
+			}
+		}
+		double isf = 0;
+		int count = 0;
+		for (double th = 0; th < 2 * PI; th += 0.1)
+		{
+			double temp_isf = 0;
+			std::complex<double> result;
+			for (int j = 0; j < frames - offset; j++)
+			{
+				for (int k = 0; k < NCELLS; k++)
+				{
+					result = exp(std::complex<double>(0, 1) * (cos(th) * dx[j][k]) + sin(th) * dy[j][k]);
+					temp_isf += result.real();
+				}
+			}
+			temp_isf /= (frames - offset) * NCELLS;
+			isf += temp_isf;
+			count++;
+		}
+		ISF[i] = isf / count;
+	}
+
+	for (int i = 0; i < timePoints.size(); i++)
+	{
+		if (ISF[i] < exp(-1))
+		{
+			tao = timePoints[i];
+			break;
+		}
+	}
+
+	return tao;
 }
 
 void cellPacking2D::add_drag(int index, double force)
