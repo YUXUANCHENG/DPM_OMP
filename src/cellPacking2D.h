@@ -376,6 +376,7 @@ public:
 	void random_shape_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	double * sp_NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void add_drag(int index, double force);
 	void add_drag_cell(int index, double force);

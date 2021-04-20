@@ -1519,10 +1519,12 @@ public:
 				//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 				//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
 				double v0 = double(j+1) * 0.0002;
+				/*
 #pragma omp critical
 				{
 					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 				}
+				*/
 				// output files
 				string extend = "_" + to_string(i) + to_string(j) + ".txt";
 				//string positionF = "position" + extend;
@@ -1538,7 +1540,12 @@ public:
 				cell_group.saveState(local_cell_group);
 				local_cell_group.closeF();
 				local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-				local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
+				//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
+				double * result = local_cell_group.sp_NVE_tao(T, v0, Dr, vtau, t_scale, frames);
+				#pragma omp critical
+				{
+					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] <<endl;
+				}
 
 			}
 		}

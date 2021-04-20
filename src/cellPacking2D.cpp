@@ -5154,7 +5154,8 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		for (int i = 0; i < 100; i++){
 			// scale lengths
 			scaleLengths(1/0.999);
-
+			for (ci = 0; ci < NCELLS; ci++)
+				lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_disk(lenscales);
 		}
@@ -5191,11 +5192,12 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	rescal_V(current_E);
 	
 	// run NVE for allotted time
-	for (double t = 0.0; t < T * 4 ; t = t + dt0 * t_scale) {
+	for (double t = 0.0; t < T * 0.1 ; t = t + dt0 * t_scale) {
 
 		//rescal_V(current_E);
 		// print data first to get the initial condition
-		if (t > T * 3 && count % print_frequency == 0) {
+		/*
+		if (t > T * 1 && count % print_frequency == 0) {
 			// calculate energies
 			U = totalPotentialEnergy();
 			K = totalKineticEnergy();
@@ -5209,6 +5211,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 			cout << "E = " << U + K << " K = " << K << endl;
 			cout << "t = " << t << endl;
 		}
+		*/
 
 		// use velocity verlet to advance time
 
@@ -5226,12 +5229,18 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		sp_VelVerlet();
 		count++;
 	}
+}
 
+double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	int print_frequency = floor(T / (dt0 * t_scale * frames));
+	sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 	int Ntotal = floor(T / (dt0 * t_scale));
-
-
+	vector<double> lenscales(NCELLS, 0.0);
+	for (int ci = 0; ci < NCELLS; ci++)
+		lenscales.at(ci) = sqrt(cell(ci).geta0() / PI);
 	std::vector< std::vector<double>> x_com(frames, std::vector<double>(NCELLS, 0));
 	std::vector< std::vector<double>> y_com(frames, std::vector<double>(NCELLS, 0));
+	std::vector<double> speed(frames, 0);
 	while (true)
 	{ 
 		int rowIndex = 0;
@@ -5240,10 +5249,34 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 		double q = PI / sqrt(L[0] * L[1] * phi / (PI * NCELLS));
 		for (int r = 0; r < 2; r++)
 		{ 
-			for (count = 0; count < Ntotal; count++)
+			for (int count = 0; count < Ntotal; count++)
 			{
+				// update positions
+				spPosVerlet();
+
+				// reset contacts before force calculation
+				resetContacts();
+
+				// calculate forces
+				sp_Forces(lenscales);
+				//calculateForces();
+
+				// update velocities
+				sp_VelVerlet();
+
 				if (count % print_frequency == 0)
 				{
+					double v_x = 0;
+					double v_y = 0;
+					double cur_speed = 0;
+					for (int ci = 0; ci < NCELLS; ci++) {
+						v_x = cell(ci).cal_mean_v(0);
+						v_y = cell(ci).cal_mean_v(1);
+						cur_speed += sqrt(v_x * v_x + v_y * v_y);
+					}
+					cur_speed /= NCELLS;
+					speed[rowIndex] = cur_speed;
+
 					for (int i = 0; i < NCELLS; i++)
 					{
 						x_com[rowIndex][i] = cell(i).cpos(0);
@@ -5252,25 +5285,33 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 					rowIndex++;
 				}
 			}
-			taos[r] = calTao(q, Ntotal, rowIndex, NCELLS, x_com, y_com);
+			taos[r] = calTao(q, rowIndex, NCELLS, x_com, y_com);
 		}
 		if (taos[0] > 0 && taos[1] > 0)
 		{ 
 			double testEq = abs(taos[1] - taos[0]) / taos[0];
 			if (testEq < 0.05)
-				return (taos[1] + taos[0]) / 2;
+			{
+				double meanSpeed = 0;
+				for (int m = 0; m < rowIndex; m ++)
+					meanSpeed += speed[m];
+				meanSpeed /= rowIndex;
+				double results[2];
+				results[0] = dt0 * print_frequency * (taos[1] + taos[0]) / 2;
+				results[1] = meanSpeed;
+				return results;
+			}
 		}
 		Ntotal *= 2;
 		print_frequency *= 2;
 	}
 }
 
-
-int calTao(double q, int Ntotal, int frames, int NCELLS, std::vector< std::vector<double>>& x_com, std::vector< std::vector<double>>& y_com)
+int calTao(double q, int frames, int NCELLS, std::vector< std::vector<double>>& x_com, std::vector< std::vector<double>>& y_com)
 {
 	int tao = -1;
 	std::vector<int> timePoints;
-	double logMax = log(Ntotal*9/10);
+	double logMax = log(frames*9/10);
 	double logInterval = logMax / 100;
 	double currentLogVal = 0;
 	int timePoint = 0;
