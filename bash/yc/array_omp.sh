@@ -37,6 +37,7 @@ job_name=DPM
 echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf
 echo \#SBATCH --cpus-per-task=10 >> $slurmf
+echo \#SBATCH --mem-per-cpu=5G >> $slurmf
 echo \#SBATCH --array=1-$jobnumber >> $slurmf
 echo \#SBATCH -n 1 >> $slurmf
 echo \#SBATCH -p $partition >> $slurmf
