@@ -1458,7 +1458,7 @@ public:
 
 		// activity
 		double T = 10000.0;
-		int frames = 50000;
+		int frames = 10000;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;

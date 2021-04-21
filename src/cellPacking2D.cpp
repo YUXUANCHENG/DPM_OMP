@@ -5276,7 +5276,7 @@ int calTao(double q, int frames, int NCELLS, std::vector< std::vector<double>>& 
 			{
 				for (int k = 0; k < NCELLS; k++)
 				{
-					result = exp(std::complex<double>(0, 1) * (cos(th) * dx[j][k]) + sin(th) * dy[j][k]);
+					result = exp(std::complex<double>(0, 1) * q * ((cos(th) * dx[j][k]) + sin(th) * dy[j][k]));
 					temp_isf += result.real();
 				}
 			}
@@ -5356,10 +5356,21 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 			}
 			taos[r] = calTao(q, rowIndex, NCELLS, x_com, y_com);
 		}
+		cout << "current tao: " << taos[0] << "," << taos[1] << endl;
 		if (taos[0] > 0 && taos[1] > 0)
-		{ 
-			double testEq = abs(taos[1] - taos[0]) / taos[0];
-			if (testEq < 0.05)
+		{ 	
+			double testEq = double(abs(taos[1] - taos[0])) / taos[0];
+			if(taos[0] > exp(log(Ntotal) * 2.0 / 3.0))
+			{
+				Ntotal *= 5;
+				print_frequency *= 5;
+			}
+			else if(taos[0] < exp(log(Ntotal) / 4.0))
+			{
+				Ntotal /= 5;
+				print_frequency /= 5;
+			}
+			else if (testEq < 0.05)
 			{
 				double meanSpeed = 0;
 				for (int m = 0; m < rowIndex; m ++)
@@ -5369,11 +5380,6 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 				results[0] = dt0 * print_frequency * (taos[1] + taos[0]) / 2;
 				results[1] = meanSpeed;
 				return results;
-			}
-			else if(taos[0] > exp(log(Ntotal) / 2))
-			{
-				Ntotal *= 5;
-				print_frequency *= 5;
 			}
 		}
 		else{
