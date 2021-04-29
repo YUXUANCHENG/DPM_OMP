@@ -4763,7 +4763,7 @@ void cellPacking2D::activityCOM_brownian_test(double T, double v0, double Dr, do
 
 void cellPacking2D::printCalA() {
 	for (int ci = 0; ci < NCELLS; ci++) {
-		calAPrintObject << cell(ci).calA() << endl;
+		calAPrintObject << std::setprecision(10) << cell(ci).calA() << endl;
 	}
 }
 
@@ -5192,7 +5192,7 @@ void cellPacking2D::sp_NVE(double T, double v0, double Dr, double vtau, double t
 	rescal_V(current_E);
 	
 	// run NVE for allotted time
-	for (double t = 0.0; t < T * 0.1 ; t = t + dt0 * t_scale) {
+	for (double t = 0.0; t < T ; t = t + dt0 * t_scale) {
 
 		//rescal_V(current_E);
 		// print data first to get the initial condition
@@ -5356,19 +5356,21 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 			}
 			taos[r] = calTao(q, rowIndex, NCELLS, x_com, y_com);
 		}
-		cout << "current tao: " << taos[0] << "," << taos[1] << endl;
+		cout << omp_get_thread_num() <<" : current tao: " << taos[0] << "," << taos[1] << endl;
 		if (taos[0] > 0 && taos[1] > 0)
 		{ 	
 			double testEq = double(abs(taos[1] - taos[0])) / taos[0];
-			if(taos[0] > exp(log(Ntotal) * 2.0 / 3.0))
+			if((taos[0] + taos[1])/2 > exp(log(Ntotal) * 2.0 / 3.0))
 			{
 				Ntotal *= 5;
 				print_frequency *= 5;
+				cout << omp_get_thread_num() <<" : T is a bit small" << endl;
 			}
-			else if(taos[0] < exp(log(Ntotal) / 4.0))
+			else if((taos[0] + taos[1])/2 < exp(log(Ntotal) / 4.0))
 			{
 				Ntotal /= 5;
 				print_frequency /= 5;
+				cout << omp_get_thread_num() <<" : T is a bit large" << endl;
 			}
 			else if (testEq < 0.05)
 			{
@@ -5379,12 +5381,14 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 				double * results = new double[2];
 				results[0] = dt0 * print_frequency * (taos[1] + taos[0]) / 2;
 				results[1] = meanSpeed;
+				cout << omp_get_thread_num() <<" : Equilibrated" << endl;
 				return results;
 			}
 		}
 		else{
 			Ntotal *= 5;
 			print_frequency *= 5;
+			cout << omp_get_thread_num() <<" : T is too small" << endl;
 		}
 	}
 }

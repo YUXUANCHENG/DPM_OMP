@@ -12,9 +12,7 @@ using namespace std;
 int main(int argc, char const *argv[]){
 
 	jamming main_function;
-
 	main_function.sp_NVE_arg(argv);
-
 
 	//Bumpy_CLI<> cli;
 	//BumpyDimer_CLI<> cli;
@@ -29,6 +27,7 @@ int main(int argc, char const *argv[]){
 	//cli.NVEvsDPhi(argv);
 
 	//cli.hopperFlow(argv);
+	//cli.deformation(argv);
 
 	system("pause");
 	return 0;

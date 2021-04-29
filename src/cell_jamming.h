@@ -1450,7 +1450,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 32;
+		int NCELLS = 128;
 		int NV = 16;
 		//int seed = 5;
 		int seed = 1;
@@ -1488,7 +1488,7 @@ public:
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
 			//phiDisk = 0.7;
-			phiDisk = 0.75 + i*0.015;
+			phiDisk = 0.75 + i*0.02;
 
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
@@ -1514,11 +1514,13 @@ public:
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 
-				//v0 = 0.04;
 				//double v0 = 0.002 + double(j) * 0.002;
 				//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 				//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
-				double v0 = double(j+1) * 0.0002;
+				//double v0 = double(j+1) * 0.0002;
+				double start = -8.5 + 0.25 * i;
+				double interval = 0.25 - 0.01 * i;
+				double v0 = exp(start + interval * j);
 				/*
 #pragma omp critical
 				{
@@ -1573,7 +1575,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 64;
 		int NV = 16;
 		//int seed = 5;
 		int seed = 1;
@@ -1644,7 +1646,7 @@ public:
 				//double v0 = 0.002 + double(j) * 0.002;
 				//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 				//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
-				double v0 = double(j+1) * 0.0002;
+				double v0 = double(j+1+i) * 0.0002;
 #pragma omp critical
 				{
 					v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;

@@ -51,6 +51,7 @@ public:
 	double T;						// system temperature
 	double phi;						// system packing/volume fraction
 	double shearStrain;				// applied shear strain to compute shear modulus
+	int gDire = 0;
 
 	// boundary lengths
 	std::vector<double> L;

@@ -643,7 +643,7 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 			cell(ci).shapeForces();
 
 			// gravity force (in +x direction)
-			cell(ci).gravityForces(g, 0);
+			cell(ci).gravityForces(g, gDire);
 		}
 	}
 

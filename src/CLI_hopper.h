@@ -69,6 +69,14 @@ public:
 		_hopperFlow();
 	}
 
+	virtual void deformation(char const* argv[])
+	{
+		this->NCELLS = 1;
+		this->qscompress(argv);
+		this->particles->gDire = 1;
+		_hopperFlow();
+	}
+
 	virtual void _hopperFlow() {
 		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
