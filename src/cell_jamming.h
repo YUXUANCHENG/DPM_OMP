@@ -1450,7 +1450,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 128;
+		int NCELLS = 64;
 		int NV = 16;
 		//int seed = 5;
 		int seed = 1;
@@ -1519,8 +1519,12 @@ public:
 				//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
 				//double v0 = double(j+1) * 0.0002;
 				double start = -8.5 + 0.25 * i;
-				double interval = 0.25 - 0.01 * i;
+				double interval = 0.25 - 0.02 * i;
 				double v0 = exp(start + interval * j);
+
+				// double start = -6 + 0.02 *i;
+				// double interval = 0.25 - 0.02 *i;
+				// double v0 = exp(start - interval * j);
 				/*
 #pragma omp critical
 				{

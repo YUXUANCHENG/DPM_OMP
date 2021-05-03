@@ -5356,17 +5356,22 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 			}
 			taos[r] = calTao(q, rowIndex, NCELLS, x_com, y_com);
 		}
-		cout << omp_get_thread_num() <<" : current tao: " << taos[0] << "," << taos[1] << endl;
+		double meanSpeed = 0;
+		for (int m = 0; m < rowIndex; m ++)
+			meanSpeed += speed[m];
+		meanSpeed /= rowIndex;
+		cout << omp_get_thread_num() <<" : current tao: " << taos[0]* dt0 * print_frequency  << "," << taos[1] * dt0 * print_frequency  << endl;
 		if (taos[0] > 0 && taos[1] > 0)
 		{ 	
-			double testEq = double(abs(taos[1] - taos[0])) / taos[0];
+			//double testEq = double(abs(taos[1] - taos[0])) / taos[0];
+			double testEq = abs((log(taos[1]) - log(taos[0])) / log(taos[0]* dt0 * print_frequency * meanSpeed));
 			if((taos[0] + taos[1])/2 > exp(log(Ntotal) * 2.0 / 3.0))
 			{
 				Ntotal *= 5;
 				print_frequency *= 5;
 				cout << omp_get_thread_num() <<" : T is a bit small" << endl;
 			}
-			else if((taos[0] + taos[1])/2 < exp(log(Ntotal) / 4.0))
+			else if((taos[0] + taos[1])/2 < exp(log(Ntotal) / 3.0))
 			{
 				Ntotal /= 5;
 				print_frequency /= 5;
@@ -5374,10 +5379,7 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 			}
 			else if (testEq < 0.05)
 			{
-				double meanSpeed = 0;
-				for (int m = 0; m < rowIndex; m ++)
-					meanSpeed += speed[m];
-				meanSpeed /= rowIndex;
+
 				double * results = new double[2];
 				results[0] = dt0 * print_frequency * (taos[1] + taos[0]) / 2;
 				results[1] = meanSpeed;
@@ -5385,7 +5387,7 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 				return results;
 			}
 		}
-		else{
+		else if(taos[0] < 0 && taos[1] < 0){
 			Ntotal *= 5;
 			print_frequency *= 5;
 			cout << omp_get_thread_num() <<" : T is too small" << endl;
@@ -5706,7 +5708,7 @@ void cellPacking2D::sp_Forces(vector<double>& lenscales){
 	double overlap = 0.0;
 	double uv = 0.0;
 	double ftmp, utmp;
-	double factor = 10;
+	double factor = 4;
 	vector<double> distanceVec(NDIM,0.0);
 
 	// get disk-disk forces
