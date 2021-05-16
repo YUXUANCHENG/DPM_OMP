@@ -12,7 +12,8 @@ using namespace std;
 int main(int argc, char const *argv[]){
 
 	jamming main_function;
-	main_function.sp_NVE_arg(argv);
+	//main_function.sp_NVE_arg(argv);
+	main_function.sp_NVE_tao(argv);
 
 	//Bumpy_CLI<> cli;
 	//BumpyDimer_CLI<> cli;

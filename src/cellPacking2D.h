@@ -52,12 +52,14 @@ public:
 	double phi;						// system packing/volume fraction
 	double shearStrain;				// applied shear strain to compute shear modulus
 	int gDire = 0;
+	int gOn = 1;
 
 	// boundary lengths
 	std::vector<double> L;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
+	int print_frequency = 1;
 	
 	// array of cells
 	deformableParticles2D* cellArray;
@@ -75,6 +77,7 @@ public:
 	std::ofstream calAPrintObject;
 	std::ofstream contactPrintObject;
 	std::ofstream vPrintObject;
+	std::ofstream ISFPrintObject;
 
 
 	// Constructors and Destructors
@@ -94,6 +97,8 @@ public:
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };
 	void calInertia();
+	double calOriginalHeight();
+	double calHeight();
 
 	// operators
 	void operator=(cellPacking2D& onTheRight);	// assign one configuration to another object
@@ -131,13 +136,14 @@ public:
 		}
 	}
 	
-	void openJamObject(std::string& str, std::string& str1, std::string& str2, std::string& str3, std::string& str4, std::string& str5) {
+	void openJamObject(std::string& str, std::string& str1, std::string& str2, std::string& str3, std::string& str4, std::string& str5, std::string& str6) {
 		jamPrintObject.open(str.c_str());
 		lengthscalePrintObject.open(str1.c_str());
 		phiPrintObject.open(str2.c_str());
 		calAPrintObject.open(str3.c_str());
 		contactPrintObject.open(str4.c_str());
 		vPrintObject.open(str5.c_str());
+		ISFPrintObject.open(str6.c_str());
 		if (!jamPrintObject.is_open()) {
 			std::cout << "	ERROR: jamPrintObject could not open " << str << "..." << std::endl;
 			exit(1);
@@ -378,6 +384,7 @@ public:
 	void cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	double * sp_NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	int calTao(double q, int frames, std::vector< std::vector<double>>& x_com, std::vector< std::vector<double>>& y_com);
 	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void add_drag(int index, double force);
 	void add_drag_cell(int index, double force);

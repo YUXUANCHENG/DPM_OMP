@@ -83,13 +83,13 @@ public:
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
-		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
-		produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
+		produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		// instantiate object
 		cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
 		particles = new Ptype(NCELLS, NT, NPRINT, Lini, seed);
 		std::cout << typeid(particles).name() << '\n';
-		particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+		particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 
 	}
 	virtual void setPhiDisk(){
@@ -113,7 +113,7 @@ public:
 	}
 
 	void produceFileName(string extend, string& energyF, string& jammingF, string& lengthscaleF,
-		string& phiF, string& calAF, string& contactF, string& vF) {
+		string& phiF, string& calAF, string& contactF, string& vF,  string& ISF) {
 		//string positionF = "position" + extend;
 		energyF = "energy" + extend;
 		jammingF = "jam" + extend;
@@ -122,6 +122,7 @@ public:
 		calAF = "calA" + extend;
 		contactF = "contact" + extend;
 		vF = "v" + extend;
+		ISF = "isf" + extend;
 	}
 
 	virtual void prepareSystem() {
@@ -162,13 +163,13 @@ public:
 			}
 			// output files
 			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
-			string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
-			produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+			string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
+			produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 
 			Ptype local_cell_group;
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
-			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
 		}

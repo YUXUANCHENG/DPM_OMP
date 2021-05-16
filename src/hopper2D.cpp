@@ -642,8 +642,9 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 			// forces on vertices due to shape
 			cell(ci).shapeForces();
 
-			// gravity force (in +x direction)
-			cell(ci).gravityForces(g, gDire);
+			// gravity force (in gDire direction)
+			if (gOn)
+				cell(ci).gravityForces(g, gDire);
 		}
 	}
 
@@ -2227,7 +2228,26 @@ void cellPacking2D::printHopperDP(double w0, double w, double th){
 }
 
 
+double cellPacking2D::calOriginalHeight()
+{
+	double radius = pow(cell(0).vrel(0,0),2) + pow(cell(0).vrel(0,1),2);
+	double edgeLength = pow(cell(0).vpos(0,0)-cell(0).vpos(1,0),2) + pow(cell(0).vpos(0,1)-cell(0).vpos(1,1),2);
+	return 2 * sqrt(radius - edgeLength/4);
+}
 
+double cellPacking2D::calHeight()
+{
+	double maxV = -pow(10,4);
+	double minV = -maxV;
+	for (int i = 0; i < cell(0).getNV(); i++)
+	{
+		if (cell(0).vpos(i,1) > maxV)
+			maxV = cell(0).vpos(i,1);
+		if (cell(0).vpos(i,1) < minV)
+			minV = cell(0).vpos(i,1);
+	}
+	return maxV - minV;
+}
 
 
 

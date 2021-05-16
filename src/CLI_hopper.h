@@ -74,14 +74,24 @@ public:
 		this->NCELLS = 1;
 		this->qscompress(argv);
 		this->particles->gDire = 1;
+		this->particles->gOn = 0;
 		_hopperFlow();
+		double originalHeight = this->particles->calOriginalHeight();
+		this->particles->gOn = 1;
+		int result = this->particles->hopperSimulation(w0, w, th, g, b);
+		double endHeight = this->particles->calHeight();
+		std::ofstream deformationPrint;
+		deformationPrint.open("deformation.txt");
+		deformationPrint << (originalHeight - endHeight)/originalHeight << endl;
+		deformationPrint.close();
+
 	}
 
 	virtual void _hopperFlow() {
 		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
-		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF;
-		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
+		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
 		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << endl;
