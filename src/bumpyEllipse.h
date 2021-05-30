@@ -6,8 +6,6 @@
 #include "cellPacking2D.h"
 #include "deformableParticles2D.h"
 
-const double PI = 4 * atan(1);
-
 class BumpyEllipse : public Bumpy {
 public:
 	double ratio_a_b = 1.6;

@@ -12,8 +12,6 @@
 // namespace
 using namespace std;
 
-// constants
-const double PI = 4*atan(1);
 
 // 2D HOPPER FLOW FUNCTIONS
 

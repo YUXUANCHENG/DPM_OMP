@@ -30,6 +30,9 @@
 #include <Eigen/Eigenvalues>
 #include <random>
 
+// constants
+const double PI = 4 * atan(1);
+
 
 class cellPacking2D{
 public:
@@ -385,6 +388,7 @@ public:
 	void cell_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void sp_NVE(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	double * sp_NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	double* NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	int calTao(double q, int frames, std::vector< std::vector<double>>& x_com, std::vector< std::vector<double>>& y_com);
 	void sp_NVE_probe(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void add_drag(int index, double force);

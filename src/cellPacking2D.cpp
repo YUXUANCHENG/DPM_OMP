@@ -15,8 +15,7 @@
 using namespace Eigen;
 using namespace std;
 
-// constants
-const double PI = 4*atan(1);
+
 
 
 /************************

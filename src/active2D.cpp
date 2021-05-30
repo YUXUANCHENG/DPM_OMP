@@ -12,8 +12,6 @@
 // namespace
 using namespace std;
 
-// constant PI
-const double PI = 4*atan(1);
 
 // channel width (in particle diameters)
 const double w0 = 1.5;			

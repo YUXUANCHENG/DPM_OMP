@@ -1,4 +1,5 @@
 #include "bumpy.h"
+#include "taoSolver.h"
 
 void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance) {
 	int ci;
@@ -130,6 +131,12 @@ void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 int Bumpy::hopperSimulation(double w0, double w, double th, double g, double b) {
 	BumpyHopperSimulator simulator = BumpyHopperSimulator(this);
 	return simulator.hopperFlow(w0, w, th, g, b);
+}
+
+double* Bumpy::NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	BumpyNVEsimulator simulator = BumpyNVEsimulator(this);
+	TaoSolver taoSolver = TaoSolver(this, &simulator);
+	return taoSolver.NVE_tao(T, v0, Dr, vtau, t_scale, frames);
 }
 
 void Bumpy::hopperForces(double w0, double w, double th, double g, int closed){

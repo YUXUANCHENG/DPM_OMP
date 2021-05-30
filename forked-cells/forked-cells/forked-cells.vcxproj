@@ -151,6 +151,7 @@
     <ClInclude Include="..\..\src\CLI_hopper.h" />
     <ClInclude Include="..\..\src\deformableParticles2D.h" />
     <ClInclude Include="..\..\src\NVE.h" />
+    <ClInclude Include="..\..\src\taoSolver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\active2D.cpp" />

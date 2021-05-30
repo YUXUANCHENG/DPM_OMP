@@ -60,8 +60,8 @@ public:
 	double Phi_to_PhiJ = 0.03;
 
 	// activity
-	double T = 1000000.0;
-	int frames = 50000;
+	double T = 10000.0;
+	int frames = 20000;
 	double Dr;
 	double vtau = 1e-2;
 	double t_scale = 1.00;
@@ -93,10 +93,12 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		phiDisk = 0.75;
+		//phiDisk = 0.75;
+		phiDisk = 0.75 + index_i * 0.02;
 	}
 	virtual void setSeed() {
-		seed = index_i;
+		//seed = index_i;
+		seed = 0;
 	}
 	virtual void setKB() {
 		//double ratio = 100.0;
@@ -192,18 +194,45 @@ public:
 		qscompress(argv);
 		_NVE();
 	}
+
+	virtual void calTao(char const* argv[])
+	{
+		qscompress(argv);
+
+		double preset_time = T;
+
+		for (int j = 0; j < 10; j++) {
+			cout << "Loop i, j = " << index_i << "," << j << endl;
+
+			double start = -8.5 + 0.25 * index_i;
+			double interval = 0.25 - 0.02 * index_i;
+			double v0 = exp(start + interval * (9 - j));
+
+			// output files
+			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
+			string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
+			produceFileName(extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+
+			Ptype local_cell_group;
+			particles->saveState(local_cell_group);
+			local_cell_group.closeF();
+			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
+			if (j == 0) local_cell_group.LangevinSimulation(T, v0, t_scale, 10);
+			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
+			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
+			preset_time = result[0] * 10;
+			delete[] result;
+			local_cell_group.saveState(*particles);
+		}
+	}
 };
 
 template <class Ptype = Bumpy>
 class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
-/*
-	virtual void createParticles(char const* argv[])
-	{
-		_createParticles<Bumpy>(argv);
-	}
-*/
+
 	virtual void prepareSystem() {
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
@@ -211,20 +240,7 @@ public:
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
-/*
-	virtual void NVEvsDPhi(char const* argv[])
-	{
-		findJamming(argv);
-		toDeltaPhi(Phi_to_PhiJ);
-		_NVE<Bumpy>();
-	}
 
-	virtual void NVE(char const* argv[])
-	{
-		qscompress(argv);
-		_NVE<Bumpy>();
-	}
-*/
 };
 
 template <class Ptype = BumpyEllipse>
@@ -232,15 +248,7 @@ class BumpyEllipse_CLI : public Bumpy_CLI<Ptype> {
 public:
 	//typedef BumpyEllipse particleType;
 	double ratio = 1.7;
-/*
-	virtual void createParticles(char const* argv[])
-	{
-		phiDisk = 0.86;
-		//phiDisk = 0.65;
-		//NV = 32;
-		_createParticles<BumpyEllipse>(argv);
-	}
-*/
+
 	virtual void setPhiDisk(){
 		this->phiDisk = 0.86;
 	}
@@ -253,35 +261,14 @@ public:
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
-/*
-	virtual void NVEvsDPhi(char const* argv[])
-	{
-		findJamming(argv);
-		toDeltaPhi(Phi_to_PhiJ);
-		_NVE<BumpyEllipse>();
-	}
 
-	virtual void NVE(char const* argv[])
-	{
-		qscompress(argv);
-		_NVE<BumpyEllipse>();
-	}
-*/
 };
 
 template <class Ptype = BumpyDimer>
 class BumpyDimer_CLI : public BumpyEllipse_CLI<Ptype> {
 public:
 	//typedef BumpyDimer particleType;
-/*
-	virtual void createParticles(char const* argv[])
-	{
-		phiDisk = 0.86;
-		//phiDisk = 0.65;
-		ratio = 1.6;
-		_createParticles<BumpyDimer>(argv);
-	}
-*/
+
 	virtual void setPhiDisk(){
 		//phiDisk = 0.86;
 		this->seed = 1;
@@ -289,20 +276,7 @@ public:
 		this->ratio = 1.6;
 		this->NV = 16;
 	}
-/*
-	virtual void NVEvsDPhi(char const* argv[])
-	{
-		findJamming(argv);
-		toDeltaPhi(Phi_to_PhiJ);
-		_NVE<BumpyDimer>();
-	}
 
-	virtual void NVE(char const* argv[])
-	{
-		qscompress(argv);
-		_NVE<BumpyDimer>();
-	}
-*/
 };
 
 #endif

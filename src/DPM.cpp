@@ -1,5 +1,6 @@
 #include "cellPacking2D.h"
 #include "NVE.h"
+#include "taoSolver.h"
 
 void cellPacking2D::resetV() {
 	int ci, vi, d;
@@ -68,3 +69,11 @@ void cellPacking2D::compressToInitial(double phiTarget, double deltaPhi, double 
 
 	qsIsoCompression(phiTarget, deltaPhi, Ftol);
 }
+
+double* cellPacking2D::NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	DPMNVEsimulator simulator = DPMNVEsimulator(this);
+	TaoSolver taoSolver = TaoSolver(this, &simulator);
+	return taoSolver.NVE_tao(T, v0, Dr, vtau, t_scale, frames);
+}
+
+

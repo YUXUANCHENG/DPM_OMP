@@ -17,6 +17,7 @@ public:
 	virtual void fireMinimizeF(double Ftol, double& Ftest, double& Ktest);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	virtual void hopperForces(double w0, double w, double th, double g, int closed);
+	double* NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 };
 
 #endif
