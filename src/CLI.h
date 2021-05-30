@@ -38,7 +38,7 @@ public:
 	double kb = 0.0;				// bending energy constant
 	double gam = 0.0;				// surface tension force constant
 
-	const double kint = 1.0;				// interaction energy constant
+	double kint = 1.0;				// interaction energy constant
 	const double del = 1.0;				// width of vertices in units of l0, vertex sep on regular polygon
 	const double aInitial = 0.0;				// attraction parameter to start
 

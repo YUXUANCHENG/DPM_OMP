@@ -1046,6 +1046,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							ftmp = (2.0/sigma)*(1 - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
+							// temperary fix for wall torque
+							cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp*s - cell(ci).vrel(vi, 1) * (-1) * ftmp*c;
 
 							// add to energies
 							utmp = 0.5*pow(1 - overlap,2);
@@ -1071,6 +1073,9 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							ftmp = (2.0/sigma)*(1 - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
+							// temperary fix for wall torque
+							cell(ci).torque += cell(ci).vrel(vi, 0) * (-1) * ftmp*s - cell(ci).vrel(vi, 1) * (-1) * ftmp*c;
+
 
 							// add to energies
 							utmp = 0.5*pow(1 - overlap,2);
@@ -1217,6 +1222,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					// add to y force ONLY (points in positive y direction)
 					ftmp = (2.0/sigma)*(1 - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp);
+					// temperary fix for wall torque
+					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
 
 					// add to energies
 					utmp = 0.5*pow(1 - overlap,2);
@@ -1237,6 +1244,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					// add to y force ONLY (points in negative y direction)
 					ftmp = (2.0/sigma)*(1 - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
+					// temperary fix for wall torque
+					cell(ci).torque += cell(ci).vrel(vi, 0) * (-1) * ftmp;
 
 					// add to energies
 					utmp = 0.5*pow(1 - overlap,2);
@@ -2232,7 +2241,7 @@ double cellPacking2D::calOriginalHeight()
 {
 	double radius = pow(cell(0).vrel(0,0),2) + pow(cell(0).vrel(0,1),2);
 	double edgeLength = pow(cell(0).vpos(0,0)-cell(0).vpos(1,0),2) + pow(cell(0).vpos(0,1)-cell(0).vpos(1,1),2);
-	return 2 * sqrt(radius - edgeLength/4);
+	return 2 * sqrt(radius - edgeLength/4) + cell(0).getl0();
 }
 
 double cellPacking2D::calHeight()
@@ -2246,9 +2255,16 @@ double cellPacking2D::calHeight()
 		if (cell(0).vpos(i,1) < minV)
 			minV = cell(0).vpos(i,1);
 	}
-	return maxV - minV;
+	//return maxV - minV;
+	return maxV + cell(0).getl0()/2;
 }
 
+void cellPacking2D::changeL0(double factor)
+{
+	for (int i = 0; i < NCELLS; i++){
+		cell(i).setl0(cell(i).getl0() * factor);
+	}
+}
 
 
 

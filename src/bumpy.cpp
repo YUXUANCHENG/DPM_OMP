@@ -137,8 +137,8 @@ void Bumpy::hopperForces(double w0, double w, double th, double g, int closed){
 	bumpy_Forces();
 	// loop over cells and cell pairs, calculate shape and interaction forces
 	for (ci = 0; ci < NCELLS; ci++) {
-		if (cell(ci).inside_hopper)
-			cell(ci).gravityForces(g, 0); // gravity force (in +x direction)
+		if (cell(ci).inside_hopper && gOn)
+			cell(ci).gravityForces(g, gDire); // gravity force (in +x direction)
 	}
 
 	// reset vstress to 0, for hopper sims used to compute net force on top (x) and bottom (y) walls

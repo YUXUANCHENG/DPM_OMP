@@ -99,6 +99,7 @@ public:
 	void calInertia();
 	double calOriginalHeight();
 	double calHeight();
+	void changeL0(double factor);
 
 	// operators
 	void operator=(cellPacking2D& onTheRight);	// assign one configuration to another object

@@ -5235,7 +5235,7 @@ int cellPacking2D::calTao(double q, int frames, std::vector< std::vector<double>
 {
 	int tao = -2;
 	std::vector<int> timePoints;
-	double logMax = log(frames*9/10);
+	double logMax = log(frames*5/10);
 	double logInterval = logMax / 100;
 	double currentLogVal = 0;
 	int timePoint = 0;
@@ -5329,6 +5329,12 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 	std::vector< std::vector<double>> x_com(frames, std::vector<double>(NCELLS, 0));
 	std::vector< std::vector<double>> y_com(frames, std::vector<double>(NCELLS, 0));
 	std::vector<double> speed(frames, 0);
+	double * results = new double[2];
+	bool REACHED = false;
+	bool READY = false;
+	std::vector<double> tao;
+	std::vector<double> Temp;
+	int count = 0;
 
 	while (true)
 	{ 
@@ -5395,15 +5401,39 @@ double * cellPacking2D::sp_NVE_tao(double T, double v0, double Dr, double vtau, 
 				print_frequency /= 5;
 				cout << omp_get_thread_num() <<" : T is a bit large" << endl;
 			}
-			else if (testEq < 0.05)
+			else if ((testEq < 0.05 && !REACHED) || REACHED)
+			//else if (testEq < 0.5)
 			{
-
-				double * results = new double[2];
-				results[0] = dt0 * print_frequency * (taos[1] + taos[0]) / 2;
-				results[1] = meanSpeed;
-				cout << omp_get_thread_num() <<" : Equilibrated" << endl;
+				//if (count > 1){
+					tao.push_back(dt0 * print_frequency * (taos[1] + taos[0]) / 2);
+					Temp.push_back(meanSpeed);
+				//}
+				if (!REACHED)
+				{
+					cout << omp_get_thread_num() <<" : Equilibrated" << endl;
+					REACHED = true;
+				}
+				else
+					cout << omp_get_thread_num() <<" : Extended runs" << endl;
+				count ++;
+				if (count > 3) READY = true;
+				//if (count > 5) READY = true;
+			}
+			if (READY)
+			{
+				double avg = 0;
+				for (double item : tao)
+					avg += item;
+				avg /= tao.size();
+				results[0] = avg;
+				avg = 0;
+				for (double item : Temp)
+					avg += item;
+				avg /= Temp.size();
+				results[1] = avg;
 				return results;
 			}
+
 		}
 		//else if(taos[0] < 0 && taos[1] < 0){
 		else{

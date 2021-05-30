@@ -18,18 +18,21 @@ public:
 	vector<double> radii;
 	double w_scale = 2;
 	double w;
+	double l0Factor = 1;
 
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
 		this->kl = 10.0;
 		this->ka = 10.0;
-		this->kb = 0.01;
+		this->kb = 0;
+		this->l0Factor = 0.999;
 		this->g = 0.05;
 		this->Lini = 0.1 * w0;
 		this->NCELLS = 64;
 		this->NV = 16;
 		this->calA0 = 1.0;
+		//this->kint = 10.0;	
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -53,13 +56,14 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		w_scale = 0.7 + 0.05 * this->index_j;
+		w_scale = 0.5 + 0.05 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
+		this->particles->changeL0(l0Factor);
 		this->particles->closeF();
 	}
 
@@ -109,6 +113,7 @@ public:
 	this->kl = 0;
 	this->ka = 0;
 	this->kb = 0;
+	this->l0Factor = 1;
 	}
 	virtual void prepareSystem() {
 		DPM_Hopper_CLI<Ptype>::prepareSystem();
