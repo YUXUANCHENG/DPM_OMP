@@ -358,6 +358,8 @@ void subspace::calculateForces_insub() {
 			// forces between resident cells
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
+				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
+					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
 					cout << "incorrect resident list" << endl;
 					//print_information();
@@ -382,6 +384,8 @@ void subspace::calculateForces_betweensub() {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
+				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
+					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
 					cout << "incorrect cashed list" << endl;
 					//print_information();
