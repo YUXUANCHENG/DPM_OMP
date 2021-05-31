@@ -2,7 +2,7 @@
 #define SUBSPACE_H
 
 #include "deformableParticles2D.h"
-#include "cellPacking2D.h"
+//#include "cellPacking2D.h"
 #include <iostream>
 #include <iomanip>
 #include <string>

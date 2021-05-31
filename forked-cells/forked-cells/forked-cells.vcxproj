@@ -150,6 +150,7 @@
     <ClInclude Include="..\..\src\CLI.h" />
     <ClInclude Include="..\..\src\CLI_hopper.h" />
     <ClInclude Include="..\..\src\deformableParticles2D.h" />
+    <ClInclude Include="..\..\src\DPM_Parallel.h" />
     <ClInclude Include="..\..\src\NVE.h" />
     <ClInclude Include="..\..\src\subspace.h" />
     <ClInclude Include="..\..\src\taoSolver.h" />

@@ -347,7 +347,7 @@ void subspace::calculateForces_insub() {
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
 					cout << "incorrect resident list" << endl;
-					print_information();
+					//print_information();
 					continue;
 				}
 				// calculate forces, add to number of vertex-vertex contacts
@@ -371,7 +371,7 @@ void subspace::calculateForces_betweensub() {
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
 					cout << "incorrect cashed list" << endl;
-					print_information();
+					//print_information();
 					continue;
 				}
 				// notice that stress between resident and cashed cells are double counted

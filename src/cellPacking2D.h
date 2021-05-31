@@ -16,9 +16,8 @@
 	* Note: everything in d=2, not generalizable to any d
 
 */
-
-#include "deformableParticles2D.h"
 #include "subspace.h"
+#include "deformableParticles2D.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -34,6 +33,8 @@
 // constants
 const double PI = 4 * atan(1);
 
+//class subspace;
+//class cvpair;
 
 class cellPacking2D{
 public:

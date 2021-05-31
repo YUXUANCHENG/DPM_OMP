@@ -52,7 +52,7 @@ public:
 	string extend;
 
 	// system size
-	int NCELLS = 16;
+	int NCELLS = 32;
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
@@ -152,7 +152,7 @@ public:
 	}
 
 	void _NVE() {
-#pragma omp parallel for 
+//#pragma omp parallel for 
 		for (int j = 0; j < 10; j++) {
 
 			cout << "Loop i, j = " << index_i << "," << j << endl;
@@ -172,6 +172,7 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
 		}

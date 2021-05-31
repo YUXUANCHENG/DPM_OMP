@@ -44,6 +44,9 @@
     <ClInclude Include="..\..\src\subspace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\DPM_Parallel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\active2D.cpp">
