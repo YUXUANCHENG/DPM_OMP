@@ -18,8 +18,8 @@ int main(int argc, char const *argv[]){
 
 	//Bumpy_CLI<> cli;
 	//BumpyDimer_CLI<> cli;
-	//DPM_CLI<> cli;
-	DPM_CLI<DPM_Parallel> cli;
+	DPM_CLI<> cli;
+	//DPM_CLI<DPM_Parallel> cli;
 	//BumpyEllipse_CLI<> cli;
 	
 	//DPM_Hopper_CLI<> cli;

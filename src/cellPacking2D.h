@@ -40,6 +40,10 @@ class cellPacking2D{
 public:
 
 	subspace* subsystem = nullptr;
+	std::vector<int> N_systems;
+	virtual void initialize_subsystems(int N_x, int N_y) {
+		;
+	};
 
 	// int scalars
 	int NDIM;						// spatial dimension (will always be 2)
@@ -71,7 +75,7 @@ public:
 	// array of cells
 	deformableParticles2D* cellArray;
 
-	std::vector<int> N_systems;
+	
 
 	// contact matrix
 	int* contactMatrix;				// array of contacts between particles (= number of vv contacts between two cells)
@@ -237,8 +241,7 @@ public:
 
 	***************************/
 
-	void calculateForces();
-	void calculateForces_parallel();
+	virtual void calculateForces();
 	void gelationForces();
 
 
@@ -415,14 +418,7 @@ public:
 	void rescal_V(double E);
 	void rescal_V_probe(double E);
 
-	void initialize_subsystems(int N_x, int N_y);
-	void reset_subsystems();
-	void delete_subsystems();
-	void split_into_subspace();
-	void cashe_into(int i, vector<cvpair*>& cash_list);
-	void migrate_into(int i, cvpair* const& migration);
-	int look_for_new_box(cvpair* pair);
-	double transformPos(cvpair* pair, int direction);
+
 
 
 	void relaxP(double Ktolerance, double Ptolerance) {

@@ -75,43 +75,8 @@ public:
 		cellpointer->rescal_V(init_E);
 	}
 
-	void subspaceManager() {
-		for (int i = 0; i < cellpointer->N_systems[0] * cellpointer->N_systems[1]; i++)
-			cellpointer->subsystem[i].migrate_out();
-		for (int i = 0; i < cellpointer->N_systems[0] * cellpointer->N_systems[1]; i++)
-			cellpointer->subsystem[i].reset_cashe();
-		for (int i = 0; i < cellpointer->N_systems[0] * cellpointer->N_systems[1]; i++)
-			cellpointer->subsystem[i].cashe_out(0);
-		for (int i = 0; i < cellpointer->N_systems[0] * cellpointer->N_systems[1]; i++)
-			cellpointer->subsystem[i].cashe_out(1);
-	}
-
 };
 
-class DPMNVEsimulatorParallel : public DPMNVEsimulator {
-
-public:
-	DPMNVEsimulatorParallel(cellPacking2D* cell):DPMNVEsimulator(cell) {
-		cell->initialize_subsystems(10, 10);
-	}
-
-	virtual void NVERoutine() {
-
-		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
-			cellpointer->cell(ci).updateCPos();
-		}
-
-		// reset contacts before force calculation
-		cellpointer->resetContacts();
-		// calculate forces
-		subspaceManager();
-
-		cellpointer->calculateForces_parallel();
-		// update velocities
-		verletVelocityUpdate();
-	}
-};
 
 class BumpyNVEsimulator : public DPMNVEsimulator {
 public:

@@ -1,7 +1,7 @@
 // include file
 #include "subspace.h"
 #include "deformableParticles2D.h"
-#include "cellPacking2D.h"
+#include "DPM_Parallel.h"
 #include "random"
 #include <cmath>
 #include <omp.h>
@@ -9,7 +9,7 @@
 using namespace std;
 
 // split the packing system into smaller subsystems
-void cellPacking2D::split_into_subspace() {
+void DPM_Parallel::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
 	if (subsystem == nullptr)
@@ -32,18 +32,18 @@ void cellPacking2D::split_into_subspace() {
 };
 
 // cashe list send to subsystems
-void cellPacking2D::cashe_into(int i, vector<cvpair*>& cash_list) {
+void DPM_Parallel::cashe_into(int i, vector<cvpair*>& cash_list) {
 	subsystem[i].cashe_in(cash_list);
 };
 
 // migrate cells into subsystems
-void cellPacking2D::migrate_into(int i, cvpair* const& migration) {
+void DPM_Parallel::migrate_into(int i, cvpair* const& migration) {
 	migration->boxid = i;
 	subsystem[i].migrate_in(migration);
 };
 
 // figure out which box the cells belong to
-int cellPacking2D::look_for_new_box(cvpair* pair) {
+int DPM_Parallel::look_for_new_box(cvpair* pair) {
 	int box_id = 0;
 	int x_id = 0;
 	int y_id = 0;
@@ -62,7 +62,7 @@ int cellPacking2D::look_for_new_box(cvpair* pair) {
 	return box_id;
 }
 
-double cellPacking2D::transformPos(cvpair* pair, int direction) {
+double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 	if (cell(pair->ci).pbc.at(direction) == 1) {
 		double x = cell(pair->ci).vpos(pair->vi, direction);
 		double y = L.at(direction);
@@ -72,7 +72,7 @@ double cellPacking2D::transformPos(cvpair* pair, int direction) {
 }
 
 // initialization
-void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
+void DPM_Parallel::initialize_subsystems(int N_x, int N_y) {
 
 	// set how many boxes along each direction
 	if (N_systems.size() < 2)
@@ -92,12 +92,12 @@ void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
 
 // reset system
-void  cellPacking2D::reset_subsystems() {
+void  DPM_Parallel::reset_subsystems() {
 	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 		(subsystem[i]).reset();
 }
 
-void  cellPacking2D::delete_subsystems() {
+void  DPM_Parallel::delete_subsystems() {
 	delete[] subsystem;
 	subsystem = nullptr;
 }
@@ -296,7 +296,18 @@ void subspace::migrate_out() {
 	}
 }
 
-void cellPacking2D::calculateForces_parallel() {
+void DPM_Parallel::subspaceManager() {
+	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
+		subsystem[i].migrate_out();
+	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
+		subsystem[i].reset_cashe();
+	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
+		subsystem[i].cashe_out(0);
+	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
+		subsystem[i].cashe_out(1);
+}
+
+void DPM_Parallel::calculateForces() {
 	// reset forces
 	for (int ci = 0; ci < NCELLS; ci++) {
 		// reset center of mass forces
@@ -313,6 +324,8 @@ void cellPacking2D::calculateForces_parallel() {
 			cell(ci).setUInt(vi, 0.0);
 		}
 	}
+
+	subspaceManager();
 
 	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 		subsystem[i].calculateForces_insub();

@@ -3,7 +3,7 @@
 
 #include "bumpy.h"
 #include "NVE.h"
-#include "cellPacking2D.h"
+#include "DPM_Parallel.h"
 #include "deformableParticles2D.h"
 
 class BumpyEllipse : public Bumpy {

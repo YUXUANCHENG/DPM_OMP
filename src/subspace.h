@@ -2,7 +2,7 @@
 #define SUBSPACE_H
 
 #include "deformableParticles2D.h"
-//#include "cellPacking2D.h"
+//#include "DPM_Parallel.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -25,7 +25,7 @@ public:
 };
 using namespace std;
 
-class cellPacking2D;
+class DPM_Parallel;
 
 class subspace {
 
@@ -40,7 +40,7 @@ protected:
 	vector<cvpair*> cash_out_list_upper;
 
 	// pointer to the whole system (cell_group)
-	cellPacking2D* pointer_to_system;
+	DPM_Parallel* pointer_to_system;
 
 	// which box is this
 	int box_id;
@@ -71,7 +71,7 @@ protected:
 
 public:
 
-	void initialize(cellPacking2D* const& pointer, vector<double> const& L, vector<int> const& N_systems, int box_id, double const& dt0) {
+	void initialize(DPM_Parallel* const& pointer, vector<double> const& L, vector<int> const& N_systems, int box_id, double const& dt0) {
 		pointer_to_system = pointer;
 		this->L = L;
 		this->box_id = box_id;
