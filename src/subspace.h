@@ -40,7 +40,7 @@ protected:
 	vector<cvpair*> cash_out_list_upper;
 
 	// pointer to the whole system (cell_group)
-	DPM_Parallel* pointer_to_system;
+	DPM_Parallel* pointer_to_system = nullptr;
 
 	// which box is this
 	int box_id;

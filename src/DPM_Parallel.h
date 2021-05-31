@@ -27,7 +27,13 @@ public:
 */
 	void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		cellPacking2D::initializeGel(NV, phiDisk, sizeDispersion, delval);
-		initialize_subsystems(10, 10);
+		initialize_subsystems(2, 2);
+	}
+
+	virtual void scaleLengths(double val) {
+		cellPacking2D::scaleLengths(val);
+		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+			subsystem[i].cal_cashed_fraction();
 	}
 };
 

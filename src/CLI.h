@@ -52,7 +52,7 @@ public:
 	string extend;
 
 	// system size
-	int NCELLS = 32;
+	int NCELLS = 16;
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;

@@ -17,7 +17,7 @@ void DPM_Parallel::split_into_subspace() {
 
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
-		(subsystem[i]).initialize(this, L, N_systems, i, dt0);
+		subsystem[i].initialize(this, L, N_systems, i, dt0);
 	}
 
 	// assign vertexes into subsystems
@@ -69,6 +69,8 @@ double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 		double modPos = x - (int)(x / y) * y;
 		return modPos > 0 ? modPos : modPos + y;
 	}
+	else
+		return cell(pair->ci).vpos(pair->vi, direction);
 }
 
 // initialization
@@ -111,7 +113,7 @@ void subspace::cal_cashed_fraction(){
 	for (int d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 3 * pointer_to_system->cell(0).l0 / spacing;
+		cashed_fraction.at(d) = 2 * pointer_to_system->cell(0).l0 / spacing;
 		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.5) {
 			cout << " Too much boxes for too little cells " << endl;
 			// has to be exactly 0.5, otherwise there could be problem of untracked bonds

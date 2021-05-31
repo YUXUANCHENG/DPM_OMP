@@ -229,7 +229,7 @@ public:
 	void setPackingFraction(double val);
 	void setAsphericity(double val);
 	void setAsphericity(int ci, double val);
-	void scaleLengths(double val);
+	virtual void scaleLengths(double val);
 	void rescaleVelocities(double temperature);
 	void rescaleVelocities_probe(double temperature);
 	int removeRattlers(int krcrs);
