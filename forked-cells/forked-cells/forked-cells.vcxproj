@@ -151,6 +151,7 @@
     <ClInclude Include="..\..\src\CLI_hopper.h" />
     <ClInclude Include="..\..\src\deformableParticles2D.h" />
     <ClInclude Include="..\..\src\NVE.h" />
+    <ClInclude Include="..\..\src\subspace.h" />
     <ClInclude Include="..\..\src\taoSolver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +164,7 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\NVE.cpp" />
     <ClCompile Include="..\..\src\stickySP.cpp" />
+    <ClCompile Include="..\..\src\subspace.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

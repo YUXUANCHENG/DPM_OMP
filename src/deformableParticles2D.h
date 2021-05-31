@@ -27,7 +27,7 @@
 using namespace std;
 
 class deformableParticles2D{
-private:
+public:
 	// spatial dimension
 	int NDIM;
 

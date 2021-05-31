@@ -77,6 +77,27 @@ public:
 
 };
 
+class DPMNVEsimulatorParallel : DPMNVEsimulator {
+	DPMNVEsimulatorParallel(cellPacking2D* cell):DPMNVEsimulator(cell) {
+		;
+	}
+
+	virtual void NVERoutine() {
+
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
+			cellpointer->cell(ci).updateCPos();
+		}
+
+		// reset contacts before force calculation
+		cellpointer->resetContacts();
+		// calculate forces
+		cellpointer->calculateForces_parallel();
+		// update velocities
+		verletVelocityUpdate();
+	}
+};
+
 class BumpyNVEsimulator : public DPMNVEsimulator {
 public:
 
