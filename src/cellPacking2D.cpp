@@ -415,6 +415,7 @@ void cellPacking2D::operator=(cellPacking2D& onTheRight){
 	dt0 	= onTheRight.dt0;
 	T 		= onTheRight.T;
 	phi 	= onTheRight.phi;
+	N_systems = onTheRight.N_systems;
 
 	// box length
 	for (int d=0; d<NDIM; d++)
@@ -476,6 +477,7 @@ void cellPacking2D::saveState(cellPacking2D& saveObject){
 		saveObject.sigmaYY = sigmaYY;
 
 		saveObject.shearStrain = shearStrain;
+		saveObject.N_systems = N_systems;
 
 		for (ci=0; ci<NCELLS; ci++){
 			// copy cell objects (using overloaded operator in deformableParticle2D class)

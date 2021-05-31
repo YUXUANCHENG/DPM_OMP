@@ -41,9 +41,8 @@ public:
 
 	subspace* subsystem = nullptr;
 	std::vector<int> N_systems;
-	virtual void initialize_subsystems(int N_x, int N_y) {
-		;
-	};
+	void initializeSub() { ; };
+	
 
 	// int scalars
 	int NDIM;						// spatial dimension (will always be 2)

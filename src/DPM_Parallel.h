@@ -35,6 +35,11 @@ public:
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].cal_cashed_fraction();
 	}
+
+	void initializeSub() {
+		initialize_subsystems(N_systems.at(0) , N_systems.at(1));
+	}
+
 };
 
 #endif

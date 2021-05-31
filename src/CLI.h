@@ -173,6 +173,7 @@ public:
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
+			local_cell_group.initializeSub();
 			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
 		}
@@ -219,6 +220,7 @@ public:
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
+			local_cell_group.initializeSub();
 			if (j == 0) local_cell_group.LangevinSimulation(T, v0, t_scale, 10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
