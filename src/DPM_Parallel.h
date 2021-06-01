@@ -24,10 +24,6 @@ public:
 		simulator.NVEsimulationNoInjection(T, v0, t_scale, frames);
 	}
 */
-	void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
-		cellPacking2D::initializeGel(NV, phiDisk, sizeDispersion, delval);
-		initialize_subsystems(2, 2);
-	}
 
 	virtual void scaleLengths(double val) {
 		cellPacking2D::scaleLengths(val);
@@ -35,7 +31,7 @@ public:
 			subsystem[i].cal_cashed_fraction();
 	}
 
-	void initializeSub() {
+	virtual void initialize_subsystems() {
 		initialize_subsystems(N_systems.at(0) , N_systems.at(1));
 	}
 

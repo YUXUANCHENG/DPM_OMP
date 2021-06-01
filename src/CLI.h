@@ -52,10 +52,12 @@ public:
 	string extend;
 
 	// system size
-	int NCELLS = 16;
+	int NCELLS = 64;
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
+	int NBx = 8;
+	int NBy = NBx;
 
 	double Phi_to_PhiJ = 0.03;
 
@@ -131,6 +133,7 @@ public:
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		particles->initializeGel(NV, phiDisk, sizedev, del);
+		particles->initialize_subsystems(NBx, NBy);
 		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 		particles->vertexDPMTimeScale(timeStepMag);
 		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
@@ -173,7 +176,7 @@ public:
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
-			local_cell_group.initializeSub();
+			local_cell_group.initialize_subsystems();
 			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
 		}
@@ -220,7 +223,7 @@ public:
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
-			local_cell_group.initializeSub();
+			local_cell_group.initialize_subsystems();
 			if (j == 0) local_cell_group.LangevinSimulation(T, v0, t_scale, 10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
@@ -240,6 +243,7 @@ public:
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
 		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
+		this->particles->initialize_subsystems(this->NBx, this->NBy);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}

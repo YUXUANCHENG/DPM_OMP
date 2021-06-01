@@ -11,6 +11,7 @@ public:
 	//using Bumpy::Bumpy;
 	Bumpy_Parallel(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};
 	Bumpy_Parallel() = default;
+	using DPM_Parallel::initialize_subsystems;
 	virtual void bumpy_Forces() { 
 		// reset forces
 		for (int ci = 0; ci < NCELLS; ci++) {

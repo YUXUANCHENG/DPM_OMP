@@ -41,7 +41,8 @@ public:
 
 	subspace* subsystem = nullptr;
 	std::vector<int> N_systems;
-	void initializeSub() { ; };
+	virtual void initialize_subsystems() { ; };
+	virtual void initialize_subsystems(int N_x, int N_y){ ; };
 	
 
 	// int scalars
