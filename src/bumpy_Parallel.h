@@ -7,8 +7,10 @@
 
 class Bumpy_Parallel : public Bumpy, public DPM_Parallel {
 public:
-	using Bumpy::Bumpy;
-
+	// g++ does not support multiple inheritance of constructors???
+	//using Bumpy::Bumpy;
+	Bumpy_Parallel(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};
+	Bumpy_Parallel() = default;
 	virtual void bumpy_Forces() { 
 		// reset forces
 		for (int ci = 0; ci < NCELLS; ci++) {
