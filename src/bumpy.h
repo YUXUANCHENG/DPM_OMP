@@ -4,7 +4,7 @@
 #include "cellPacking2D.h"
 #include "NVE.h"
 
-class Bumpy : public cellPacking2D {
+class Bumpy : public virtual cellPacking2D {
 public:
 	using cellPacking2D::cellPacking2D;
 	void printV();

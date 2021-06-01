@@ -408,7 +408,7 @@ public:
 	void sp_Forces(vector<double>& lenscales);
 	void sp_Forces_probe(vector<double>& lenscales);
 	void bumpy_NVE(double phiTarget, double T, double v0, double Dr, double vtau, double t_scale, int frames);
-	void bumpy_Forces();
+	virtual void bumpy_Forces();
 	void bumpyRotation();
 	void bumpy_angularV();
 	void bumpy_angularV(double b);

@@ -145,6 +145,7 @@
     <ClInclude Include="..\..\src\bumpy.h" />
     <ClInclude Include="..\..\src\bumpyDimer.h" />
     <ClInclude Include="..\..\src\bumpyEllipse.h" />
+    <ClInclude Include="..\..\src\bumpy_Parallel.h" />
     <ClInclude Include="..\..\src\cellPacking2D.h" />
     <ClInclude Include="..\..\src\cell_jamming.h" />
     <ClInclude Include="..\..\src\CLI.h" />

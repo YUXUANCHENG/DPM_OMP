@@ -90,7 +90,7 @@ void DPM_Parallel::initialize_subsystems(int N_x, int N_y) {
 	}
 	// split
 	split_into_subspace();
-	
+
 }
 
 
@@ -108,14 +108,14 @@ void  DPM_Parallel::delete_subsystems() {
 
 
 
-void subspace::cal_cashed_fraction(){
+void subspace::cal_cashed_fraction() {
 
 	// calculate cashed fraction
 	for (int d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
 		cashed_fraction.at(d) = 2 * pointer_to_system->cell(0).l0 / spacing;
-		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.5) {
+		if (N_systems[d] == 2 && cashed_fraction.at(d) > 0.5) {
 			cout << " Too much boxes for too little cells " << endl;
 			// has to be exactly 0.5, otherwise there could be problem of untracked bonds
 			cashed_fraction.at(d) = 0.5 - 1e-8;
@@ -299,45 +299,6 @@ void subspace::migrate_out() {
 	}
 }
 
-void DPM_Parallel::subspaceManager() {
-	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
-		subsystem[i].migrate_out();
-	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
-		subsystem[i].reset_cashe();
-	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
-		subsystem[i].cashe_out(0);
-	for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
-		subsystem[i].cashe_out(1);
-}
-
-void DPM_Parallel::calculateForces() {
-	// reset forces
-	for (int ci = 0; ci < NCELLS; ci++) {
-		// reset center of mass forces
-		for (int d = 0; d < NDIM; d++)
-			cell(ci).setCForce(d, 0.0);
-
-		// reset vertex forces and interaction energy
-		for (int vi = 0; vi < cell(ci).getNV(); vi++) {
-			// forces
-			for (int d = 0; d < NDIM; d++)
-				cell(ci).setVForce(vi, d, 0.0);
-
-			// energies
-			cell(ci).setUInt(vi, 0.0);
-		}
-	}
-
-	subspaceManager();
-
-	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
-		subsystem[i].calculateForces_insub();
-	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
-		subsystem[i].calculateForces_betweensub();
-	for (int ci = 0; ci < NCELLS; ci++) {
-		cell(ci).shapeForces();
-	}
-}
 
 // calculate forces 
 void subspace::calculateForces_insub() {
@@ -375,7 +336,7 @@ void subspace::calculateForces_insub() {
 					//addContact(ci, cj);
 					//Ncc++;
 					// increment vertex-vertex contacts
-					Nvv ++;
+					Nvv++;
 				}
 			}
 		}
@@ -405,100 +366,208 @@ void subspace::calculateForces_betweensub() {
 		}
 	}
 }
+/*
+int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
+	// return variable
+	int inContact = 0;
+	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
+	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
+	// local variables
+	int d, dd;
 
-int subspace::vertexForce(cvpair * onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
-		// return variable
-		int inContact = 0;
-		deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
-		deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
-		// local variables
-		int d, dd;
+	// -------------------------
+	// 
+	// 	   Vertex forces
+	//
+	// -------------------------
 
-		// -------------------------
-		// 
-		// 	   Vertex forces
-		//
-		// -------------------------
-
-		double forceScale = leftCell.kint;				// force scale
-		double energyScale = forceScale;		// energy scale
-		double distScale = 0.0;					// distance scale
-		double p1 = 1.0 + leftCell.a;					// edge of interaction zone, units of delta
-		double ftmp = 0.0;						// temporary force variable
-		double uTmp = 0.0;						// temporary energy variable
-		double vertexDist = 0.0;				// distance variable
-		vector<double> vertexVec(NDIM, 0.0);		// vector to hold vectorial distance quantity
-		double contactDistance = 0.0;			// contact distance variable
-		double distTmp = 0.0;
+	double forceScale = leftCell.kint;				// force scale
+	double energyScale = forceScale;		// energy scale
+	double distScale = 0.0;					// distance scale
+	double p1 = 1.0 + leftCell.a;					// edge of interaction zone, units of delta
+	double ftmp = 0.0;						// temporary force variable
+	double uTmp = 0.0;						// temporary energy variable
+	double vertexDist = 0.0;				// distance variable
+	vector<double> vertexVec(NDIM, 0.0);		// vector to hold vectorial distance quantity
+	double contactDistance = 0.0;			// contact distance variable
+	double distTmp = 0.0;
 
 
-		// get distance between vertices i and j
-		vertexDist = 0.0;
-		for (d = 0; d < NDIM; d++) {
-			// get distance to nearest image
-			distTmp = leftCell.distance(rightCell, onTheRight->vi, onTheLeft->vi, d);
+	// get distance between vertices i and j
+	vertexDist = 0.0;
+	for (d = 0; d < NDIM; d++) {
+		// get distance to nearest image
+		distTmp = leftCell.distance(rightCell, onTheRight->vi, onTheLeft->vi, d);
 
-			// add to vertex distance
-			vertexVec.at(d) = distTmp;
+		// add to vertex distance
+		vertexVec.at(d) = distTmp;
 
-			// add to scalar distance
-			vertexDist += distTmp * distTmp;
-		}
+		// add to scalar distance
+		vertexDist += distTmp * distTmp;
+	}
 
-		// get contact distance
-		contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0);
+	// get contact distance
+	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0);
 
-		// get vertex distance
-		vertexDist = sqrt(vertexDist);
+	// get vertex distance
+	vertexDist = sqrt(vertexDist);
 
-		// check overlap distances
-		if (vertexDist < contactDistance * p1) {
-			// increment number of vertex-vertex contacts
-			inContact++;
+	// check overlap distances
+	if (vertexDist < contactDistance * p1) {
+		// increment number of vertex-vertex contacts
+		inContact++;
 
-			// define scaled distance (x = distance/contact distance)
-			distScale = vertexDist / contactDistance;
+		// define scaled distance (x = distance/contact distance)
+		distScale = vertexDist / contactDistance;
 
-			// update force and energy scales
-			forceScale = leftCell.kint / contactDistance;
-			energyScale = leftCell.kint;
+		// update force and energy scales
+		forceScale = leftCell.kint / contactDistance;
+		energyScale = leftCell.kint;
 
-			// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
-			if (vertexDist < contactDistance) {
+		// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
+		if (vertexDist < contactDistance) {
 
-				// add to interaction potential
-				uTmp = 0.5 * energyScale * pow(1 - distScale, 2) - (energyScale * leftCell.a * leftCell.a) / 6.0;
+			// add to interaction potential
+			uTmp = 0.5 * energyScale * pow(1 - distScale, 2) - (energyScale * leftCell.a * leftCell.a) / 6.0;
 
-				leftCell.setUInt(onTheLeft->vi, leftCell.uInt(onTheLeft->vi) + 0.5 * uTmp);
-				rightCell.setUInt(onTheRight->vi, rightCell.uInt(onTheRight->vi) + 0.5 * uTmp);
+			leftCell.setUInt(onTheLeft->vi, leftCell.uInt(onTheLeft->vi) + 0.5 * uTmp);
+			rightCell.setUInt(onTheRight->vi, rightCell.uInt(onTheRight->vi) + 0.5 * uTmp);
 
-				// add to vectorial forces
-				for (d = 0; d < NDIM; d++) {
-					// get force value
-					ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+			// add to vectorial forces
+			for (d = 0; d < NDIM; d++) {
+				// get force value
+				ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
 
-					// add to force on i
-					leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp);
+				// add to force on i
+				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp);
 
-					// subtract off complement from force on j
-					rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp);
+				// subtract off complement from force on j
+				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp);
 
-					// add to stress tensor
-					if (d == 0) {
-						sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
-						sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
-					}
-					else {
-						sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
-						sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
-					}
+				// add to stress tensor
+				if (d == 0) {
+					sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
+					sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
+				}
+				else {
+					sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
+					sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
 				}
 			}
-
 		}
 
-		// return if in contact or not
-		return inContact;
+	}
+
+	// return if in contact or not
+	return inContact;
+}
+*/
+
+int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
+//int subspace::vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
+	// return variable
+	int inContact = 0;
+	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
+	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
+	// local variables
+	int d, dd;
+
+	// -------------------------
+	// 
+	// 	   Vertex forces
+	//
+	// -------------------------
+
+	double forceScale = leftCell.kint;				// force scale
+	double energyScale = forceScale;		// energy scale
+	double distScale = 0.0;					// distance scale
+	double p1 = 1.0 + leftCell.a;					// edge of interaction zone, units of delta
+	double ftmp = 0.0;						// temporary force variable
+	double uTmp = 0.0;						// temporary energy variable
+	double vertexDist = 0.0;				// distance variable
+	vector<double> vertexVec(NDIM, 0.0);		// vector to hold vectorial distance quantity
+	double contactDistance = 0.0;			// contact distance variable
+	double distTmp = 0.0;
+
+
+	// get distance between vertices i and j
+	vertexDist = 0.0;
+	for (d = 0; d < NDIM; d++) {
+		// get distance to nearest image
+		distTmp = leftCell.distance(rightCell, onTheRight->vi, onTheLeft->vi, d);
+
+		// add to vertex distance
+		vertexVec.at(d) = distTmp;
+
+		// add to scalar distance
+		vertexDist += distTmp * distTmp;
+	}
+
+	// get contact distance
+	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0);
+
+	// get vertex distance
+	vertexDist = sqrt(vertexDist);
+
+	// check overlap distances
+	if (vertexDist < contactDistance * p1) {
+		// increment number of vertex-vertex contacts
+		inContact++;
+
+		// define scaled distance (x = distance/contact distance)
+		distScale = vertexDist / contactDistance;
+
+		// update force and energy scales
+		forceScale = leftCell.kint / contactDistance;
+		energyScale = leftCell.kint;
+
+		// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
+		if (vertexDist < contactDistance) {
+
+			// add to interaction potential
+			uTmp = 0.5 * energyScale * pow(1 - distScale, 2) - (energyScale * leftCell.a * leftCell.a) / 6.0;
+
+			leftCell.setUInt(onTheLeft->vi, leftCell.uInt(onTheLeft->vi) + 0.5 * uTmp);
+			rightCell.setUInt(onTheRight->vi, rightCell.uInt(onTheRight->vi) + 0.5 * uTmp);
+
+			std::vector<double> force(2);
+			std::vector<double> r1(2);
+			std::vector<double> r2(2);
+			// add to vectorial forces
+			for (d = 0; d < NDIM; d++) {
+				// get force value
+				ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+				force[d] = ftmp;
+				r1[d] = leftCell.vrel(onTheLeft->vi, d) + vertexVec.at(d) / 2;
+				r2[d] = rightCell.vrel(onTheRight->vi, d) - vertexVec.at(d) / 2;
+				// add to force on i
+				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp);
+
+				// subtract off complement from force on j
+				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp);
+
+				// add to stress tensor
+				if (d == 0) {
+					sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
+					sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
+				}
+				else {
+					sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
+					sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
+				}
+			}
+#pragma omp critical
+			{
+				// torque calculation
+				leftCell.torque += r1[0] * force[1] - r1[1] * force[0];
+				rightCell.torque += -r2[0] * force[1] + r2[1] * force[0];
+			}
+		}
+
+	}
+
+	// return if in contact or not
+	return inContact;
 }
 
 

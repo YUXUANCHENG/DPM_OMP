@@ -2,6 +2,7 @@
 #include "CLI.h"
 #include "CLI_hopper.h"
 #include "DPM_Parallel.h"
+#include "bumpy_Parallel.h"
 
 
 
@@ -17,9 +18,10 @@ int main(int argc, char const *argv[]){
 	//main_function.sp_NVE_tao(argv);
 
 	//Bumpy_CLI<> cli;
+	Bumpy_CLI<Bumpy_Parallel> cli;
 	//BumpyDimer_CLI<> cli;
 	//DPM_CLI<> cli;
-	DPM_CLI<DPM_Parallel> cli;
+	//DPM_CLI<DPM_Parallel> cli;
 	//BumpyEllipse_CLI<> cli;
 	
 	//DPM_Hopper_CLI<> cli;

@@ -93,12 +93,11 @@ public:
 	void calculateForces_betweensub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
-	double forceRMS_insub();
 	double totalKineticEnergy_insub();
-	double max_length();
 	void print_information();
 	void cal_cashed_fraction();
 	int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+	int vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	
 
 };
