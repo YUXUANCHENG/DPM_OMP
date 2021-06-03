@@ -96,7 +96,7 @@ public:
 	}
 	virtual void setPhiDisk(){
 		//phiDisk = 0.75;
-		phiDisk = 0.75 + index_i * 0.02;
+		phiDisk = 0.72 + index_i * 0.02;
 	}
 	virtual void setSeed() {
 		//seed = index_i;

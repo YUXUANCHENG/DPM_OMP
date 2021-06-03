@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # directories with code
-cellsdir=~/cells
+cellsdir=~/DPM_OMP
 srcdir=$cellsdir/src
 # maindir=$cellsdir/main
 

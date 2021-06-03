@@ -63,6 +63,7 @@ void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 			phi = packingFraction();
 		}
 	}
+	//fireMinimize_bummpy();
 }
 
 void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E, double init_U) {

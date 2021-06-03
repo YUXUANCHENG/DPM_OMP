@@ -39,7 +39,10 @@ public:
 			subsystem[i].calculateForces_insub();
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_betweensub();
-
+		for (int ci = 0; ci < NCELLS; ci++) {
+			for (int d = 0; d < NDIM; d++)
+				cell(ci).setCForce(d, cell(ci).cforce(d));
+	}
 	}
 
 };

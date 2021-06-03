@@ -13,6 +13,12 @@ using namespace std;
 
 int main(int argc, char const *argv[]){
 
+# pragma omp parallel
+{
+	# pragma omp master
+	cout << "# of threads = " << omp_get_num_threads() << endl;
+}
+
 	//jamming main_function;
 	//main_function.sp_NVE_arg(argv);
 	//main_function.sp_NVE_tao(argv);
@@ -28,12 +34,12 @@ int main(int argc, char const *argv[]){
 	//Bumpy_Hopper_CLI<> cli;
 
 	//cli.findJamming(argv);
-	cli.NVE(argv);
+	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
 	//cli.hopperFlow(argv);
 	//cli.deformation(argv);
-	//cli.calTao(argv);
+	cli.calTao(argv);
 
 	system("pause");
 	return 0;
