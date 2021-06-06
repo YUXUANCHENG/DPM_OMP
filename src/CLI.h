@@ -96,7 +96,7 @@ public:
 	}
 	virtual void setPhiDisk(){
 		//phiDisk = 0.75;
-		phiDisk = 0.72 + index_i * 0.02;
+		phiDisk = 0.70 + index_i * 0.02;
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -209,7 +209,9 @@ public:
 		for (int j = 0; j < 10; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 
-			double start = -8.5 + 0.25 * index_i;
+			// double start = -8.5 + 0.25 * index_i;
+			// double interval = 0.25 - 0.02 * index_i;
+			double start = -7.8 + 0.25 * index_i;
 			double interval = 0.25 - 0.02 * index_i;
 			double v0 = exp(start + interval * (9 - j));
 
@@ -224,7 +226,7 @@ public:
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			if (j == 0) local_cell_group.LangevinSimulation(T, v0, t_scale, 10);
+			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, 10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
 			preset_time = result[0] * 10;

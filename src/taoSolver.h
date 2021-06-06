@@ -96,13 +96,13 @@ public:
 					cellpointer->print_frequency /= 5;
 					cout << omp_get_thread_num() << " : T is a bit large" << endl;
 				}
-				//else if ((testEq < 0.05 && !REACHED) || REACHED)
-				else if (testEq < 0.5)
+				else if ((testEq < 0.1 && !REACHED) || REACHED)
+				//else if (testEq < 0.5)
 				{
-					if (count > 1){
+					//if (count > 1){
 					tao.push_back(cellpointer->dt0 * cellpointer->print_frequency * (taos[1] + taos[0]) / 2);
 					Temp.push_back(meanSpeed);
-					}
+					//}
 					if (!REACHED)
 					{
 						cout << omp_get_thread_num() << " : Equilibrated" << endl;
@@ -111,8 +111,8 @@ public:
 					else
 						cout << omp_get_thread_num() << " : Extended runs" << endl;
 					count++;
-					//if (count > 3) READY = true;
-					if (count > 4) READY = true;
+					if (count > 2) READY = true;
+					//if (count > 4) READY = true;
 				}
 				if (READY)
 				{
