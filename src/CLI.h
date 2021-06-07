@@ -43,7 +43,7 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	double calA0 = 1.2;
+	double calA0 = 1.08;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
@@ -256,7 +256,6 @@ template <class Ptype = BumpyEllipse>
 class BumpyEllipse_CLI : public Bumpy_CLI<Ptype> {
 public:
 	//typedef BumpyEllipse particleType;
-	double ratio = 1.7;
 
 	virtual void setPhiDisk(){
 		this->phiDisk = 0.86;
@@ -285,7 +284,6 @@ public:
 		//phiDisk = 0.86;
 		this->seed = 1;
 		this->phiDisk = 0.65 + 0.01 * this->index_i;
-		this->ratio = 1.6;
 		this->NV = 16;
 	}
 
