@@ -6,7 +6,7 @@
 #include "DPM_Parallel.h"
 #include "deformableParticles2D.h"
 
-class BumpyEllipse : public Bumpy {
+class BumpyEllipse : public virtual Bumpy {
 public:
 	double ratio_a_b = 1.6;
 

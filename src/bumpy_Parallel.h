@@ -5,7 +5,7 @@
 #include "bumpy.h"
 #include "NVE.h"
 
-class Bumpy_Parallel : public Bumpy, public DPM_Parallel {
+class Bumpy_Parallel : public virtual Bumpy, public virtual DPM_Parallel {
 public:
 	// g++ does not support multiple inheritance of constructors???
 	//using Bumpy::Bumpy;

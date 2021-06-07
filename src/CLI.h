@@ -96,7 +96,7 @@ public:
 	}
 	virtual void setPhiDisk(){
 		//phiDisk = 0.75;
-		phiDisk = 0.70 + index_i * 0.02;
+		phiDisk = 0.75 + index_i * 0.02;
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -266,9 +266,12 @@ public:
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
 		this->particles->setRatio(this->ratio);
+		Bumpy_CLI<Ptype>::prepareSystem();
+		/*
 		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
+		*/
 	}
 
 };
