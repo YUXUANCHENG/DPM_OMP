@@ -11,8 +11,33 @@ public:
 	double ratio_a_b = 1.6;
 
 	using Bumpy::Bumpy;
-	virtual void setRatio(double ratio) {
-		ratio_a_b = ratio;
+	virtual void setRatio(double calA0) {
+		double xpos = (double)rand() / (RAND_MAX + 1.0);
+		deformableParticles2D celltemp = deformableParticles2D();
+		// set as initial position of com
+		celltemp.setNV(16);
+		for (int d = 0; d < NDIM; d++) {
+			celltemp.setL(d, 5);
+			celltemp.setpbc(d, 1);
+		}
+		// array information
+		celltemp.initializeVertices();
+		celltemp.initializeCell();
+		celltemp.seta0(1);
+		celltemp.setCPos(0, xpos);
+		celltemp.setCPos(1, xpos);
+		// initialize vertices as a regular polygon
+		initShape(ratio_a_b, celltemp);
+		double currentCalA = celltemp.calA();
+		while (!(currentCalA > calA0 * 0.99 && currentCalA < calA0 * 1.01))
+		{
+			if (currentCalA > calA0)		
+				ratio_a_b *= 0.99;
+			else
+				ratio_a_b *= 1.01;
+			initShape(ratio_a_b, celltemp);
+			currentCalA = celltemp.calA();
+		}
 	}
 	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		// local variables
@@ -145,6 +170,10 @@ public:
 		printCalA();
 		printContact();
 
+	}
+
+	virtual void initShape(double ratio, deformableParticles2D & cell){
+		cell.ellipse(ratio);
 	}
 
 	void breakAlignment() {

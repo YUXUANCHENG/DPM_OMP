@@ -5,7 +5,7 @@
 #include "NVE.h"
 #include "cellPacking2D.h"
 
-class BumpyDimer : public BumpyEllipse {
+class BumpyDimer : public virtual BumpyEllipse {
 public:
 	double ratio_a_b = 1.6;
 
@@ -142,6 +142,10 @@ public:
 		printCalA();
 		printContact();
 
+	}
+
+	virtual void initShape(double ratio, deformableParticles2D & cell){
+		cell.dimer(ratio);
 	}
 
 	

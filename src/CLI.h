@@ -265,7 +265,7 @@ public:
 	virtual void prepareSystem() {
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
-		this->particles->setRatio(this->ratio);
+		this->particles->setRatio(this->calA0);
 		Bumpy_CLI<Ptype>::prepareSystem();
 		/*
 		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
