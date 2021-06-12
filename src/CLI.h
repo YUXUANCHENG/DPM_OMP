@@ -104,9 +104,8 @@ public:
 	}
 	virtual void setKB() {
 		//double ratio = 100.0;
-		kb = 0.00001 * pow(index_i + 1, 2);
-		//kb = 0.0;
-		//phiDisk = 0.8 + 0.01 * index_i;
+		//kb = 0.00001 * pow(index_i + 1, 2);
+		kb = 0.001;
 		//double kl = ratio * kb;
 	}
 
@@ -200,6 +199,13 @@ public:
 		_NVE();
 	}
 
+	virtual double setV0(int j)
+	{
+		double start = -8.5 + 0.25 * index_i;
+		double interval = 0.25 - 0.02 * index_i;
+		return exp(start + interval * (9 - j));
+	}
+
 	virtual void calTao(char const* argv[])
 	{
 		qscompress(argv);
@@ -211,9 +217,7 @@ public:
 
 			// double start = -8.5 + 0.25 * index_i;
 			// double interval = 0.25 - 0.02 * index_i;
-			double start = -7.8 + 0.25 * index_i;
-			double interval = 0.25 - 0.02 * index_i;
-			double v0 = exp(start + interval * (9 - j));
+			double v0 = setV0(j);
 
 			// output files
 			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
@@ -241,6 +245,17 @@ class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
 
+	virtual double setV0(int j)
+	{
+		double start = -7.8 + 0.25 * this->index_i;
+		double interval = 0.25 - 0.02 * this->index_i;
+		return exp(start + interval * (9 - j));
+	}
+
+	virtual void setPhiDisk(){
+		this->phiDisk = 0.7 + this->index_i * 0.02;
+	}
+
 	virtual void prepareSystem() {
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
@@ -258,7 +273,14 @@ public:
 	//typedef BumpyEllipse particleType;
 
 	virtual void setPhiDisk(){
-		this->phiDisk = 0.86;
+		this->phiDisk = 0.65 + 0.02 * this->index_i;
+	}
+
+	virtual double setV0(int j)
+	{
+		double start = -7.8 + 0.25 * this->index_i;
+		double interval = 0.25 - 0.02 * this->index_i;
+		return exp(start + interval * (9 - j));
 	}
 
 	virtual void prepareSystem() {
@@ -281,10 +303,7 @@ public:
 	//typedef BumpyDimer particleType;
 
 	virtual void setPhiDisk(){
-		//phiDisk = 0.86;
-		this->seed = 1;
-		this->phiDisk = 0.65 + 0.01 * this->index_i;
-		this->NV = 16;
+		this->phiDisk = 0.65 + 0.02 * this->index_i;
 	}
 
 };

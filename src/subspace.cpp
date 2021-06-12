@@ -335,8 +335,11 @@ void subspace::calculateForces_insub() {
 				inContact = vertexForce(resident_cells[ci], resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				if (inContact > 0) {
 					// add to cell-cell contacts
-					//addContact(ci, cj);
-					//Ncc++;
+					if (pointer_to_system->contacts(ci, cj) == 0)
+					{
+						pointer_to_system->addContact(ci, cj);
+						Ncc++;
+					}
 					// increment vertex-vertex contacts
 					Nvv++;
 				}
@@ -359,11 +362,14 @@ void subspace::calculateForces_betweensub() {
 				}
 				// notice that stress between resident and cashed cells are double counted
 				int inContact = vertexForce(resident_cells[ci], cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				if (inContact > 0) {
-					// add to cell-cell contacts
-
-					Nvv++;
+				// add to cell-cell contacts
+				if (pointer_to_system->contacts(ci, ck) == 0)
+				{
+					pointer_to_system->addContact(ci, ck);
+					Ncc++;
 				}
+				// increment vertex-vertex contacts
+				Nvv++;
 			}
 		}
 	}

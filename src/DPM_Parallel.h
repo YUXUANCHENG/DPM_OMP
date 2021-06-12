@@ -48,6 +48,7 @@ public:
 	}
 
 	virtual void calculateForces() {
+
 		// reset forces
 		for (int ci = 0; ci < NCELLS; ci++) {
 			// reset center of mass forces
@@ -65,6 +66,8 @@ public:
 			}
 		}
 
+		resetContacts();
+
 		subspaceManager();
 #pragma omp parallel for
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
@@ -73,6 +76,33 @@ public:
 			subsystem[i].calculateForces_betweensub();
 		for (int ci = 0; ci < NCELLS; ci++) {
 			cell(ci).shapeForces();
+		}
+		addUpStress();
+	}
+
+	void addUpStress()
+	{
+		// reset virial stresses to 0
+		sigmaXX = 0.0;
+		sigmaXY = 0.0;
+		sigmaYX = 0.0;
+		sigmaYY = 0.0;
+
+		// reset contacts before force calculation
+		//resetContacts();
+		Ncc = 0;
+		Nvv = 0;
+
+		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+		{
+			sigmaXX += subsystem[i].sigmaXX;
+			sigmaXY += subsystem[i].sigmaXY;
+			sigmaYX += subsystem[i].sigmaYX;
+			sigmaYY += subsystem[i].sigmaYY;
+
+			Nvv += subsystem[i].Nvv;
+			// need to fix later
+			Ncc += subsystem[i].Ncc;
 		}
 	}
 

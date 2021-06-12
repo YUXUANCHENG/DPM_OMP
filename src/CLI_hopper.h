@@ -82,11 +82,12 @@ public:
 		_hopperFlow();
 		double originalHeight = this->particles->calOriginalHeight();
 		this->particles->gOn = 1;
-		int result = this->particles->hopperSimulation(w0, w, th, g, b);
+		this->particles->hopperSimulation(w0, w, th, g, b);
 		double endHeight = this->particles->calHeight();
+		double angle = this->particles->calContactAng();
 		std::ofstream deformationPrint;
 		deformationPrint.open("deformation.txt");
-		deformationPrint << (originalHeight - endHeight)/originalHeight << endl;
+		deformationPrint << (originalHeight - endHeight)/originalHeight << "," << angle <<endl;
 		deformationPrint.close();
 
 	}

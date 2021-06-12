@@ -28,6 +28,15 @@ using namespace std;
 class DPM_Parallel;
 
 class subspace {
+	
+public:
+	double Ncc = 0, Nvv = 0;
+
+	// stress
+	double sigmaXX = 0.0;
+	double sigmaXY = 0.0;
+	double sigmaYX = 0.0;
+	double sigmaYY = 0.0;
 
 protected:
 
@@ -49,17 +58,9 @@ protected:
 	vector<int> N_systems;
 
 	int NDIM = 2;
-	double Ncc = 0, Nvv = 0;
-
-	// stress
-	double sigmaXX = 0.0;
-	double sigmaXY = 0.0;
-	double sigmaYX = 0.0;
-	double sigmaYY = 0.0;
 
 	// MD time 
 	double dt0;
-	double PI = 4 * atan(1);
 
 	// Update frequency
 	// seems like cashe frequency won't affect speed too much

@@ -2257,6 +2257,23 @@ double cellPacking2D::calHeight()
 	return maxV + cell(0).getl0()/2;
 }
 
+double cellPacking2D::calContactAng()
+{
+	double limit = cell(0).getl0() * cell(0).getdel();
+	int NV = cell(0).getNV();
+	for (int i = 0; i < NV; i++)
+	{
+		if (cell(0).vpos(i,1) < limit && cell(0).vpos((i+1)%NV,1) > limit)
+		{
+			double dx = cell(0).vpos(i,0) - cell(0).vpos((i+1)%NV,0);
+			double dy = cell(0).vpos(i,1) - cell(0).vpos((i+1)%NV,1);			
+			return atan(dy/dx) * 180/ PI;
+		}
+	}
+	return -1;
+
+}
+
 void cellPacking2D::changeL0(double factor)
 {
 	for (int i = 0; i < NCELLS; i++){
