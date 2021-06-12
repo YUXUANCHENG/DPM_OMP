@@ -58,6 +58,9 @@ public:
 	// interaction potential energy
 	double* interactionPotential;
 
+	// wall contact indicator
+	int* wallContactFlag;
+	
 	// force parameters
 	double kl;			// perimeter energy scale
 	double ka;			// area energy scale

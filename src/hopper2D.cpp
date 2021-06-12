@@ -1007,9 +1007,12 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	sigmaYX = 0.0;
 	sigmaYY = 0.0;
 
+	bool cFlag = false;
+
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
 		for (vi=0; vi<cell(ci).getNV(); vi++){
+			cFlag = false;
 			// get vertex diameter
 			sigma = cell(ci).getl0()*cell(ci).getdel();
 
@@ -1054,6 +1057,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							// add to net force on bottom wall
 							sigmaYX += ftmp*c;
 							sigmaYY -= ftmp*s;
+							cFlag = true;
 						}
 					}
 
@@ -1082,6 +1086,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							// add to net force on top wall
 							sigmaXX += ftmp*c;
 							sigmaXY += ftmp*s;
+							cFlag = true;
 						}
 					}
 				}
@@ -1114,6 +1119,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 								// add to net force on top wall
 								sigmaXX += ftmp*c;
 								sigmaXY += ftmp*s;
+								cFlag = true;
 							}
 						}
 						// else, check overlap with bead
@@ -1141,6 +1147,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 								// add to net force on top wall
 								sigmaXX -= ftmp*(lwx/lw);
 								sigmaXY -= ftmp*(lwy/lw);
+								cFlag = true;
 							}
 						}
 					}
@@ -1170,6 +1177,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 								// add to net force on bottom wall
 								sigmaYX += ftmp*c;
 								sigmaYY -= ftmp*s;
+								cFlag = true;
 							}
 						}
 						// else, check overlap with bottom bead						
@@ -1197,6 +1205,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 								// add to net force on bottom wall
 								sigmaYX -= ftmp*(lwx/lw);
 								sigmaYY -= ftmp*(lwy/lw);
+								cFlag = true;
 							}
 						}
 					}
@@ -1229,6 +1238,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 					// add to net force on bottom wall
 					sigmaYY -= ftmp;
+					cFlag = true;
 				}
 
 				// if true, interacting with top wall
@@ -1251,6 +1261,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 					// add to net force on top wall
 					sigmaXY += ftmp;
+					cFlag = true;
 				}
 			}
 
@@ -1379,7 +1390,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 				}
 			}
 
-
+			cell(ci).wallContactFlag[vi] = cFlag? 1 : 0;
 		}
 	}
 }
