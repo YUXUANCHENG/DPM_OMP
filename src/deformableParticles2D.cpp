@@ -289,7 +289,7 @@ void deformableParticles2D::initializeVertices(){
 			setVAcc(i,d,0.0);
 			setVForce(i,d,0.0);
 		}
-		wallContactFlag[NV] = 0;
+		wallContactFlag[i] = 0;
 	}
 }
 
