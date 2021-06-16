@@ -1158,9 +1158,25 @@ void deformableParticles2D::shapeForces(){
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
 
+			double l0li = (wallContactFlag[i] && wallContactFlag[ip1]) ? 1/0.9 * l0: l0;
+			double l0lim1 = (wallContactFlag[im1] && wallContactFlag[i]) ? 1/0.9 * l0: l0;
+
+			// double l0li, l0lim1;
+			// if (wallContactFlag[i] && wallContactFlag[ip1])
+			// 	l0li = 1.05 * l0;
+			// else
+			// 	l0li = l0;
+			// if (wallContactFlag[im1] && wallContactFlag[i])
+			// 	l0lim1 = 1.05 * l0;
+			// else
+			// 	l0lim1 = l0;
+
+			// double l0li = l0;
+			// double l0lim1 = l0;
+
 	        // get segment strains
-	        lStrainI = (li/l0) - 1.0;
-	        lStrainIm1 = (lim1/l0) - 1.0;
+	        lStrainI = (li/l0li) - 1.0;
+	        lStrainIm1 = (lim1/l0lim1) - 1.0;
 
 	        // loop over dimensions, add to force                                                                                                                                                                                      
 	        for (d=0; d<NDIM; d++){

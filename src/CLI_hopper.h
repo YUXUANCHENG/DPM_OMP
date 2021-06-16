@@ -23,16 +23,17 @@ public:
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
-		this->kl = 1.0;
+		this->kl =1.0;
 		this->ka = 1.0;
 		this->kb = 0;
-		//this->l0Factor = 0.999;
+		this->l0Factor = 0.9;
 		this->g = 0.05;
 		this->Lini = 0.1 * w0;
 		this->NCELLS = 64;
 		this->NV = 16;
 		this->calA0 = 1.0;
-		//this->kint = 10.0;	
+		//this->kint = 10.0;
+		//this->timeStepMag = 0.001;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)

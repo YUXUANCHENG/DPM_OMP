@@ -638,7 +638,7 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 			}
 
 			// forces on vertices due to shape
-			cell(ci).shapeForces();
+			//cell(ci).shapeForces();
 
 			// gravity force (in gDire direction)
 			if (gOn)
@@ -654,6 +654,10 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 
 	// wall forces
 	hopperWallForcesDP(w0,w,th,closed);
+	for (ci=0; ci<NCELLS; ci++)
+		cell(ci).shapeForces();
+
+
 }
 
 
