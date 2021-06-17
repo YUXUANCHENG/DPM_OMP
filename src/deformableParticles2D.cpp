@@ -1158,18 +1158,29 @@ void deformableParticles2D::shapeForces(){
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
 
-			double l0li = (wallContactFlag[i] && wallContactFlag[ip1]) ? 1/0.9 * l0: l0;
-			double l0lim1 = (wallContactFlag[im1] && wallContactFlag[i]) ? 1/0.9 * l0: l0;
+			// double l0li = (wallContactFlag[i] && wallContactFlag[ip1]) ? 1/0.9 * l0: l0;
+			// double l0lim1 = (wallContactFlag[im1] && wallContactFlag[i]) ? 1/0.9 * l0: l0;
 
-			// double l0li, l0lim1;
-			// if (wallContactFlag[i] && wallContactFlag[ip1])
-			// 	l0li = 1.05 * l0;
-			// else
-			// 	l0li = l0;
-			// if (wallContactFlag[im1] && wallContactFlag[i])
-			// 	l0lim1 = 1.05 * l0;
-			// else
-			// 	l0lim1 = l0;
+			double l0li = l0, l0lim1 = l0;
+			double factor = 0.05;
+			if (wallContactFlag[i] || wallContactFlag[ip1])
+			{	
+				double angle = abs(atan(segment(i,1)/segment(i,0))) * 180 / PI;
+				if (angle < 5)
+				{
+					double prefactor = factor * (5 - angle)/5;
+					l0li = (1 + prefactor) * l0;
+				}
+			}
+			if (wallContactFlag[im1] || wallContactFlag[i])
+			{	
+				double angle = atan(abs(segment(im1,1)/segment(im1,0))) * 180 / PI;
+				if (angle < 5)
+				{
+					double prefactor = factor * (5 - angle)/5;
+					l0lim1 =(1 + prefactor) * l0;
+				}
+			}
 
 			// double l0li = l0;
 			// double l0lim1 = l0;
