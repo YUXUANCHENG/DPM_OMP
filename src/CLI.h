@@ -52,17 +52,17 @@ public:
 	string extend;
 
 	// system size
-	int NCELLS = 64;
+	int NCELLS = 16;
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
-	int NBx = 8;
+	int NBx = 3;
 	int NBy = NBx;
 
 	double Phi_to_PhiJ = 0.03;
 
 	// activity
-	double T = 10000.0;
+	double T = 1000.0;
 	int frames = 20000;
 	double Dr;
 	double vtau = 1e-2;
@@ -230,7 +230,7 @@ public:
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, 10);
+			if (j == 0) local_cell_group.LangevinSimulation(1000, v0, t_scale, 10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
 			preset_time = result[0] * 10;
