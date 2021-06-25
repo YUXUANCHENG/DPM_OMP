@@ -37,14 +37,14 @@ int main(int argc, char const *argv[]){
 	//DPM_Hopper_CLI<> cli;
 	//Bumpy_Hopper_CLI<> cli;
 
-	//cli.findJamming(argv);
+	cli.findJamming(argv);
 	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
 	//cli.hopperFlow(argv);
 	//cli.deformation(argv);
 	
-	cli.calTao(argv);
+	//cli.calTao(argv);
 
 	system("pause");
 	return 0;
