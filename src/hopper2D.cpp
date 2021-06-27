@@ -988,6 +988,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
 
+	double a = 0.1;
+
 	// hopper nozzle length
 	Lx = L.at(0);
 
@@ -1063,6 +1065,28 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							sigmaYY -= ftmp*s;
 							cFlag = true;
 						}
+
+						if (a > 0 && lw > 0.5*sigma && lw < 0.5*sigma*(1 + a))
+						{
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
+							// temperary fix for wall torque
+							cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp*s - cell(ci).vrel(vi, 1) * (-1) * ftmp*c;
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2)* (2*(overlap - 1.0) - 3*a);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on bottom wall
+							sigmaYX += ftmp*c;
+							sigmaYY -= ftmp*s;
+							cFlag = true;
+						}
 					}
 
 
@@ -1090,6 +1114,28 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							// add to net force on top wall
 							sigmaXX += ftmp*c;
 							sigmaXY += ftmp*s;
+							cFlag = true;
+						}
+
+						if (a > 0 && lw > 0.5*sigma && lw < 0.5*sigma*(1 + a))
+						{
+							// overlap with wall
+							overlap = 2.0*lw/sigma;
+
+							// force
+							ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
+							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
+							// temperary fix for wall torque
+							cell(ci).torque += cell(ci).vrel(vi, 0) * (-1) * ftmp*s - cell(ci).vrel(vi, 1) * (-1) * ftmp*c;
+
+							// add to energies
+							utmp = 0.5*pow(1 - overlap,2)* (2*(overlap - 1.0) - 3*a);
+							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);
+
+							// add to net force on bottom wall
+							sigmaYX += ftmp*c;
+							sigmaYY -= ftmp*s;
 							cFlag = true;
 						}
 					}
@@ -1245,6 +1291,29 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					cFlag = true;
 				}
 
+				if (a > 0 && y > yMinusMax && y < yMinusMax*(1 + a))
+				{
+					// vector from wall to particle
+					lwy = y;
+
+					// overlap with wall
+					overlap = 2.0*lwy/sigma;
+
+					// add to y force ONLY (points in positive y direction)
+					ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp);
+					// temperary fix for wall torque
+					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2)*(2*(overlap - 1.0) - 3*a);;
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+					// add to net force on bottom wall
+					sigmaYY -= ftmp;
+					cFlag = true;
+				}
+
 				// if true, interacting with top wall
 				if (y > yPlusMin){
 					// vector from particle to wall
@@ -1265,6 +1334,28 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 					// add to net force on top wall
 					sigmaXY += ftmp;
+					cFlag = true;
+				}
+				if (a > 0 && y < yPlusMin && (yPlusMin - y) < 0.5*sigma*a)
+				{
+					// vector from wall to particle
+					lwy = w0 - y;
+
+					// overlap with wall
+					overlap = 2.0*lwy/sigma;
+
+					// add to y force ONLY (points in positive y direction)
+					ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
+					// temperary fix for wall torque
+					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2)*(2*(overlap - 1.0) - 3*a);;
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+					// add to net force on bottom wall
+					sigmaYY -= ftmp;
 					cFlag = true;
 				}
 			}
