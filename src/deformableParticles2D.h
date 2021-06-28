@@ -86,6 +86,7 @@ public:
 	double angularV = 0.0;
 	double b = 0.0;
 	double inertia = 0.0;
+	double gamafactor1 = 0, gamafactor2 = 0;
 	// constructors
 	deformableParticles2D();
 	deformableParticles2D(int n);

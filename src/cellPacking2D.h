@@ -112,7 +112,7 @@ public:
 	void calInertia();
 	double calOriginalHeight();
 	double calHeight();
-	void changeL0(double factor);
+	void changeL0(double factor1, double factor2);
 	double calContactAng();
 
 

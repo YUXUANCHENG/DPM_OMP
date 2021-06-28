@@ -18,19 +18,21 @@ public:
 	vector<double> radii;
 	double w_scale = 2;
 	double w;
-	double l0Factor = 1;
+	double gamafactor1 = 0;
+	double gamafactor2 = 0;
 
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
-		this->kl =1.0;
-		this->ka = 1.0;
+		this->kl =0.1;
+		this->ka = 0.1;
 		this->kb = 0;
-		this->l0Factor = 0.9;
+		this->gamafactor1 = 0.65;
+		this->gamafactor2 = 0.1;
 		this->g = 0.05;
 		this->Lini = 0.1 * w0;
 		this->NCELLS = 64;
-		this->NV = 16;
+		this->NV = 32;
 		this->calA0 = 1.0;
 		//this->kint = 10.0;
 		//this->timeStepMag = 0.001;		
@@ -64,7 +66,7 @@ public:
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
-		this->particles->changeL0(l0Factor);
+		this->particles->changeL0(gamafactor1, gamafactor2);
 		this->particles->closeF();
 	}
 

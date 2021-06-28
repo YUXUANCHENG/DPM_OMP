@@ -988,7 +988,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
 
-	double a = 0.1;
+	double a = 0.3;
 
 	// hopper nozzle length
 	Lx = L.at(0);
@@ -1072,7 +1072,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							overlap = 2.0*lw/sigma;
 
 							// force
-							ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+							ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
 							// temperary fix for wall torque
@@ -1123,7 +1123,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							overlap = 2.0*lw/sigma;
 
 							// force
-							ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+							ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
 							// temperary fix for wall torque
@@ -1300,7 +1300,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					overlap = 2.0*lwy/sigma;
 
 					// add to y force ONLY (points in positive y direction)
-					ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+					ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp);
 					// temperary fix for wall torque
 					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
@@ -1345,7 +1345,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					overlap = 2.0*lwy/sigma;
 
 					// add to y force ONLY (points in positive y direction)
-					ftmp = -(1/a)*(overlap - 1)*(1 + a - overlap);
+					ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
 					// temperary fix for wall torque
 					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
@@ -2380,10 +2380,11 @@ double cellPacking2D::calContactAng()
 
 }
 
-void cellPacking2D::changeL0(double factor)
+void cellPacking2D::changeL0(double factor1, double factor2)
 {
 	for (int i = 0; i < NCELLS; i++){
-		cell(i).setl0(cell(i).getl0() * factor);
+		cell(i).gamafactor1 = factor1;
+		cell(i).gamafactor2 = factor2;
 	}
 }
 
