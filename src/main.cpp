@@ -34,8 +34,8 @@ int main(int argc, char const *argv[]){
 	//BumpyEllipse_CLI<> cli;
 	//BumpyEllipse_CLI<BumpyEllipse_Parallel> cli;
 	
-	//DPM_Hopper_CLI<> cli;
-	Bumpy_Hopper_CLI<> cli;
+	DPM_Hopper_CLI<> cli;
+	//Bumpy_Hopper_CLI<> cli;
 
 	//cli.findJamming(argv);
 	//cli.NVE(argv);
