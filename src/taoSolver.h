@@ -96,7 +96,7 @@ public:
 					cellpointer->print_frequency /= 5;
 					cout << omp_get_thread_num() << " : T is a bit large" << endl;
 				}
-				else if ((testEq < 0.1 && !REACHED) || REACHED)
+				else if ((testEq < 0.5 && !REACHED) || REACHED)
 				//else if (testEq < 0.5)
 				{
 					//if (count > 1){

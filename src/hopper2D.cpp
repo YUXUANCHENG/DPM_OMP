@@ -449,7 +449,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		resetContacts();
 
 		// calculate forces between disks (with door closed)
-		hopperForcesSP(radii,w0,w,th,0.01,closed);
+		hopperForcesSP(radii,w0,w,th,0,closed);
 
 		// verlet velocity update
 		hopperVelVerletSP(radii);
@@ -989,6 +989,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	double yline;							// line separating edge force from wall force
 
 	double a = 0.3;
+	//double a = -0.3;
 
 	// hopper nozzle length
 	Lx = L.at(0);
@@ -1017,6 +1018,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
+		double factor = 10 * cell(ci).NV/16.0;
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			cFlag = false;
 			// get vertex diameter
@@ -1072,7 +1074,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							overlap = 2.0*lw/sigma;
 
 							// force
-							ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
+							ftmp = -factor*(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
 							// temperary fix for wall torque
@@ -1123,7 +1125,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							overlap = 2.0*lw/sigma;
 
 							// force
-							ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
+							ftmp = -factor*(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp*s);
 							// temperary fix for wall torque
@@ -1300,7 +1302,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					overlap = 2.0*lwy/sigma;
 
 					// add to y force ONLY (points in positive y direction)
-					ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
+					ftmp = -factor*(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp);
 					// temperary fix for wall torque
 					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;
@@ -1345,7 +1347,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					overlap = 2.0*lwy/sigma;
 
 					// add to y force ONLY (points in positive y direction)
-					ftmp = -(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
+					ftmp = -factor*(1/(a * sigma))*(overlap - 1)*(1 + a - overlap);
 					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
 					// temperary fix for wall torque
 					cell(ci).torque += cell(ci).vrel(vi, 0) * ftmp;

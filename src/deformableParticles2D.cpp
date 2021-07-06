@@ -1198,7 +1198,7 @@ void deformableParticles2D::shapeForces(){
 
 	        	// add to force
 	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
-	            ftmp *= kl;
+	            ftmp *= kl * NV/16.0;
 	            setVForce(i,d,vforce(i,d)+ftmp);
 	        }
 		}
@@ -1208,8 +1208,8 @@ void deformableParticles2D::shapeForces(){
 			
 
 			// calculate force term in each direction (based on calc from notes)
-			fxTmp = ka * astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
-			fyTmp = ka * astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
+			fxTmp = ka * NV/16.0* astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
+			fyTmp = ka * NV/16.0* astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
 
 			// add to force on vertices
 			setVForce(i,0,vforce(i,0)+fxTmp);
@@ -1308,8 +1308,8 @@ void deformableParticles2D::gravityForces(double g, int dir){
 			fxtmp = -1.0*(yip1*yip1 - yim1*yim1 + (yip1 - yim1)*(yi - 3.0*cy));
 			fytmp = (xip1 - xi)*yip1 + (xi - xim1)*yim1 + (xip1 - xim1)*(2.0*yi - 3.0*cy);
 		}
-		fxtmp *= (a0*g)/(6.0*apoly);
-		fytmp *= (a0*g)/(6.0*apoly);
+		fxtmp *= (NV/16.0)*(a0*g)/(6.0*apoly);
+		fytmp *= (NV/16.0)*(a0*g)/(6.0*apoly);
 
 		// add to total force (factor of NV is to take mass into account)
 		setVForce(i,0,vforce(i,0) + fxtmp);

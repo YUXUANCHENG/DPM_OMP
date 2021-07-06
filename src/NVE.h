@@ -199,7 +199,7 @@ public:
 		{
 			return 0;
 		}
-		if (Ke() < 1e-16 * N_inside && closed == 0)
+		if (Ke() < 1e-16 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
 		{
 			clog_count++;
 			if (clog_count > 100)

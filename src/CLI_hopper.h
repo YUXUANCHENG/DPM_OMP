@@ -24,11 +24,13 @@ public:
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
-		this->kl =0.1;
-		this->ka = 0.1;
+		this->kl = 0.01;
+		this->ka = 0.5;
 		this->kb = 0;
-		this->gamafactor1 = 0.65;
-		this->gamafactor2 = 0.1;
+		this->gamafactor1 = 0.9;
+		this->gamafactor2 = -1;
+		// this->gamafactor1 = 0;
+		// this->gamafactor2 = 0;
 		this->g = 0.05;
 		this->Lini = 0.1 * w0;
 		this->NCELLS = 64;
@@ -58,6 +60,11 @@ public:
 		;
 	}
 
+	virtual void setSeed() {
+		//seed = index_i;
+		this->seed = 4;
+	}
+
 	virtual void prepareSystem() {
 		w_scale = 0.5 + 0.05 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
@@ -79,6 +86,8 @@ public:
 	virtual void deformation(char const* argv[])
 	{
 		this->NCELLS = 1;
+		this->w0 = 5;
+		this->Lini = w0;
 		this->qscompress(argv);
 		this->particles->gDire = 1;
 		this->particles->gOn = 0;
