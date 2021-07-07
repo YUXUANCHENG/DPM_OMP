@@ -13,6 +13,15 @@ public:
 	Bumpy_Parallel() = default;
 
 	using DPM_Parallel::initialize_subsystems;
+	
+	virtual void hopperForces(double w0, double w, double th, double g, int closed){
+		bumpy_Forces();
+		if (gOn){
+			for (int ci = 0; ci < NCELLS; ci++) 
+				cell(ci).gravityForces(g, gDire);
+		}
+		hopperWallForcesDP(w0,w,th,closed);
+	}
 
 	virtual void bumpy_Forces() { 
 		// reset forces

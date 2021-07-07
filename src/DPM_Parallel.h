@@ -80,6 +80,16 @@ public:
 		addUpStress();
 	}
 
+	virtual void hopperForces(double w0, double w, double th, double g, int closed){
+		calculateForces();
+		if (gOn){
+			for (int ci = 0; ci < NCELLS; ci++) 
+				cell(ci).gravityForces(g, gDire);
+		}
+		hopperWallForcesDP(w0,w,th,closed);
+	}
+
+
 	void addUpStress()
 	{
 		// reset virial stresses to 0

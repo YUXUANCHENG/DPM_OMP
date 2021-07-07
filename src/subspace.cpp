@@ -15,9 +15,12 @@ void DPM_Parallel::split_into_subspace() {
 	if (subsystem == nullptr)
 		subsystem = new subspace[N_systems[0] * N_systems[1]];
 
+	std::vector<double> temp;
+	for (int d = 0; d < NDIM; d++)
+		temp.push_back(L.at(d) - BoundaryCoor.at(d));
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
-		subsystem[i].initialize(this, L, N_systems, i, dt0);
+		subsystem[i].initialize(this, temp, N_systems, i, dt0);
 		subsystem[i].cal_cashed_fraction();
 	}
 
@@ -50,12 +53,19 @@ int DPM_Parallel::look_for_new_box(cvpair* pair) {
 	int y_id = 0;
 
 	// figure out x and y index
-	x_id = floor(transformPos(pair, 0) / (L.at(0) / N_systems[0]));
-	y_id = floor(transformPos(pair, 1) / (L.at(1) / N_systems[1]));
+	x_id = floor(transformPos(pair, 0) / (subsystem[0].L.at(0) / N_systems[0]));
+	y_id = floor(transformPos(pair, 1) / (subsystem[0].L.at(1) / N_systems[1]));
 
 	//add periodic boundary just in case
-	x_id = x_id % N_systems[0];
-	y_id = y_id % N_systems[1];
+	if (cell(0).pbc.at(0))
+		x_id = x_id % N_systems[0];
+	else if (x_id < 0 || x_id >= N_systems[0])
+		return -1;
+
+	if (cell(0).pbc.at(1))
+		y_id = y_id % N_systems[1];
+	else if (y_id < 0 || y_id >= N_systems[1])
+		return -1;
 
 	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
@@ -64,14 +74,14 @@ int DPM_Parallel::look_for_new_box(cvpair* pair) {
 }
 
 double DPM_Parallel::transformPos(cvpair* pair, int direction) {
-	if (cell(pair->ci).pbc.at(direction) == 1) {
+	if (cell(pair->ci).pbc.at(direction)) {
 		double x = cell(pair->ci).vpos(pair->vi, direction);
 		double y = L.at(direction);
 		double modPos = x - (int)(x / y) * y;
 		return modPos > 0 ? modPos : modPos + y;
 	}
 	else
-		return cell(pair->ci).vpos(pair->vi, direction);
+		return cell(pair->ci).vpos(pair->vi, direction) - BoundaryCoor.at(direction);
 }
 
 // initialization
@@ -206,8 +216,10 @@ void subspace::cashe_out(int direction) {
 	}
 
 	// send to other boxes
-	pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
-	pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
+	if (lower_index > 0)
+		pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
+	if (upper_index > 0)
+		pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
 
@@ -222,8 +234,10 @@ int subspace::neighbor_box(int direction, int upper_lower) {
 	// neighbor box
 	current[direction] += upper_lower;
 	// periodic boundary
-	current[direction] = (current[direction] + N_systems[direction]) % N_systems[direction];
-
+	if (pointer_to_system->cell(0).pbc.at(direction))
+		current[direction] = (current[direction] + N_systems[direction]) % N_systems[direction];
+	else if (current[direction] < 0 || current[direction] >= N_systems[direction])
+		return -1;
 	// neighbor id
 	neighbor_box_id = current[0] + current[1] * N_systems[0];
 
@@ -291,7 +305,8 @@ void subspace::migrate_out() {
 			// find which subsystem to go
 			new_box_index = migrate_out_destination.top();
 			// migrate
-			pointer_to_system->migrate_into(new_box_index, target_cell);
+			if (new_box_index > 0)
+				pointer_to_system->migrate_into(new_box_index, target_cell);
 			// pop from list
 			migrate_out_list.pop();
 			migrate_out_destination.pop();
@@ -326,6 +341,8 @@ void subspace::calculateForces_insub() {
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
 					continue;
+				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper && pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
+					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
 					cout << "incorrect resident list" << endl;
 					//print_information();
@@ -354,6 +371,8 @@ void subspace::calculateForces_betweensub() {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
+					continue;
+				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper && pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
 					cout << "incorrect cashed list" << endl;

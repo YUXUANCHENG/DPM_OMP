@@ -211,7 +211,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	vrmin = 0.5*cell(0).getl0();
 	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	L.at(0) = Ltmp;
-	L.at(1) = Ltmp;
+	//L.at(1) = Ltmp;
+	L.at(1) = w0;
+	BoundaryCoor.at(0) = -Lmin*L.at(0);
+	BoundaryCoor.at(1) = 0;
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++)
 			cell(ci).setL(d,Ltmp);
@@ -227,6 +230,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 
 		// get random x location in hopper
 		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+		//xpos *= 0.9;
 
 		// assign random y components
 		if (xpos < 0){

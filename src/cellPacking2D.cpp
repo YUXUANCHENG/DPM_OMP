@@ -46,9 +46,12 @@ void cellPacking2D::defaultvars(){
 
 	// set box lengths to 1.0
 	L.resize(NDIM);
+	BoundaryCoor.resize(NDIM);
 	for (int d=0; d<NDIM; d++)
+	{	
 		L.at(d) 	= 1.0;
-
+		BoundaryCoor.at(d) 	= 0.0;
+	}
 	// pointer variables point to nullptr
 	cellArray 				= nullptr;
 	contactMatrix	 		= nullptr;
@@ -87,8 +90,10 @@ cellPacking2D::cellPacking2D(int ncells, int nt, int nprint, double l, double s)
 
 	// set box lengths to be square
 	for (d=0; d<NDIM; d++)
+	{
 		L.at(d) = l;
-
+		BoundaryCoor.at(d) = 0;
+	}
 	// test for error in inputs
 	if (NCELLS <= 0){
 		cout << "	ERROR: in overloaded operator, NCELLS <= 0 so cannot initialize arrays, ending code here." << endl;

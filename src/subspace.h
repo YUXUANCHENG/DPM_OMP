@@ -37,6 +37,7 @@ public:
 	double sigmaXY = 0.0;
 	double sigmaYX = 0.0;
 	double sigmaYY = 0.0;
+	vector<double> L;
 
 protected:
 
@@ -54,7 +55,7 @@ protected:
 	// which box is this
 	int box_id;
 
-	vector<double> L;
+	
 	vector<int> N_systems;
 
 	int NDIM = 2;

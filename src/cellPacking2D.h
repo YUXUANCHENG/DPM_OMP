@@ -67,6 +67,7 @@ public:
 
 	// boundary lengths
 	std::vector<double> L;
+	std::vector<double> BoundaryCoor;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;

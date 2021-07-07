@@ -24,17 +24,17 @@ public:
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
-		this->kl = 0.01;
-		this->ka = 0.5;
+		// this->kl = 0.01;
+		// this->ka = 0.5;
+		this->kl = 1;
+		this->ka = 1;
 		this->kb = 0;
-		this->gamafactor1 = 0.9;
-		this->gamafactor2 = -1;
-		// this->gamafactor1 = 0;
-		// this->gamafactor2 = 0;
+		// this->gamafactor1 = 0.9;
+		// this->gamafactor2 = -1;
 		this->g = 0.05;
 		this->Lini = 0.1 * w0;
 		this->NCELLS = 64;
-		this->NV = 32;
+		this->NV = 16;
 		this->calA0 = 1.0;
 		//this->kint = 10.0;
 		//this->timeStepMag = 0.001;		
@@ -72,6 +72,7 @@ public:
 		cout << "	** Initializing hopper " << endl;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
+		this->particles->initialize_subsystems(this->NBx, this->NBy);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->changeL0(gamafactor1, gamafactor2);
 		this->particles->closeF();
@@ -109,7 +110,7 @@ public:
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
 		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-
+		this->particles->initialize_subsystems();
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
 		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << endl;
 		cout << "	** FINISHED **   " << endl;
@@ -126,7 +127,6 @@ public:
 	this->kl = 0;
 	this->ka = 0;
 	this->kb = 0;
-	this->l0Factor = 1;
 	}
 	virtual void prepareSystem() {
 		DPM_Hopper_CLI<Ptype>::prepareSystem();
