@@ -2,4 +2,4 @@
 
 binf=$(pwd)/jamming.o
 
-$binf
+$binf 0 10

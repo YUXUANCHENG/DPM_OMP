@@ -46,7 +46,7 @@ public:
 
 		subspaceManager();
 
-#pragma omp parallel for
+#pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_insub();
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)

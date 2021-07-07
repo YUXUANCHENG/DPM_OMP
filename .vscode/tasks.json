@@ -25,6 +25,31 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "C/C++: g++ build production",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-O3",
+                "--std=c++11",
+                "-fopenmp",
+                "${workspaceFolder}/src/*.cpp",
+                "-I",
+                "${workspaceFolder}/src/",
+                "-o",
+                "${workspaceFolder}/jamming.o"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

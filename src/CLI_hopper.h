@@ -33,10 +33,11 @@ public:
 		// this->gamafactor2 = -1;
 		this->g = 0.05;
 		this->Lini = 3;
-		this->NCELLS = 512;
+		this->NBx = 16;
+		this->NCELLS = 256;
 		this->NV = 16;
 		this->calA0 = 1.0;
-		//this->kint = 10.0;
+		this->kint = 10.0;
 		//this->timeStepMag = 0.001;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
