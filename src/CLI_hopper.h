@@ -32,8 +32,8 @@ public:
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
 		this->g = 0.05;
-		this->Lini = 0.1 * w0;
-		this->NCELLS = 64;
+		this->Lini = 3;
+		this->NCELLS = 512;
 		this->NV = 16;
 		this->calA0 = 1.0;
 		//this->kint = 10.0;

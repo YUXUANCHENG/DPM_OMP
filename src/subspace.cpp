@@ -17,7 +17,7 @@ void DPM_Parallel::split_into_subspace() {
 
 	std::vector<double> temp;
 	for (int d = 0; d < NDIM; d++)
-		temp.push_back(L.at(d) - BoundaryCoor.at(d));
+		temp.push_back(L.at(d) * 1.2 - BoundaryCoor.at(d));
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);

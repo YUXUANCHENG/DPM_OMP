@@ -453,7 +453,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		resetContacts();
 
 		// calculate forces between disks (with door closed)
-		hopperForcesSP(radii,w0,w,th,0,closed);
+		hopperForcesSP(radii,w0,w,th,0.01,closed);
 
 		// verlet velocity update
 		hopperVelVerletSP(radii);
