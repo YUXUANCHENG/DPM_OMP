@@ -223,7 +223,8 @@ public:
 				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
 				cellpointer->cell(ci).updateCPos();
 				// if still inside hopper
-				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5)
+				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.2)
+				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 					cellpointer->cell(ci).inside_hopper = 0;
 			}
 		}

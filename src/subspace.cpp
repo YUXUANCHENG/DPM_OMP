@@ -81,7 +81,11 @@ double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 		return modPos > 0 ? modPos : modPos + y;
 	}
 	else
-		return cell(pair->ci).vpos(pair->vi, direction) - BoundaryCoor.at(direction);
+	{
+		double pos = cell(pair->ci).vpos(pair->vi, direction) - BoundaryCoor.at(direction);
+		pos = pos < 0? 0 : pos;
+		return pos;
+	}
 }
 
 // initialization

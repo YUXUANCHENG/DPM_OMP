@@ -63,11 +63,12 @@ public:
 
 	virtual void setSeed() {
 		//seed = index_i;
-		this->seed = 4;
+		this->seed = 1;
 	}
 
 	virtual void prepareSystem() {
-		w_scale = 0.5 + 0.05 * this->index_j;
+		//w_scale = 0.5 + 0.05 * this->index_j;
+		w_scale = 0.5 + 0.1 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
