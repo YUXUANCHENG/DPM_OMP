@@ -88,7 +88,7 @@ public:
 	virtual void deformation(char const* argv[])
 	{
 		this->NCELLS = 1;
-		this->w0 = 5;
+		this->w0 = 5.5;
 		this->Lini = w0;
 		this->qscompress(argv);
 		this->particles->gDire = 1;
