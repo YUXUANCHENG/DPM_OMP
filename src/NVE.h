@@ -257,7 +257,7 @@ public:
 		cellpointer->spPosVerlet();
 		cellpointer->bumpyRotation();
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5)
+			if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.2)
 				cellpointer->cell(ci).inside_hopper = 0;
 		}
 		// reset contacts before force calculation

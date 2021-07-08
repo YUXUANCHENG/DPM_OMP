@@ -224,8 +224,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	cout << "		-- Ininitializing cell positions" << endl;
 	for (ci=0; ci<NCELLS; ci++){
 		// set min and max values of positions
-		xmin = -Lmin*L.at(0);
-		xmax = L.at(0);
+		xmin = -Lmin*L.at(0) + radii.at(ci);
+		xmax = L.at(0) * 0.5;
 		
 
 		// get random x location in hopper
@@ -238,8 +238,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			ymax = w0 - radii.at(ci);
 		}
 		else{
-			ymin = xpos/tan(th) + cell(ci).getl0();
-			ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
+			// ymin = xpos/tan(th) + cell(ci).getl0();
+			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
+			ymin = xpos/tan(th) + radii.at(ci);
+			ymax = w0 - (xpos/tan(th)) - radii.at(ci);
 		}
 		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
 
@@ -506,6 +508,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	double overlap = 0.0;
 	double uv = 0.0;
 	double ftmp, utmp;
+	double fscale = 10;
 	vector<double> distanceVec(NDIM,0.0);
 
 	// reset virial stresses to 0
@@ -542,7 +545,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 				overlap = centerDistance/contactDistance;
 
 				// force scale
-				ftmp = (1 - overlap);
+				ftmp = fscale * (1 - overlap);
 
 				// add to potential energy (energy should increase because particles are growing)
 				utmp = 0.5*contactDistance*pow(1 - overlap,2);
@@ -580,7 +583,8 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	// body force (in x direction)
 	if (g > 1e-16){
 		for (ci=0; ci<NCELLS; ci++)
-			cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
+			cell(ci).setCForce(0,cell(ci).cforce(0) + g*cell(ci).NV/16.0);
+			//cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
 	}
 }
 
@@ -680,7 +684,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	double overlap;							// overlap of particle with wall
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
-
+	double factor = 10;
 	// preliminary calculations
 	t = tan(th);
 	c = cos(th);
@@ -726,6 +730,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 						// force
 						ftmp = 1 - overlap;
+						ftmp *= factor;
 						cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 						cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -756,6 +761,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 						// force
 						ftmp = 1 - overlap;
+						ftmp *= factor;
 						cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 						cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -793,6 +799,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 							// force
 							ftmp = 1 - overlap;
+							ftmp *= factor;
 							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -821,6 +828,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 							// force
 							ftmp = 1 - overlap;
+							ftmp *= factor;
 							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -855,6 +863,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 							// force
 							ftmp = 1 - overlap;
+							ftmp *= factor;
 							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -883,6 +892,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 							// force
 							ftmp = 1 - overlap;
+							ftmp *= factor;
 							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
 							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
@@ -916,6 +926,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 				// add to y force ONLY (points in positive y direction)
 				ftmp = 1 - overlap;
+				ftmp *= factor;
 				cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp);
 
 				// add to energies
@@ -937,6 +948,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 				// add to y force ONLY (points in negative y direction)
 				ftmp = 1 - overlap;
+				ftmp *= factor;
 				cell(ci).setCForce(1,cell(ci).cforce(1) - ftmp);
 
 				// add to energies
@@ -961,6 +973,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 				// add to x force ONLY (points in negative x direction)
 				ftmp = 1 - overlap;
+				ftmp *= factor;
 				cell(ci).setCForce(0,cell(ci).cforce(0) - ftmp);
 
 				// add to energies
@@ -2177,7 +2190,8 @@ void cellPacking2D::hopperVelVerletSP(vector<double>& radii){
 	// update com velocity
 	for (ci=0; ci<NCELLS; ci++){
 		// get disk mass
-		diskMass = PI*pow(radii.at(ci),2);
+		//diskMass = PI*pow(radii.at(ci),2);
+		diskMass = cell(ci).NV;
 
 		// loop over velocities
 		for (d=0; d<NDIM; d++){
