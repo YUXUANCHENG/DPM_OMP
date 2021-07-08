@@ -83,7 +83,7 @@ double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 	else
 	{
 		double pos = cell(pair->ci).vpos(pair->vi, direction) - BoundaryCoor.at(direction);
-		pos = pos < 0? 0 : pos;
+		pos = (!direction && pos < 0)? 1e-10 : pos;
 		return pos;
 	}
 }
@@ -220,9 +220,9 @@ void subspace::cashe_out(int direction) {
 	}
 
 	// send to other boxes
-	if (lower_index > 0)
+	if (lower_index >= 0)
 		pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
-	if (upper_index > 0)
+	if (upper_index >= 0)
 		pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
@@ -309,7 +309,7 @@ void subspace::migrate_out() {
 			// find which subsystem to go
 			new_box_index = migrate_out_destination.top();
 			// migrate
-			if (new_box_index > 0)
+			if (new_box_index >= 0)
 				pointer_to_system->migrate_into(new_box_index, target_cell);
 			// pop from list
 			migrate_out_list.pop();

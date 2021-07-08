@@ -1005,8 +1005,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
 
-	double a = 0.3;
-	//double a = -0.3;
+	//double a = 0.3;
+	double a = -0.3;
 
 	// hopper nozzle length
 	Lx = L.at(0);
