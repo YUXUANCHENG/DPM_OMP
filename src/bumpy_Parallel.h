@@ -1,9 +1,15 @@
 #ifndef BUMPY_PARALLEL_H
 #define BUMPY_PARALLEL_H
 
+#include <chrono>
 #include "DPM_Parallel.h"
 #include "bumpy.h"
 #include "NVE.h"
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
 
 class Bumpy_Parallel : public virtual Bumpy, public virtual DPM_Parallel {
 public:
@@ -45,12 +51,19 @@ public:
 		resetContacts();
 
 		subspaceManager();
-
+// auto t1 = high_resolution_clock::now();
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_insub();
+// auto t2 = high_resolution_clock::now();
+#pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_betweensub();
+// auto t3 = high_resolution_clock::now();
+// duration<double, std::milli> ms_double_1 = t2 - t1;
+// duration<double, std::milli> ms_double_2 = t3 - t2;
+// std::cout << ms_double_1.count() << " " << ms_double_2.count() << endl;
+
 		for (int ci = 0; ci < NCELLS; ci++) {
 			for (int d = 0; d < NDIM; d++)
 				cell(ci).setCForce(d, cell(ci).cforce(d));

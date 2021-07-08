@@ -568,11 +568,13 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 				r1[d] = leftCell.vrel(onTheLeft->vi, d) + vertexVec.at(d) / 2;
 				r2[d] = rightCell.vrel(onTheRight->vi, d) - vertexVec.at(d) / 2;
 				// add to force on i
+#pragma omp critical
+			{
 				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp);
 
 				// subtract off complement from force on j
 				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp);
-
+			}
 				// add to stress tensor
 				if (d == 0) {
 					sigmaXX -= 2.0 * ftmp * vertexVec.at(0);

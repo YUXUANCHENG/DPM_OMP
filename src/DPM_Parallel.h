@@ -72,6 +72,7 @@ public:
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_insub();
+#pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_betweensub();
 		for (int ci = 0; ci < NCELLS; ci++) {

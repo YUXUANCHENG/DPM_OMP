@@ -68,6 +68,7 @@
         "cfenv": "cpp",
         "cinttypes": "cpp",
         "hashtable": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "chrono": "cpp"
     }
 }
