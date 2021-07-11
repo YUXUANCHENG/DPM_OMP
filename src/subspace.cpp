@@ -17,7 +17,10 @@ void DPM_Parallel::split_into_subspace() {
 
 	std::vector<double> temp;
 	for (int d = 0; d < NDIM; d++)
-		temp.push_back(L.at(d) * 1.2 - BoundaryCoor.at(d));
+	{
+		double factor = cell(0).pbc.at(d)? 1: 1.2;
+		temp.push_back(L.at(d) * factor - BoundaryCoor.at(d));
+	}
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);
@@ -345,7 +348,7 @@ void subspace::calculateForces_insub() {
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
 					continue;
-				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper && pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
+				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
 					cout << "incorrect resident list" << endl;
@@ -376,7 +379,7 @@ void subspace::calculateForces_betweensub() {
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
 					continue;
-				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper && pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
+				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
 					cout << "incorrect cashed list" << endl;

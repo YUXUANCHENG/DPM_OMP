@@ -84,7 +84,6 @@ public:
 	virtual void hopperForces(double w0, double w, double th, double g, int closed){
 		calculateForces();
 		if (gOn){
-#pragma omp parallel for
 			for (int ci = 0; ci < NCELLS; ci++) 
 				cell(ci).gravityForces(g, gDire);
 		}

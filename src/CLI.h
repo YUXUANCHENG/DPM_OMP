@@ -106,7 +106,8 @@ public:
 		//double ratio = 100.0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		kb = 0;
+		//kb = 0;
+		kb = 0.1;
 		//double kl = ratio * kb;
 	}
 
