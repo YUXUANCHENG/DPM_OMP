@@ -21,12 +21,21 @@ public:
 	using DPM_Parallel::initialize_subsystems;
 	
 	virtual void hopperForces(double w0, double w, double th, double g, int closed){
+// auto t1 = high_resolution_clock::now();
 		bumpy_Forces();
+// auto t2 = high_resolution_clock::now();
 		if (gOn){
+#pragma omp parallel for
 			for (int ci = 0; ci < NCELLS; ci++) 
 				cell(ci).gravityForces(g, gDire);
 		}
+// auto t3 = high_resolution_clock::now();
 		hopperWallForcesDP(w0,w,th,closed);
+// auto t4 = high_resolution_clock::now();
+// duration<double, std::milli> ms_double_1 = t2 - t1;
+// duration<double, std::milli> ms_double_2 = t3 - t2;
+// duration<double, std::milli> ms_double_3 = t4 - t3;
+// std::cout << ms_double_1.count() << " " << ms_double_2.count() << " " << ms_double_3.count() << endl;
 	}
 
 	virtual void bumpy_Forces() { 
@@ -49,13 +58,13 @@ public:
 			}
 		}
 		resetContacts();
-
-		subspaceManager();
 // auto t1 = high_resolution_clock::now();
+		subspaceManager();
+// auto t2 = high_resolution_clock::now();
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_insub();
-// auto t2 = high_resolution_clock::now();
+//auto t2 = high_resolution_clock::now();
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 			subsystem[i].calculateForces_betweensub();
