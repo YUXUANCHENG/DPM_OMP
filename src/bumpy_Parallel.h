@@ -80,6 +80,13 @@ public:
 		addUpStress();
 	}
 
+	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U)
+	{
+		Bumpy::printRoutine(count, print_frequency, t, init_E, init_U);
+		if (count % print_frequency == 0)
+			cout << "total vetex count = " << countTotalVertices() << endl;
+	}
+
 };
 
 #endif

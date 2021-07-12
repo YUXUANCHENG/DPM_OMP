@@ -39,7 +39,7 @@ public:
 	double sigmaYY = 0.0;
 	vector<double> L;
 
-protected:
+public:
 
 	// resident cells and cashed cells
 	vector<cvpair*> resident_cells;

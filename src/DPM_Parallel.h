@@ -82,6 +82,14 @@ public:
 		addUpStress();
 	}
 
+	int countTotalVertices()
+	{
+		int count = 0;
+		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+			count += subsystem[i].resident_cells.size();
+		return count;
+	}
+
 	virtual void hopperForces(double w0, double w, double th, double g, int closed){
 		calculateForces();
 		if (gOn){
@@ -117,6 +125,13 @@ public:
 			// need to fix later
 			Ncc += subsystem[i].Ncc;
 		}
+	}
+
+	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U)
+	{
+		cellPacking2D::printRoutine(count, print_frequency, t, init_E, init_U);
+		if (count % print_frequency == 0)
+			cout << "total vetex count = " << countTotalVertices() << endl;
 	}
 
 };

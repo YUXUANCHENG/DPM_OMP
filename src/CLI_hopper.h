@@ -112,7 +112,7 @@ public:
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
 		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-		this->particles->initialize_subsystems();
+		//this->particles->initialize_subsystems();
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
 		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << endl;
 		cout << "	** FINISHED **   " << endl;
