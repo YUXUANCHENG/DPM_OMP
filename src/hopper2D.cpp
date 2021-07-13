@@ -213,7 +213,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	L.at(0) = Ltmp;
 	//L.at(1) = Ltmp;
 	L.at(1) = w0;
-	BoundaryCoor.at(0) = -Lmin*L.at(0);
+	BoundaryCoor.at(0) = -Lmin*L.at(1);
 	BoundaryCoor.at(1) = 0;
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++)
@@ -224,7 +224,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	cout << "		-- Ininitializing cell positions" << endl;
 	for (ci=0; ci<NCELLS; ci++){
 		// set min and max values of positions
-		xmin = -Lmin*L.at(0) + radii.at(ci);
+		xmin = -Lmin*L.at(1) + radii.at(ci);
 		xmax = L.at(0) * 0.5;
 		
 
@@ -314,7 +314,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 	double alpha 			= alpha0;
 	double alphat 			= alpha;
 	double t 				= 0.0;
-	double Ftol 			= 1e-14;
+	double Ftol 			= 1e-10;
 	bool converged 			= false;
 
 	// local variables

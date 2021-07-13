@@ -27,17 +27,20 @@ public:
 		// this->kl = 0.01;
 		// this->ka = 0.5;
 		this->kl = 1;
-		this->ka = 1;
+		this->ka = 10;
 		this->kb = 0;
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
 		this->g = 0.05;
-		this->Lini = 5;
-		this->NBx = 16;
-		this->NCELLS = 512;
+		//this->Lini = 5;
+		this->NBx = 30;
+		this->NBy = 10;
+		this->NCELLS = 800;
 		this->NV = 16;
 		this->calA0 = 1.0;
 		this->kint = 2.0;
+		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.75 / pow(w0, 2);
+		cout << "Lini = " << this->Lini << endl;
 		//this->timeStepMag = 0.001;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
@@ -45,7 +48,7 @@ public:
 				radii.at(ci) = smallRadius;
 			else
 				radii.at(ci) = smallRadius * sizeRatio;
-		}
+		}	
 	}
 
 	virtual void setIndex(char const* argv[]) {
@@ -68,7 +71,7 @@ public:
 
 	virtual void prepareSystem() {
 		//w_scale = 0.5 + 0.05 * this->index_j;
-		w_scale = 0.5 + 0.1 * this->index_j;
+		w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;

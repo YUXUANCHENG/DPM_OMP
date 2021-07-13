@@ -184,7 +184,7 @@ public:
 	int hopperFlow(double w0, double w, double th, double g, double b) {
 		int result;
 		for (int t = 0; t < cellpointer->NT; t++) {
-			if (closed == 1 && t > cellpointer->NT / 500) closed = 0;
+			if (closed == 1 && t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside) closed = 0;
 			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
 			hopperRoutine(w0, w, th, g, b);
 			result = checkTermination();
