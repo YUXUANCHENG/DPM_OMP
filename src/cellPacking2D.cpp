@@ -5262,7 +5262,7 @@ int cellPacking2D::calTao(double q, int frames, std::vector< std::vector<double>
 		currentLogVal += logInterval;
 	}
 	std::vector<double> ISF(timePoints.size());
-#pragma omp parallel for
+#pragma omp parallel for schedule (dynamic, 5)
 	for (int i = 0; i < timePoints.size(); i++)
 	{
 		int offset = timePoints[i];

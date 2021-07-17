@@ -30,23 +30,23 @@ int main(int argc, char const *argv[]){
 	//BumpyDimer_CLI<> cli;
 	//BumpyDimer_CLI<BumpyDimer_Parallel> cli;
 	//DPM_CLI<> cli;
-	//DPM_CLI<DPM_Parallel> cli;
+	DPM_CLI<DPM_Parallel> cli;
 	//BumpyEllipse_CLI<> cli;
 	//BumpyEllipse_CLI<BumpyEllipse_Parallel> cli;
 	
 	//DPM_Hopper_CLI<> cli;
 	//DPM_Hopper_CLI<DPM_Parallel> cli;
 	//Bumpy_Hopper_CLI<> cli;
-	Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
+	//Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
 
 	//cli.findJamming(argv);
 	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
-	cli.hopperFlow(argv);
+	//cli.hopperFlow(argv);
 	//cli.deformation(argv);
 	
-	//cli.calTao(argv);
+	cli.calTao(argv);
 
 	system("pause");
 	return 0;

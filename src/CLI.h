@@ -96,7 +96,8 @@ public:
 	}
 	virtual void setPhiDisk(){
 		//phiDisk = 0.75;
-		phiDisk = 0.70 + index_i * 0.02;
+		//phiDisk = 0.70 + index_i * 0.02;
+		phiDisk = 0.70 + index_i * 0.015;
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -106,8 +107,8 @@ public:
 		//double ratio = 100.0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		//kb = 0;
-		kb = 0.1;
+		kb = 0;
+		//kb = 0.1;
 		//double kl = ratio * kb;
 	}
 
@@ -214,7 +215,7 @@ public:
 
 		double preset_time = T;
 
-		for (int j = 0; j < 10; j++) {
+		for (int j = 0; j < 100; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 
 			// double start = -8.5 + 0.25 * index_i;
