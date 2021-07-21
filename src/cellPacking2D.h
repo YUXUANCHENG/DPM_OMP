@@ -105,6 +105,7 @@ public:
 	// new interface
 
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
+	void printSubRoutine(int count, int print_frequency);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);

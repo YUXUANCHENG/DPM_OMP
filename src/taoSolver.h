@@ -1,8 +1,14 @@
 #ifndef TAOSOLVER_H
 #define TAOSOLVER_H
 
+#include <chrono>
 #include "cellPacking2D.h"
 #include "NVE.h"
+
+// using std::chrono::high_resolution_clock;
+// using std::chrono::duration_cast;
+// using std::chrono::duration;
+// using std::chrono::milliseconds;
 
 class TaoSolver {
 public:
@@ -38,9 +44,12 @@ public:
 		double* results = new double[2];
 		bool REACHED = false;
 		bool READY = false;
+		bool PRINT = false;
+		bool PRINTFINISHED = false;
 		std::vector<double> tao;
 		std::vector<double> Temp;
-		int count = 0;
+		int rep_count = 0;
+		int rep_threash = 2;
 
 		while (true)
 		{
@@ -50,10 +59,14 @@ public:
 			double q = PI / sqrt(cellpointer->L[0] * cellpointer->L[1] * cellpointer->phi / (PI * cellpointer->NCELLS));
 			for (int r = 0; r < 2; r++)
 			{
+// auto t1 = high_resolution_clock::now();
 				rowIndex = 0;
 				for (int count = 0; count < Ntotal; count++)
 				{
 					simulator->NVERoutine();
+					if (PRINT && r && !PRINTFINISHED)
+						//simulator->printRoutine(count,cellpointer->print_frequency * 10, count * cellpointer->dt0);
+						cellpointer->printSubRoutine(count,cellpointer->print_frequency * 10);
 
 					if (count % cellpointer->print_frequency == 0 && rowIndex < frames)
 					{
@@ -73,7 +86,18 @@ public:
 						rowIndex++;
 					}
 				}
+// auto t2 = high_resolution_clock::now();
 				taos[r] = cellpointer->calTao(q, rowIndex, x_com, y_com);
+// auto t3 = high_resolution_clock::now();
+// duration<double, std::milli> ms_double_1 = t2 - t1;
+// duration<double, std::milli> ms_double_2 = t3 - t2;
+// std::cout << ms_double_1.count() << " " << ms_double_2.count() << endl;
+				// set flag indicating print finished
+				if (PRINT && r && !PRINTFINISHED)
+				{
+					PRINT = false;
+					PRINTFINISHED = true;
+				}
 			}
 			double meanSpeed = 0;
 			for (int m = 0; m < rowIndex; m++)
@@ -110,8 +134,10 @@ public:
 					}
 					else
 						cout << omp_get_thread_num() << " : Extended runs" << endl;
-					count++;
-					if (count > 2) READY = true;
+					rep_count++;
+					if (rep_count > rep_threash) READY = true;
+					// print the last segment of trajectory
+					if (rep_count == rep_threash) PRINT = true;
 					//if (count > 4) READY = true;
 				}
 				if (READY)

@@ -6,10 +6,10 @@
 #include "bumpy.h"
 #include "NVE.h"
 
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
+// using std::chrono::high_resolution_clock;
+// using std::chrono::duration_cast;
+// using std::chrono::duration;
+// using std::chrono::milliseconds;
 
 class Bumpy_Parallel : public virtual Bumpy, public virtual DPM_Parallel {
 public:

@@ -43,7 +43,7 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	double calA0 = 1.08;
+	double calA0 = 1.18;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
@@ -218,8 +218,6 @@ public:
 		for (int j = 0; j < 100; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 
-			// double start = -8.5 + 0.25 * index_i;
-			// double interval = 0.25 - 0.02 * index_i;
 			double v0 = setV0(j);
 
 			// output files
@@ -231,6 +229,8 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+			double time = timeStepMag * (j < 11 ? setV0(0)/ v0: setV0(0)/ setV0(10));
+			local_cell_group.vertexDPMTimeScale(time);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
 			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, 10);

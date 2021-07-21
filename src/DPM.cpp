@@ -21,17 +21,22 @@ void cellPacking2D::printRoutine(int count, int print_frequency, double t, doubl
 	if (count % print_frequency == 0) {
 		double U = totalPotentialEnergy();
 		double K = totalKineticEnergy();		
-		printJammedConfig_yc();
-		phi = packingFraction();
-		phiPrintObject << phi << endl;
-		printCalA();
-		printContact();
-		printV();
+		printSubRoutine(count, print_frequency);
 		cout << "phi = " << phi << endl;
 		cout << "E_INIT = " << init_E << " U_INIT = " << init_U << endl;
 		cout << "E = " << U + K << " K = " << K << " U = " << U << endl;
 		cout << "t = " << t << endl;
 	}
+}
+
+void cellPacking2D::printSubRoutine(int count, int print_frequency)
+{
+	printJammedConfig_yc();
+	phi = packingFraction();
+	phiPrintObject << phi << endl;
+	printCalA();
+	printContact();
+	printV();
 }
 
 void cellPacking2D::NVEsimulation(double T, double v0, double t_scale, int frames) {
