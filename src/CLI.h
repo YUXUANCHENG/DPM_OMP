@@ -95,7 +95,8 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.75;
+		//phiDisk = 0.85;
+		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		phiDisk = 0.70 + index_i * 0.015;
 	}
@@ -157,7 +158,9 @@ public:
 	}
 
 	void _NVE() {
-//#pragma omp parallel for 
+		// T = 10000;
+		// frames = 2000;
+#pragma omp parallel for 
 		for (int j = 0; j < 10; j++) {
 
 			cout << "Loop i, j = " << index_i << "," << j << endl;
@@ -277,6 +280,8 @@ public:
 
 	virtual void setPhiDisk(){
 		this->phiDisk = 0.65 + 0.02 * this->index_i;
+		//this->phiDisk = 0.85;
+		//this->phiDisk = 0.4;
 	}
 
 	virtual double setV0(int j)
@@ -307,6 +312,8 @@ public:
 
 	virtual void setPhiDisk(){
 		this->phiDisk = 0.65 + 0.02 * this->index_i;
+		//this->phiDisk = 0.85;
+		//this->phiDisk = 0.4;
 	}
 
 };

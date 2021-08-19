@@ -49,7 +49,8 @@ public:
 		std::vector<double> tao;
 		std::vector<double> Temp;
 		int rep_count = 0;
-		int rep_threash = 2;
+		//int rep_threash = 2;
+		int rep_threash = 3;
 
 		while (true)
 		{
@@ -120,7 +121,7 @@ public:
 					cellpointer->print_frequency /= 5;
 					cout << omp_get_thread_num() << " : T is a bit large" << endl;
 				}
-				else if ((testEq < 0.5 && !REACHED) || REACHED)
+				else if ((testEq < 0.4 && !REACHED) || (REACHED && testEq < 0.6))
 				//else if (testEq < 0.5)
 				{
 					//if (count > 1){
