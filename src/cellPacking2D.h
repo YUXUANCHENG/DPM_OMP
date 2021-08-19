@@ -116,6 +116,7 @@ public:
 	double calHeight();
 	void changeL0(double factor1, double factor2);
 	double calContactAng();
+	double calContactLength();
 
 
 	// operators

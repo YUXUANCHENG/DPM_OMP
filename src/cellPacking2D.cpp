@@ -4289,9 +4289,10 @@ void cellPacking2D::spPosVerlet(){
 	// update com position
 	for (ci=0; ci<NCELLS; ci++){
 		if (cell(ci).inside_hopper){
+			double mass = cell(ci).a0 * 16.0;
 			for (d=0; d<NDIM; d++){
 				// update new position based on acceleration
-				postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d)/cell(ci).getNV();
+				postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d)/mass;
 
 				// translate vertices based on cpos change
 				for (vi=0; vi<cell(ci).getNV(); vi++)
@@ -4808,7 +4809,7 @@ void cellPacking2D::conserve_momentum() {
 
 	for (int ci = 0; ci < NCELLS; ci++) {
 		//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
-		system_mass += cell(ci).getNV();
+		system_mass += cell(ci).geta0()* 16.0 / cell(ci).NV;
 	}
 
 	for (int ci = 0; ci < NCELLS; ci++) {
@@ -5702,6 +5703,7 @@ void cellPacking2D::sp_VelVerlet() {
 
 	// update com velocity
 	for (ci = 0; ci < NCELLS; ci++) {
+		double mass = cell(ci).a0 * 16.0;
 		// loop over velocities
 		for (d = 0; d < NDIM; d++) {
 			// get current velocity
@@ -5711,7 +5713,7 @@ void cellPacking2D::sp_VelVerlet() {
 			aold = cell(ci).vacc(0, d);
 
 			// get new accelation
-			anew = cell(ci).cforce(d) / cell(ci).getNV();
+			anew = cell(ci).cforce(d) / mass;
 
 			// update velocity
 			veltmp += 0.5 * dt * (anew + aold);

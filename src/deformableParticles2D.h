@@ -252,7 +252,7 @@ public:
 	double cal_mean_v(int d);
 
 	double momentum(int d);
-
+	void contactLineRepul();
 	int vertexForce_with_Torque(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 };
 

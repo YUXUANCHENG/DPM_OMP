@@ -196,7 +196,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
 
 		// preferred area is regular polygon with slightly smaller radius
-		a0tmp = 0.5*nvtmp*pow(radii.at(ci),2.0)*sin(2.0*PI/nvtmp);
+		//a0tmp = 0.5*nvtmp*pow(radii.at(ci),2.0)*sin(2.0*PI/nvtmp);
+		a0tmp = PI * pow(radii.at(ci),2.0);
 
 		// initial length of polygon side
 		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/nvtmp;
@@ -456,6 +457,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 		// calculate forces between disks (with door closed)
 		hopperForcesSP(radii,w0,w,th,0.01,closed);
+		//hopperForcesSP(radii,w0,w,th,0,closed);
 
 		// verlet velocity update
 		hopperVelVerletSP(radii);
@@ -579,11 +581,10 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 
 	// wall forces
 	hopperWallForcesSP(radii,w0,w,th,closed);
-
 	// body force (in x direction)
 	if (g > 1e-16){
 		for (ci=0; ci<NCELLS; ci++)
-			cell(ci).setCForce(0,cell(ci).cforce(0) + g*cell(ci).NV/16.0);
+			cell(ci).setCForce(gDire,cell(ci).cforce(gDire) - (gDire*2-1) * g*cell(ci).a0 * 16.0/ cell(ci).NV);
 			//cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
 	}
 }
@@ -662,8 +663,10 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 
 	// wall forces
 	hopperWallForcesDP(w0,w,th,closed);
-	for (ci=0; ci<NCELLS; ci++)
+	for (ci=0; ci<NCELLS; ci++){
 		cell(ci).shapeForces();
+		//cell(ci).contactLineRepul();
+	}
 
 
 }
@@ -1006,7 +1009,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	double yline;							// line separating edge force from wall force
 
 	//double a = 0.3;
-	double a = -0.3;
+	//double a = -0.3;
 
 	// hopper nozzle length
 	Lx = L.at(0);
@@ -1035,11 +1038,14 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
-		double factor = 10 * cell(ci).NV/16.0;
+		//double factor = 10 * cell(ci).NV/16.0;
+		// get vertex diameter
+		double factor = 0.1 * cell(ci).geta0();
+		//double factor = 0;
+		sigma = cell(ci).getl0()*cell(ci).getdel();
+		double a = 0.1* sqrt(cell(ci).geta0()/PI)/ sigma;
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			cFlag = false;
-			// get vertex diameter
-			sigma = cell(ci).getl0()*cell(ci).getdel();
 
 			// determine sigma_ij with edge bead
 			sib = 0.5*(sigma + sb);
@@ -2385,18 +2391,64 @@ double cellPacking2D::calHeight()
 
 double cellPacking2D::calContactAng()
 {
-	double limit = cell(0).getl0() * cell(0).getdel();
+	//double limit = 1.001 * cell(0).getl0() * cell(0).getdel() / 2;
+	double limit = sqrt(cell(0).a0/PI) * 0.1 + cell(0).getl0() / 2;
 	int NV = cell(0).getNV();
-	for (int i = 0; i < NV; i++)
+	//int num = NV / 10;
+	int num = 2;
+	int i;
+	for (i = 0; i < NV; i++)
 	{
 		if (cell(0).vpos(i,1) < limit && cell(0).vpos((i+1)%NV,1) > limit)
 		{
-			double dx = cell(0).vpos(i,0) - cell(0).vpos((i+1)%NV,0);
-			double dy = cell(0).vpos(i,1) - cell(0).vpos((i+1)%NV,1);			
-			return atan(dy/dx) * 180/ PI;
+			break;
 		}
 	}
-	return -1;
+	double x_mean = 0, y_mean = 0;
+	for (int j = 0; j < num; j++)
+	{
+		x_mean += cell(0).vpos((i+j)%NV,0);
+		y_mean += cell(0).vpos((i+j)%NV,1);
+	}
+	x_mean /= num;
+	y_mean /= num;
+	double numer = 0, denum = 0;
+	for (int j = 0; j < num; j++)
+	{
+		numer += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,1) - y_mean);
+		denum += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,0) - x_mean);
+	}
+	cout << "contact angle calculating point is " << i << endl;		
+	return atan(numer/denum) * 180/ PI;
+
+}
+
+double cellPacking2D::calContactLength()
+{
+	int l = 0, m = 0;
+	int NV = cell(0).getNV();
+	double length = -1;
+	double limit = 1.001 * cell(0).getl0() * cell(0).getdel() / 2;
+
+	for (int i = 0; i < NV; i++)
+	{
+		if (cell(0).vpos(i,1) > limit && cell(0).vpos((i+1)%NV,1) < limit)
+		{
+			l = (i + 1)%NV;
+			break;
+		}
+	}
+	for (int i = l; i < l + NV; i++)
+	{
+		if (cell(0).vpos(i,1) < limit && cell(0).vpos((i+1)%NV,1) > limit)
+		{
+			m = i%NV;
+			break;
+		}
+	}
+	cout << "two points are " << l << ", " << m << endl;
+	length = abs(cell(0).vpos(l, 0) - cell(0).vpos(m ,0));
+	return length;
 
 }
 

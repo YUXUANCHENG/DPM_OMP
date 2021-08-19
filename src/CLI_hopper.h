@@ -20,6 +20,7 @@ public:
 	double w;
 	double gamafactor1 = 0;
 	double gamafactor2 = 0;
+	bool deformFlag = false;
 
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
@@ -75,6 +76,8 @@ public:
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
+		if (deformFlag)
+			this->particles->gDire = 1;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
@@ -91,9 +94,21 @@ public:
 
 	virtual void deformation(char const* argv[])
 	{
+		deformFlag = true;
+		this->NT = 1e7;
+		this->th = PI/4;
+		//this->timeStepMag = 0.00002;	
+		this->timeStepMag = 0.00005;	
+		//this->timeStepMag = 0.0005;	
+		this->kl = 1;
+		this->ka = 1;
+		this->kb = 0;
+		this->gamafactor1 = 0.2;
+		// this->gamafactor2 = -3.3;
 		this->NCELLS = 1;
-		this->w0 = 5.5;
-		this->Lini = w0;
+		this->NV = 64;
+		this->w0 = 3;
+		this->Lini = 5;
 		this->qscompress(argv);
 		this->particles->gDire = 1;
 		this->particles->gOn = 0;
@@ -103,9 +118,10 @@ public:
 		this->particles->hopperSimulation(w0, w, th, g, b);
 		double endHeight = this->particles->calHeight();
 		double angle = this->particles->calContactAng();
+		double length = this->particles->calContactLength();
 		std::ofstream deformationPrint;
 		deformationPrint.open("deformation.txt");
-		deformationPrint << (originalHeight - endHeight)/originalHeight << "," << angle <<endl;
+		deformationPrint << (originalHeight - endHeight)/originalHeight << "," << angle << "," << length <<endl;
 		deformationPrint.close();
 
 	}

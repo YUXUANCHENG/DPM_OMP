@@ -1199,6 +1199,7 @@ void deformableParticles2D::shapeForces(){
 	        	// add to force
 	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
 	            ftmp *= kl * NV/16.0;
+				//ftmp *= kl;
 	            setVForce(i,d,vforce(i,d)+ftmp);
 	        }
 		}
@@ -1208,8 +1209,8 @@ void deformableParticles2D::shapeForces(){
 			
 
 			// calculate force term in each direction (based on calc from notes)
-			fxTmp = ka * NV/16.0* astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
-			fyTmp = ka * NV/16.0* astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
+			fxTmp = ka *  astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
+			fyTmp = ka *  astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
 
 			// add to force on vertices
 			setVForce(i,0,vforce(i,0)+fxTmp);
@@ -1308,8 +1309,8 @@ void deformableParticles2D::gravityForces(double g, int dir){
 			fxtmp = -1.0*(yip1*yip1 - yim1*yim1 + (yip1 - yim1)*(yi - 3.0*cy));
 			fytmp = (xip1 - xi)*yip1 + (xi - xim1)*yim1 + (xip1 - xim1)*(2.0*yi - 3.0*cy);
 		}
-		fxtmp *= (NV/16.0)*(a0*g)/(6.0*apoly);
-		fytmp *= (NV/16.0)*(a0*g)/(6.0*apoly);
+		fxtmp *= (a0*g)/(6.0*apoly);
+		fytmp *= (a0*g)/(6.0*apoly);
 
 		// add to total force (factor of NV is to take mass into account)
 		setVForce(i,0,vforce(i,0) + fxtmp);
@@ -1457,7 +1458,84 @@ int deformableParticles2D::segmentForce(deformableParticles2D &onTheRight){
 	return inContact;
 }
 
+void deformableParticles2D::contactLineRepul(){
 
+	// local variables
+	int i,j,d,dd;
+
+
+	
+	// -------------------------
+	// 
+	// 	   Vertex forces
+	//
+	// -------------------------
+
+	double forceScale = kint;				// force scale
+	double energyScale = forceScale;		// energy scale
+	double distScale = 0.0;					// distance scale
+	double p1 = 1.0 + a;					// edge of interaction zone, units of delta
+	double ftmp = 0.0;						// temporary force variable
+	double uTmp = 0.0;						// temporary energy variable
+	double vertexDist = 0.0;				// distance variable
+	vector<double> vertexVec(NDIM,0.0);		// vector to hold vectorial distance quantity
+	double contactDistance = 0.0;			// contact distance variable
+	double distTmp = 0.0;
+
+	// loop over vertex pairs, check for contact
+	for (i=0; i<NV; i++){
+		for (j=i+1; j<NV; j++){
+			if (!(wallContactFlag[i] && wallContactFlag[j]))
+				continue;
+			// get distance between vertices i and j
+			vertexDist = 0.0;
+			for (d=0; d<NDIM; d++){
+				// get distance to nearest image
+				distTmp = distance(*this,j,i,d);
+
+				// add to vertex distance
+				vertexVec.at(d) = distTmp;
+
+				// add to scalar distance
+				vertexDist += distTmp*distTmp;
+			}
+
+			// get contact distance
+			contactDistance = del*l0 ;
+
+			// get vertex distance
+			vertexDist = sqrt(vertexDist);
+
+			// check overlap distances
+			if (vertexDist < contactDistance*p1){
+
+				// define scaled distance (x = distance/contact distance)
+				distScale = vertexDist/contactDistance;
+
+				// update force and energy scales
+				forceScale = kint / contactDistance;
+				energyScale = kint;
+
+				// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
+				if (vertexDist < contactDistance){
+
+					// add to vectorial forces
+					for (d=0; d<NDIM; d++){
+						// get force value
+						ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+
+						// add to force on i
+						setVForce(i,d,vforce(i,d) + ftmp);
+
+						// subtract off complement from force on j
+						setVForce(j,d,vforce(j,d) - ftmp);
+					}
+				}
+
+			}
+		}
+	}
+}
 // force between vertices
 // 		* interacting parts are disks of diameter delta = l_0
 // 		* also updates interaction potential
@@ -2227,7 +2305,7 @@ double deformableParticles2D::totalKineticEnergy(){
 	// loop over vertices, get kinetic energy ( assume unit mass on all vertices )
 	for (i=0; i<NV; i++){
 		for (d=0; d<NDIM; d++)
-			val += vvel(i,d)*vvel(i,d);
+			val += vvel(i,d)*vvel(i,d)*a0*16.0/NV;
 	}
 
 	// return value
@@ -2306,7 +2384,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt){
 			veltmp = vvel(i,d);
 
 			// get the new acceleration from forces
-			anew = vforce(i,d);
+			anew = vforce(i,d)/(a0*16/NV);
 
 			// update velocity
 			veltmp += 0.5*dt*(anew + vacc(i,d));
@@ -2333,7 +2411,7 @@ void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double Kb
 			aold = vacc(i,d);
 
 			// get new accelation
-			anew = vforce(i,d);
+			anew = vforce(i,d)/(a0*16.0/NV);
 
 			// update velocity
 			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt) * dist(gen));
@@ -2352,7 +2430,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
     double ftmp, dampNum, dampDenom, dampUpdate;
 
     // scale damping                                                                                                                                                                                                                   
-    b = dampingParam;
+    b = dampingParam*16.0/NV;
 
     // update vertex velocities (assume unit mass)                                                                                                                                                                                                 
     for (i=0; i<NV; i++){
@@ -2370,7 +2448,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
             setVForce(i,d,dampUpdate);
 
 	        // get the new acceleration from forces with damping                                                                                                                                                               
-            anew = vforce(i,d);
+            anew = vforce(i,d)/(a0*16/NV);
 
 			// update velocity                                                                                                                                                                                                 
 			veltmp += 0.5*dt*(anew + vacc(i,d));
@@ -2591,7 +2669,7 @@ double deformableParticles2D::cal_mean_v(int d){
 double deformableParticles2D::momentum(int d) {
 	double momentum = 0;
 	//double segmentMass = PI * pow(0.5 * del * l0, 2);
-	double segmentMass = 1.0;
+	double segmentMass = a0*16.0/NV;
 
 	// update vertex velocities
 	for (int i = 0; i < NV; i++) {
@@ -2610,4 +2688,5 @@ void deformableParticles2D::cal_inertia()
 	{
 		inertia += 1.0 * pow(vrel(i, 0), 2) + pow(vrel(i, 1), 2);
 	}
+	inertia *= a0*NV/16.0;
 }
