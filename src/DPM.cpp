@@ -31,12 +31,14 @@ void cellPacking2D::printRoutine(int count, int print_frequency, double t, doubl
 
 void cellPacking2D::printSubRoutine(int count, int print_frequency)
 {
-	printJammedConfig_yc();
-	phi = packingFraction();
-	phiPrintObject << phi << endl;
-	printCalA();
-	printContact();
-	printV();
+	if (count % print_frequency == 0) {
+		printJammedConfig_yc();
+		phi = packingFraction();
+		phiPrintObject << phi << endl;
+		printCalA();
+		printContact();
+		printV();
+	}
 }
 
 void cellPacking2D::NVEsimulation(double T, double v0, double t_scale, int frames) {
