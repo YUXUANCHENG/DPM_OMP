@@ -49,14 +49,19 @@ void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 	if (phi > 0.6)
 	{
 		// loop until phi is the correct value
-		for (int i = 0; i < 50; i++) {
+		//for (int i = 0; i < 50; i++) 
+		while (phi > 0.3)	
+		{
 			// scale lengths
 			scaleLengths(0.99);
+			phi = packingFraction();
 		}
 		// loop until phi is the correct value
-		for (int i = 0; i < 50; i++) {
+		//for (int i = 0; i < 50; i++) 
+		while (phi < phiTarget)
+		{
 			// scale lengths
-			scaleLengths(1 / 0.99);
+			scaleLengths(1 / 0.995);
 			calInertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();

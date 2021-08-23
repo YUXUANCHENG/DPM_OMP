@@ -279,9 +279,10 @@ public:
 	//typedef BumpyEllipse particleType;
 
 	virtual void setPhiDisk(){
-		this->phiDisk = 0.65 + 0.02 * this->index_i;
+		//this->phiDisk = 0.65 + 0.02 * this->index_i;
 		//this->phiDisk = 0.85;
 		//this->phiDisk = 0.4;
+		this->phiDisk = 0.70 + this->index_i * 0.015;
 	}
 
 	virtual double setV0(int j)
@@ -310,11 +311,12 @@ class BumpyDimer_CLI : public BumpyEllipse_CLI<Ptype> {
 public:
 	//typedef BumpyDimer particleType;
 
-	virtual void setPhiDisk(){
-		this->phiDisk = 0.65 + 0.02 * this->index_i;
-		//this->phiDisk = 0.85;
-		//this->phiDisk = 0.4;
-	}
+	// virtual void setPhiDisk(){
+	// 	//this->phiDisk = 0.65 + 0.02 * this->index_i;
+	// 	//this->phiDisk = 0.85;
+	// 	//this->phiDisk = 0.4;
+	// 	this->phiDisk = 0.70 + this->index_i * 0.015;
+	// }
 
 };
 
