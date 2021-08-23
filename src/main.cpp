@@ -28,7 +28,7 @@ int main(int argc, char const *argv[]){
 	//Bumpy_CLI<> cli;
 	//Bumpy_CLI<Bumpy_Parallel> cli;
 	//BumpyDimer_CLI<> cli;
-	//BumpyDimer_CLI<BumpyDimer_Parallel> cli;
+	BumpyDimer_CLI<BumpyDimer_Parallel> cli;
 	//DPM_CLI<> cli;
 	//DPM_CLI<DPM_Parallel> cli;
 	//BumpyEllipse_CLI<> cli;

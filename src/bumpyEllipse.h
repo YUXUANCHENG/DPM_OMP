@@ -29,12 +29,12 @@ public:
 		// initialize vertices as a regular polygon
 		initShape(ratio_a_b, celltemp);
 		double currentCalA = celltemp.calA();
-		while (!(currentCalA > calA0 * 0.99 && currentCalA < calA0 * 1.01))
+		while (!(currentCalA > calA0 * 0.995 && currentCalA < calA0 * 1.005))
 		{
 			if (currentCalA > calA0)		
-				ratio_a_b *= 0.99;
+				ratio_a_b *= 0.995;
 			else
-				ratio_a_b *= 1.01;
+				ratio_a_b *= 1.005;
 			initShape(ratio_a_b, celltemp);
 			currentCalA = celltemp.calA();
 		}
