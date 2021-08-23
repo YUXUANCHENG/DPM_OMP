@@ -1040,7 +1040,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	for (ci=0; ci<NCELLS; ci++){
 		//double factor = 10 * cell(ci).NV/16.0;
 		// get vertex diameter
-		double factor = 0.1 * cell(ci).geta0();
+		double factor = 0.1 * cell(ci).geta0() * 16.0 / cell(ci).NV;
 		//double factor = 0;
 		sigma = cell(ci).getl0()*cell(ci).getdel();
 		double a = 0.1* sqrt(cell(ci).geta0()/PI)/ sigma;
@@ -2391,11 +2391,11 @@ double cellPacking2D::calHeight()
 
 double cellPacking2D::calContactAng()
 {
-	//double limit = 1.001 * cell(0).getl0() * cell(0).getdel() / 2;
-	double limit = sqrt(cell(0).a0/PI) * 0.1 + cell(0).getl0() / 2;
+	double limit = 1.001 * cell(0).getl0() * cell(0).getdel() / 2;
+	//double limit = sqrt(cell(0).a0/PI) * 0.1 + cell(0).getl0() / 2;
 	int NV = cell(0).getNV();
-	//int num = NV / 10;
-	int num = 2;
+	int num = NV / 20;
+	//int num = 2;
 	int i;
 	for (i = 0; i < NV; i++)
 	{
@@ -2418,8 +2418,10 @@ double cellPacking2D::calContactAng()
 		numer += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,1) - y_mean);
 		denum += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,0) - x_mean);
 	}
-	cout << "contact angle calculating point is " << i << endl;		
-	return atan(numer/denum) * 180/ PI;
+	cout << "contact angle calculating point is " << i << endl;
+	double angle = atan(numer/denum) * 180/ PI;
+	cout << "contact angle is " << angle << endl;
+	return angle;
 
 }
 
@@ -2448,8 +2450,31 @@ double cellPacking2D::calContactLength()
 	}
 	cout << "two points are " << l << ", " << m << endl;
 	length = abs(cell(0).vpos(l, 0) - cell(0).vpos(m ,0));
+	cout << "contact length is " << length << endl;
 	return length;
 
+}
+
+bool cellPacking2D::matchPreset(double presetCalA, double presetAngle, double threashold)
+{
+	double angle = calContactAng();
+	double angleDev = abs(presetAngle - angle)/presetAngle;
+	double calAdev = abs(presetCalA - cell(0).calA())/presetCalA;
+	std::ofstream debugInfo;
+	debugInfo.open("debug.txt", std::ios_base::app);
+
+	if (angleDev < threashold && calAdev < threashold/5)
+	{
+		debugInfo << "match" << endl;
+		debugInfo << "angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle << ", calA = " << cell(0).calA() << endl;
+		return true;
+	}
+	else
+	{
+		debugInfo << "not match, angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle  << endl;
+		return false;
+	}
+	
 }
 
 void cellPacking2D::changeL0(double factor1, double factor2)

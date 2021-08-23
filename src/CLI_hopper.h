@@ -126,6 +126,46 @@ public:
 
 	}
 
+	void findParameter(char const* argv[]){
+		double presetCalA = 1.14;
+		double presetAngle = 17.9;
+		double threashold = 0.3;
+
+		deformFlag = true;
+		this->NT = 5e6;
+		this->th = PI/4;
+		//this->timeStepMag = 0.00002;	
+		//this->timeStepMag = 0.00005;	
+		this->timeStepMag = 0.0001;	
+		for (this->kl = 1; this->kl < 3; this->kl += 0.5){
+			for (this->gamafactor1 = 0.01; this->gamafactor1 < 0.2; this->gamafactor1 += 0.05){
+				for (this->gamafactor2 = -0.01; this->gamafactor2 > -0.2; this->gamafactor2 -= 0.05){
+					this->ka = 1;
+					this->kb = 0;
+					
+					// this->gamafactor2 = -3.3;
+					this->NCELLS = 1;
+					this->NV = 64;
+					this->w0 = 3;
+					this->Lini = 5;
+					this->qscompress(argv);
+					this->particles->gDire = 1;
+					this->particles->gOn = 0;
+					_hopperFlow();
+					double originalHeight = this->particles->calOriginalHeight();
+					this->particles->gOn = 1;
+					this->particles->hopperSimulation(w0, w, th, g, b);
+					if (this->particles->matchPreset(presetCalA, presetAngle, threashold)){
+						cout << "Parameters found!" << endl;
+						cout << "kl = " << this->kl << ", gama1 = " << this->gamafactor1 << ", gama2 = " << this->gamafactor2 << endl;
+						return;
+					}
+				}
+			}
+		}
+		cout<< "Parameters for preset shape were not found" << endl;
+	}
+
 	virtual void _hopperFlow() {
 		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;

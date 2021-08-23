@@ -117,6 +117,8 @@ public:
 	void changeL0(double factor1, double factor2);
 	double calContactAng();
 	double calContactLength();
+	bool matchPreset(double presetCalA, double presetAngle, double threashold);
+
 
 
 	// operators
