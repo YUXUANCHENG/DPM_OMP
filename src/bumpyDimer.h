@@ -7,7 +7,6 @@
 
 class BumpyDimer : public virtual BumpyEllipse {
 public:
-	double ratio_a_b = 1.6;
 
 	using BumpyEllipse::BumpyEllipse;
 
@@ -184,7 +183,7 @@ void deformableParticles2D::dimer(double ratio) {
 		setVRel(i, 1, b * sin(angleArg));
 	}
 	// output
-	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", compare to " << NV * tan(PI / NV) / PI << endl;
+	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", and calA = " << calA() <<", compare to " << NV * tan(PI / NV) / PI << endl;
 }
 
 #endif

@@ -29,12 +29,12 @@ public:
 		// initialize vertices as a regular polygon
 		initShape(ratio_a_b, celltemp);
 		double currentCalA = celltemp.calA();
-		while (!(currentCalA > calA0 * 0.995 && currentCalA < calA0 * 1.005))
+		while (!(currentCalA > calA0 * 0.999 && currentCalA < calA0 * 1.001))
 		{
 			if (currentCalA > calA0)		
-				ratio_a_b *= 0.995;
+				ratio_a_b *= 0.999;
 			else
-				ratio_a_b *= 1.005;
+				ratio_a_b *= 1.001;
 			initShape(ratio_a_b, celltemp);
 			currentCalA = celltemp.calA();
 		}
@@ -226,7 +226,7 @@ void deformableParticles2D::ellipse(double ratio) {
 		setVRel(i, 1, y);
 	}
 	// output
-	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", compare to " << NV * tan(PI / NV) / PI << endl;
+	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", and calA = " << calA() <<", compare to " << NV * tan(PI / NV) / PI << endl;
 }
 
 #endif
