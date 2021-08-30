@@ -34,11 +34,11 @@ public:
 
 	// force parameters
 	double kl = 1.0;				// perimeter force constant
-	double ka = 1.0;				// area force constant
+	double ka = 10.0;				// area force constant
 	double kb = 0.0;				// bending energy constant
 	double gam = 0.0;				// surface tension force constant
 
-	double kint = 1.0;				// interaction energy constant
+	double kint = 10.0;				// interaction energy constant
 	const double del = 1.0;				// width of vertices in units of l0, vertex sep on regular polygon
 	const double aInitial = 0.0;				// attraction parameter to start
 
@@ -55,8 +55,8 @@ public:
 	int NCELLS = 64;
 	int NV = 16;
 	int seed = 1;
-	double Lini = 1.0;
-	int NBx = 8;
+	double Lini = 10.0;
+	int NBx = 10;
 	int NBy = NBx;
 
 	double Phi_to_PhiJ = 0.03;
@@ -69,6 +69,7 @@ public:
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
 	int index_i, index_j;
+	int timeStepCutOff = 6;
 
 	cellPacking2D* particles;
 
@@ -95,7 +96,7 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.85;
+		//phiDisk = 0.83;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		phiDisk = 0.70 + index_i * 0.015;
@@ -207,7 +208,8 @@ public:
 
 	virtual double setV0(int j)
 	{
-		double start = -9.0 + 0.20 * index_i;
+		//double start = -9.0 + 0.20 * index_i;
+		double start = -8.0 + 0.30 * index_i;
 		double interval = 0.25 - 0.02 * index_i;
 		return exp(start + interval * (9 - j));
 	}
@@ -232,11 +234,12 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-			double time = timeStepMag * (j < 11 ? setV0(0)/ v0: setV0(0)/ setV0(10));
+			//double time = timeStepMag * (j < 11 ? DPM_CLI::setV0(0)/ v0: DPM_CLI::setV0(0)/ setV0(10));
+			double time = timeStepMag * (j < timeStepCutOff ? setV0(0)/ v0: setV0(0)/ setV0(10));
 			local_cell_group.vertexDPMTimeScale(time);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, 10);
+			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, frames/10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
 			preset_time = result[0] * 10;
@@ -253,6 +256,8 @@ public:
 
 	virtual double setV0(int j)
 	{
+		this->timeStepCutOff = 11;
+
 		double start = -7.8 + 0.25 * this->index_i;
 		double interval = 0.25 - 0.02 * this->index_i;
 		return exp(start + interval * (9 - j));
@@ -267,6 +272,7 @@ public:
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
 		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
+		this->particles->forceVals(this->calA0, 0, 0, 0, 0, this->kint, this->del, this->aInitial);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
@@ -280,17 +286,17 @@ public:
 
 	virtual void setPhiDisk(){
 		//this->phiDisk = 0.65 + 0.02 * this->index_i;
-		//this->phiDisk = 0.85;
+		//this->phiDisk = 0.82;
 		//this->phiDisk = 0.4;
 		this->phiDisk = 0.70 + this->index_i * 0.015;
 	}
 
-	virtual double setV0(int j)
-	{
-		double start = -7.8 + 0.25 * this->index_i;
-		double interval = 0.25 - 0.02 * this->index_i;
-		return exp(start + interval * (9 - j));
-	}
+	// virtual double setV0(int j)
+	// {
+	// 	double start = -7.8 + 0.25 * this->index_i;
+	// 	double interval = 0.25 - 0.02 * this->index_i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	virtual void prepareSystem() {
 		// Initialze the system as disks

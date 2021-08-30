@@ -61,10 +61,10 @@ void cellPacking2D::compressToInitial(double phiTarget, double deltaPhi, double 
 	//double phi = packingFraction();
 	phi = packingFraction();
 	double temp_phiTarget;
-	if (phiTarget < 0.85)
+	if (phiTarget < 0.7)
 		temp_phiTarget = phiTarget;
 	else
-		temp_phiTarget = 0.85 + 1e-10;
+		temp_phiTarget = 0.7 + 1e-10;
 	// compute length scaler based on deltaPhi
 	double dr = sqrt((phi - 0.01) / phi);
 	// loop until phi is the correct value

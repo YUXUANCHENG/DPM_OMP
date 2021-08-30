@@ -129,17 +129,22 @@ public:
 		std::random_device rd;
 		gen = std::mt19937(rd());
 		dist = std::normal_distribution<double>(0, 1);
+		
 	}
 	BumpyLangevin() = default;
-
+	// virtual void NVEsimulationNoInjection(double T, double v0, double t_scale, int frames) {
+	// 	cellpointer->dt /= 10;
+	// 	BumpyNVEsimulator::NVEsimulationNoInjection(T, v0, t_scale, frames);
+	// 	cellpointer->dt *= 10;
+	// }
 	virtual void verletVelocityUpdate(){
 		cellpointer->sp_VelVerlet_Langevin(1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->bumpy_angularV();
 	}
-	virtual void printRoutine(int count, int print_frequency, double t){
-		if (count % print_frequency == 0)
-			cout << "t = " << t << endl;
-	}
+	// virtual void printRoutine(int count, int print_frequency, double t){
+	// 	if (count % print_frequency == 0)
+	// 		cout << "t = " << t << endl;
+	// }
 };
 
 class DPMLangevin : public DPMNVEsimulator {

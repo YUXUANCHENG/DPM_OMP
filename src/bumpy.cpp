@@ -5,7 +5,7 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 	int ci;
 	double dr;
 	for (ci = 0; ci < NCELLS; ci++) {
-		cell(ci).setkint(1.0);
+		//cell(ci).setkint(1.0);
 		cell(ci).setdel(1.0);
 		cell(ci).seta(0.0);
 		cell(ci).setCForce(0, 0.0);
@@ -68,6 +68,10 @@ void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 			phi = packingFraction();
 		}
 	}
+	printJammedConfig_yc();
+	printCalA();
+	printContact();
+
 	//fireMinimize_bummpy();
 }
 
@@ -77,16 +81,23 @@ void Bumpy::printRoutine(int count, int print_frequency, double t, double init_E
 		double U = totalPotentialEnergy();
 		double K = totalKineticEnergy() + totalRotaionalK();
 		//rescal_V(current_E);
+		printSubRoutine(count, print_frequency);
+		cout << "phi = " << phi << endl;
+		cout << "E_INIT = " << init_E << " U_INIT = " << init_U << endl;
+		cout << "E = " << U + K << " K = " << K << " Kr = " << totalRotaionalK() << endl;
+		cout << "t = " << t << endl;
+	}
+}
+
+void Bumpy::printSubRoutine(int count, int print_frequency)
+{
+	if (count % print_frequency == 0) {
 		printJammedConfig_yc();
 		phi = packingFraction();
 		phiPrintObject << phi << endl;
 		printCalA();
 		printContact();
 		printV();
-		cout << "phi = " << phi << endl;
-		cout << "E_INIT = " << init_E << " U_INIT = " << init_U << endl;
-		cout << "E = " << U + K << " K = " << K << " Kr = " << totalRotaionalK() << endl;
-		cout << "t = " << t << endl;
 	}
 }
 
@@ -166,5 +177,24 @@ void Bumpy::hopperForces(double w0, double w, double th, double g, int closed){
 	for (ci = 0; ci < NCELLS; ci++) {
 		for (d = 0; d < NDIM; d++)
 			cell(ci).setCForce(d, cell(ci).cforce(d));
+	}
+}
+
+void Bumpy::forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a){
+	// local variables
+	int ci;
+
+	// loop over cells, add values
+	for (ci=0; ci<NCELLS; ci++){
+		// set shape force scales
+		cell(ci).setkl(kl);
+		cell(ci).setka(ka);
+		cell(ci).setgam(gam);
+		cell(ci).setkb(kb);
+
+		// set interaction force scales
+		cell(ci).setkint(kint);
+		cell(ci).setdel(del);
+		cell(ci).seta(a);
 	}
 }

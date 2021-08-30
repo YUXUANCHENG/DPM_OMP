@@ -8,8 +8,9 @@
 class BumpyDimer : public virtual BumpyEllipse {
 public:
 
-	using BumpyEllipse::BumpyEllipse;
-
+	//using BumpyEllipse::BumpyEllipse;
+	BumpyDimer(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};
+	BumpyDimer() = default;
 	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		// local variables
 		int ci, vi, d, nvtmp;
@@ -56,7 +57,7 @@ public:
 
 		// determine box length from particle sizes and input packing fraction
 		for (d = 0; d < NDIM; d++)
-			L.at(d) = sqrt(areaSum / phiDisk);
+			L.at(d) = sqrt(1.1 * areaSum * ratio_a_b / phiDisk);
 
 		// set phi to input
 		phi = phiDisk;
@@ -134,12 +135,16 @@ public:
 
 		// use FIRE in PBC box to relax overlaps
 		cout << "		-- Using FIRE to relax overlaps..." << endl;
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) *= 1.1;
 		fireMinimizeSP(diskradii);
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) /= 1.1;
 		lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 
-		printJammedConfig_yc();
-		printCalA();
-		printContact();
+		// printJammedConfig_yc();
+		// printCalA();
+		// printContact();
 
 	}
 

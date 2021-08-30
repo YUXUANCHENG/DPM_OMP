@@ -863,7 +863,7 @@ double deformableParticles2D::polygonArea(){
 	// local variables
 	int i, kstart, km1, kp1, kcurr, knext;
 	bool cwpos;
-	double maxy = 0;
+	double maxy = -100000;
 	double totalArea = 0.0;
 
 	// find index of maximum y value
