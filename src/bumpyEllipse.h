@@ -74,6 +74,8 @@ public:
 
 			// get root area
 			lenscales.at(ci) = g1 * sizeDispersion + 1.0;
+			if (ci < NCELLS / 2)
+				lenscales.at(ci) *= 1.4;
 
 			// effective particle area
 			a0tmp = lenscales.at(ci) * lenscales.at(ci);

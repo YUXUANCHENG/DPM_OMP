@@ -167,10 +167,10 @@ public:
 			cellpointer->cell(ci).velVerlet_Langevin(cellpointer->dt, 1e-2, 2* init_K/ cellpointer->NCELLS, dist, gen);
 		cellpointer->conserve_momentum();
 	}
-	virtual void printRoutine(int count, int print_frequency, double t){
-		if (count % print_frequency == 0)
-			cout << "t = " << t << endl;
-	}
+	// virtual void printRoutine(int count, int print_frequency, double t){
+	// 	if (count % print_frequency == 0)
+	// 		cout << "t = " << t << endl;
+	// }
 };
 
 class DPMhopperSimulator {

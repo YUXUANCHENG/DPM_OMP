@@ -34,11 +34,11 @@ public:
 
 	// force parameters
 	double kl = 1.0;				// perimeter force constant
-	double ka = 10.0;				// area force constant
+	double ka = 1.0;				// area force constant
 	double kb = 0.0;				// bending energy constant
 	double gam = 0.0;				// surface tension force constant
 
-	double kint = 10.0;				// interaction energy constant
+	double kint = 1.0;				// interaction energy constant
 	const double del = 1.0;				// width of vertices in units of l0, vertex sep on regular polygon
 	const double aInitial = 0.0;				// attraction parameter to start
 
@@ -55,7 +55,7 @@ public:
 	int NCELLS = 64;
 	int NV = 16;
 	int seed = 1;
-	double Lini = 10.0;
+	double Lini = 1.0;
 	int NBx = 10;
 	int NBy = NBx;
 
@@ -69,7 +69,8 @@ public:
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
 	int index_i, index_j;
-	int timeStepCutOff = 6;
+	int timeStepCutOff = 9;
+	int numOfRuns = 40;
 
 	cellPacking2D* particles;
 
@@ -100,6 +101,9 @@ public:
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		phiDisk = 0.70 + index_i * 0.015;
+		//phiDisk = 0.20 + index_i * (0.65/40);
+
+		//timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -109,7 +113,7 @@ public:
 		//double ratio = 100.0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		kb = 0;
+		kb = 0.01;
 		//kb = 0.1;
 		//double kl = ratio * kb;
 	}
@@ -206,11 +210,12 @@ public:
 		_NVE();
 	}
 
-	virtual double setV0(int j)
+	virtual double setV0(int i, int j)
 	{
-		//double start = -9.0 + 0.20 * index_i;
-		double start = -8.0 + 0.30 * index_i;
-		double interval = 0.25 - 0.02 * index_i;
+		//i = 0; j = 4;
+		double start = -9.0 + 0.20 * i;
+		//double start = -8.5 + 0.22 * index_i;
+		double interval = 0.25 - 0.02 * i;
 		return exp(start + interval * (9 - j));
 	}
 
@@ -220,10 +225,10 @@ public:
 
 		double preset_time = T;
 
-		for (int j = 0; j < 100; j++) {
+		for (int j = 0; j < numOfRuns; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 
-			double v0 = setV0(j);
+			double v0 = setV0(index_i, j);
 
 			// output files
 			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
@@ -235,7 +240,7 @@ public:
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 			//double time = timeStepMag * (j < 11 ? DPM_CLI::setV0(0)/ v0: DPM_CLI::setV0(0)/ setV0(10));
-			double time = timeStepMag * (j < timeStepCutOff ? setV0(0)/ v0: setV0(0)/ setV0(10));
+			double time = timeStepMag * (j < timeStepCutOff ? setV0(0, 0)/ v0: setV0(0, 0)/ setV0(index_i, timeStepCutOff));
 			local_cell_group.vertexDPMTimeScale(time);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
@@ -247,6 +252,12 @@ public:
 			local_cell_group.saveState(*particles);
 		}
 	}
+
+	void ArrheniusAngell(char const* argv[])
+	{
+		numOfRuns = 1;
+		calTao(argv);
+	}
 };
 
 template <class Ptype = Bumpy>
@@ -254,16 +265,16 @@ class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
 
-	virtual double setV0(int j)
-	{
-		this->timeStepCutOff = 11;
-
-		double start = -7.8 + 0.25 * this->index_i;
-		double interval = 0.25 - 0.02 * this->index_i;
-		return exp(start + interval * (9 - j));
-	}
+	// virtual double setV0(int i, int j)
+	// {
+	// 	double start = -7.8 + 0.3 * i;
+	// 	double interval = 0.25 - 0.02 * i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	virtual void setPhiDisk(){
+		this->timeStepCutOff = 11;
+		this->kint = 10.0;
 		this->phiDisk = 0.7 + this->index_i * 0.02;
 	}
 
@@ -288,15 +299,19 @@ public:
 		//this->phiDisk = 0.65 + 0.02 * this->index_i;
 		//this->phiDisk = 0.82;
 		//this->phiDisk = 0.4;
+		this->timeStepCutOff = 8;
+		this->kint = 10.0;	
+
 		this->phiDisk = 0.70 + this->index_i * 0.015;
+		//this->phiDisk = 0.20 + this->index_i * (0.65/40);
 	}
 
-	// virtual double setV0(int j)
-	// {
-	// 	double start = -7.8 + 0.25 * this->index_i;
-	// 	double interval = 0.25 - 0.02 * this->index_i;
-	// 	return exp(start + interval * (9 - j));
-	// }
+	virtual double setV0(int i, int j)
+	{
+		double start = -7.8 + 0.3 * i;
+		double interval = 0.25 - 0.02 * i;
+		return exp(start + interval * (9 - j));
+	}
 
 	virtual void prepareSystem() {
 		// Initialze the system as disks
