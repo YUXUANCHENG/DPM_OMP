@@ -2430,7 +2430,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
     double ftmp, dampNum, dampDenom, dampUpdate;
 
     // scale damping                                                                                                                                                                                                                   
-    b = dampingParam*16.0/NV;
+    b = dampingParam*a0*16.0/NV;
 
     // update vertex velocities (assume unit mass)                                                                                                                                                                                                 
     for (i=0; i<NV; i++){

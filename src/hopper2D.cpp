@@ -498,6 +498,262 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		cout << "	** FIRE not converged in itrMax = " << itr << " force evaluations" << endl;
 }
 
+void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g){
+	// HARD CODE IN FIRE PARAMETERS
+	double Ftol = 1e-12; double Fcheck = 0; double Kcheck = 0;
+	const double alpha0 	= 0.1;
+	const double finc 		= 1.1;
+	const double fdec 		= 0.5;
+	const double falpha 	= 0.99;
+	const double dtmax 		= 10*dt0;
+	const double dtmin 		= 1e-8*dt0;
+	const double Trescale 	= 1e-12*NCELLS;
+	const int NMIN 			= 20;
+	const int NNEGMAX 		= 2000;
+	const int NDELAY 		= 500;
+	int npPos				= 0;
+	int npNeg 				= 0;
+	int npPMIN				= 0;
+	double alpha 			= alpha0;
+	double t 				= 0.0;
+	double P 				= 0.0;
+
+	// local variables
+	int ci,vi,d,k,kmax;
+	double vstarnrm,fstarnrm,vtmp,ftmp;
+	double K, F, Pcheck;
+	double xold, xnew, vold, vnew, fold;
+
+	// variable to test for potential energy minimization
+	bool converged = false;
+
+	// reset time step
+	dt = dt0;
+
+	// initialize forces
+	//calculateForces();
+	hopperForces(w0, w, th, g, 1);
+
+	// do preliminary update of velocities
+	for (ci=0; ci<NCELLS; ci++)	
+		cell(ci).verletVelocityUpdate(dt);
+
+	// norm of total force vector, kinetic energy
+	F = forceRMS();
+	K = totalKineticEnergy();
+	Pcheck = 0.5*(sigmaXX + sigmaYY)/(NCELLS*L.at(0)*L.at(1));
+
+	// scale P and K for convergence checking
+	Fcheck = F;
+	Kcheck = K/NCELLS;
+
+	// rescale velocities
+	rescaleVelocities(Trescale);
+
+	// iterate until system converged
+	kmax = 1e6;
+	for (k=0; k<kmax; k++){
+		// Step 1. calculate P and norms
+		P = 0.0;
+		vstarnrm = 0.0;
+		fstarnrm = 0.0;
+		for (ci=0; ci<NCELLS; ci++){
+			for (vi=0; vi<cell(ci).getNV(); vi++){
+				for (d=0; d<NDIM; d++){
+					// get tmp variables
+					ftmp = cell(ci).vforce(vi,d);
+					vtmp = cell(ci).vvel(vi,d);
+
+					// calculate based on all vertices on all cells
+					P += ftmp*vtmp;
+					vstarnrm += vtmp*vtmp;
+					fstarnrm += ftmp*ftmp;
+				}
+			}
+		}
+
+
+		// get norms
+		vstarnrm = sqrt(vstarnrm);
+		fstarnrm = sqrt(fstarnrm);
+
+		// output some information to console
+		if (k % (NPRINT*100) == 0){
+			cout << "===================================================" << endl << endl;
+			cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
+			cout << "===================================================" << endl;			
+			cout << "	* Run data:" << endl;
+			cout << "	* Kcheck 	= " << Kcheck << endl;
+			cout << "	* Fcheck 	= " << Fcheck << endl;
+			cout << "	* Pcheck 	= " << Pcheck << endl;
+			cout << "	* phi 		= " << phi << endl;
+			cout << "	* dt 		= " << dt << endl;
+			cout << "	* alpha 	= " << alpha << endl;
+			cout << "	* P 		= " << P << endl;
+			cout << "	* Pdir 		= " << P/(vstarnrm*fstarnrm) << endl;
+			cout << endl << endl;
+		}
+
+
+		// Step 2. Adjust simulation based on net motion of system
+		if (P > 0){
+			// increment pos counter
+			npPos++;
+
+			// reset neg counter
+			npNeg = 0;
+
+			// alter sim if enough positive steps taken
+			if (npPos > NMIN){
+				// change time step
+				if (dt*finc < dtmax)
+					dt *= finc;
+
+				// decrease alpha
+				alpha *= falpha;
+			}
+		}
+		else{
+			// reset pos counter
+			npPos = 0;
+
+			// rest neg counter
+			npNeg++;
+
+			// check for stuck sim
+			if (npNeg > NNEGMAX)
+				break;
+
+			// decrease time step if past initial delay
+			if (k > NMIN){
+				// decrease time step 
+				if (dt*fdec > dtmin)
+					dt *= fdec;
+
+				// change alpha
+				alpha = alpha0;
+			}
+
+			// take half step backwards
+			for (ci=0; ci<NCELLS; ci++){
+				for (vi=0; vi<cell(ci).getNV(); vi++){
+					for (d=0; d<NDIM; d++)
+						cell(ci).setVPos(vi,d,cell(ci).vpos(vi,d) - 0.5*dt*cell(ci).vvel(vi,d) - 0.25*cell(ci).vacc(vi,d)*dt*dt);
+				}
+			}
+
+			// reset velocities to 0
+			for (ci=0; ci<NCELLS; ci++){
+				for (vi=0; vi<cell(ci).getNV(); vi++){
+					for (d=0; d<NDIM; d++)
+						cell(ci).setVVel(vi,d,0.0);
+				}
+			}
+		}
+
+		// update velocities if forces are acting
+		if (fstarnrm > 0){
+			for (ci=0; ci<NCELLS; ci++){
+				for (vi=0; vi<cell(ci).getNV(); vi++){
+					for (d=0; d<NDIM; d++){
+						vtmp = (1 - alpha)*cell(ci).vvel(vi,d) + alpha*(cell(ci).vforce(vi,d)/fstarnrm)*vstarnrm;
+						cell(ci).setVVel(vi,d,vtmp);
+					}
+				}
+			}
+		}
+
+		// VV update in FIRE 2.0: position update
+		for (ci=0; ci<NCELLS; ci++){
+			cell(ci).verletPositionUpdate(dt);
+			cell(ci).updateCPos();
+		}
+
+		// calculate forces
+		hopperForces(w0, w, th, g, 1);
+
+		// VV update in FIRE 2.0: Velocity update 2
+		for (ci=0; ci<NCELLS; ci++)
+			cell(ci).verletVelocityUpdate(dt);
+
+		// update t
+		t += dt;
+
+		// track energy and forces
+		F = forceRMS();
+		K = totalKineticEnergy();
+		Pcheck = 0.5*(sigmaXX + sigmaYY)/(NCELLS*L.at(0)*L.at(1));
+
+		// scale P and K for convergence checking
+		Fcheck = F;
+		Kcheck = K/NCELLS;
+
+		// update if Fcheck under tol
+		if (abs(Fcheck) < Ftol)
+			npPMIN++;
+		else
+			npPMIN = 0;
+
+		// check that P is not crazy
+		if (abs(P) > 800){
+			cout << "	ERROR: P = " << P << ", ending." << endl;
+			cout << "	** Kcheck = " << Kcheck << endl;
+			cout << "	** Fcheck = " << Fcheck << endl;
+			cout << "	** Pcheck = " << Pcheck << endl;
+			cout << "	** k = " << k << ", t = " << t << endl;
+
+			// print minimized config, energy and contact network
+			if (packingPrintObject.is_open()){
+				cout << "	* Printing vetex positions to file" << endl;
+				printSystemPositions();
+			}
+			
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing cell energy to file" << endl;
+				printSystemEnergy(k);
+			}
+
+			exit(1);
+		}
+
+		// check for convergence
+		converged = (abs(Fcheck) < Ftol && npPMIN > NDELAY);
+
+		if (converged){
+			cout << "	** FIRE has converged!" << endl;
+			cout << "	** Fcheck = " << Fcheck << endl;
+			cout << "	** Kcheck = " << Kcheck << endl;
+			cout << "	** Pcheck = " << Pcheck << endl;
+			cout << "	** k = " << k << ", t = " << t << endl;
+			cout << "	** Breaking out of FIRE protocol." << endl;
+
+			// print minimized config, energy and contact network
+			//if (packingPrintObject.is_open()){
+				cout << "	* Printing vetex positions to file" << endl;
+				printRoutine(1, 1, 0, 0, 0);
+			//}
+			
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing cell energy to file" << endl;
+				printSystemEnergy(k);
+			}
+
+			break;
+		}
+	}
+
+	// reset dt to be original value before ending function
+	dt = dt0;
+
+	// if no convergence, just stop
+	if (k == kmax){
+		cout << "	** ERROR: FIRE not converged in kmax = " << kmax << " force evaluations, ending code" << endl;
+		exit(1);
+	}
+}
+
+
+
 
 // calculate all forces on SP model particles
 // 	** if closed = 1, orifice is closed off by wall
@@ -584,7 +840,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	// body force (in x direction)
 	if (g > 1e-16){
 		for (ci=0; ci<NCELLS; ci++)
-			cell(ci).setCForce(gDire,cell(ci).cforce(gDire) - (gDire*2-1) * g*cell(ci).a0 * 16.0/ cell(ci).NV);
+			cell(ci).setCForce(gDire,cell(ci).cforce(gDire) - (gDire*2-1) * g*cell(ci).a0);
 			//cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
 	}
 }
@@ -1040,7 +1296,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	for (ci=0; ci<NCELLS; ci++){
 		//double factor = 10 * cell(ci).NV/16.0;
 		// get vertex diameter
-		double factor = 0.1 * cell(ci).geta0() * 16.0 / cell(ci).NV;
+		double factor = 0.001 * cell(ci).geta0() * 16.0 / cell(ci).NV;
 		//double factor = 0;
 		sigma = cell(ci).getl0()*cell(ci).getdel();
 		double a = 0.1* sqrt(cell(ci).geta0()/PI)/ sigma;
@@ -2197,7 +2453,7 @@ void cellPacking2D::hopperVelVerletSP(vector<double>& radii){
 	for (ci=0; ci<NCELLS; ci++){
 		// get disk mass
 		//diskMass = PI*pow(radii.at(ci),2);
-		diskMass = cell(ci).NV;
+		diskMass = cell(ci).a0 * 16.0;
 
 		// loop over velocities
 		for (d=0; d<NDIM; d++){
@@ -2405,7 +2661,7 @@ double cellPacking2D::calContactAng()
 		}
 	}
 	double x_mean = 0, y_mean = 0;
-	for (int j = 0; j < num; j++)
+	for (int j = 1; j < num+1; j++)
 	{
 		x_mean += cell(0).vpos((i+j)%NV,0);
 		y_mean += cell(0).vpos((i+j)%NV,1);
@@ -2413,7 +2669,7 @@ double cellPacking2D::calContactAng()
 	x_mean /= num;
 	y_mean /= num;
 	double numer = 0, denum = 0;
-	for (int j = 0; j < num; j++)
+	for (int j = 1; j < num+1; j++)
 	{
 		numer += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,1) - y_mean);
 		denum += (cell(0).vpos((i+j)%NV,0) - x_mean) * (cell(0).vpos((i+j)%NV,0) - x_mean);
@@ -2455,7 +2711,8 @@ double cellPacking2D::calContactLength()
 
 }
 
-bool cellPacking2D::matchPreset(double presetCalA, double presetAngle, double threashold)
+double cellPacking2D::matchPreset(double presetCalA, double presetAngle, double threashold)
+// bool cellPacking2D::matchPreset(double presetCalA, double presetAngle, double threashold)
 {
 	double angle = calContactAng();
 	double angleDev = abs(presetAngle - angle)/presetAngle;
@@ -2463,17 +2720,19 @@ bool cellPacking2D::matchPreset(double presetCalA, double presetAngle, double th
 	std::ofstream debugInfo;
 	debugInfo.open("debug.txt", std::ios_base::app);
 
-	if (angleDev < threashold && calAdev < threashold/5)
+	if (angleDev < threashold && calAdev < 0.01)
 	{
 		debugInfo << "match" << endl;
 		debugInfo << "angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle << ", calA = " << cell(0).calA() << endl;
-		return true;
+		//return true;
+		//exit(0);
 	}
 	else
 	{
-		debugInfo << "not match, angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle  << endl;
-		return false;
+		debugInfo << "not match, angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle  << ", calA = " << cell(0).calA() << endl;
+		//return false;
 	}
+	return 10*calAdev + angleDev;
 	
 }
 

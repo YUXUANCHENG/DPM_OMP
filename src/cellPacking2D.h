@@ -117,7 +117,8 @@ public:
 	void changeL0(double factor1, double factor2);
 	double calContactAng();
 	double calContactLength();
-	bool matchPreset(double presetCalA, double presetAngle, double threashold);
+	double matchPreset(double presetCalA, double presetAngle, double threashold);
+	//bool matchPreset(double presetCalA, double presetAngle, double threashold);
 
 
 
@@ -362,6 +363,7 @@ public:
 	void initializeHopperDP(std::vector<double>& radii, double w0, double w, double th, double Lmin, int NV);
 	void fireMinimizeHopperSP(std::vector<double>& radii, double w0, double w, double th);
 	void fireMinimizeHopperDP(double w0, double w, double th);
+	void fireMinimizeHopperF(double w0, double w, double th, double g);
 	void hopperForcesSP(std::vector<double>& radii, double w0, double w, double th, double g, int closed);
 	virtual void hopperForces(double w0, double w, double th, double g, int closed);
 	void hopperWallForcesSP(std::vector<double>& radii, double w0, double w, double th, int closed);

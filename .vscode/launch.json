@@ -43,7 +43,29 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: g++ build production",
+            "preLaunchTask": "C/C++: g++ build nlopt",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "g++ - Build nlopt",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/jamming.o",
+            "args": ["0","10"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            //"env": {"LD_LIBRARY_PATH":"/home/yc757/install/lib64/"},
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/home/yc757/install/lib64/"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: g++ build nlopt",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ]

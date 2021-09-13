@@ -50,6 +50,37 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "C/C++: g++ build nlopt",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-O3",
+                "--std=c++11",
+                "-fopenmp",
+                "${workspaceFolder}/src/*.cpp",
+                "-I",
+                "${workspaceFolder}/src/",
+                "-I",
+                "/home/yc757/install/include/",
+                "-L",
+                "/home/yc757/install/lib64/",
+                "-lnlopt",
+                "-lm",
+                "-o",
+                "${workspaceFolder}/jamming.o"
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
         }
     ]
 }

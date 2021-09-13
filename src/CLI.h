@@ -43,7 +43,7 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	double calA0 = 1.18;
+	double calA0 = 1.08;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
