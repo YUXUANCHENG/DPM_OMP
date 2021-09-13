@@ -48,6 +48,7 @@ int main(int argc, char const *argv[]){
 	//cli.findParameter(argv);
 	
 	//cli.calTao(argv);
+	//cli.ArrheniusAngell(argv);
 
 	//optFun();
 

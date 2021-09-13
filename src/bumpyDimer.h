@@ -7,10 +7,10 @@
 
 class BumpyDimer : public virtual BumpyEllipse {
 public:
-	double ratio_a_b = 1.6;
 
-	using BumpyEllipse::BumpyEllipse;
-
+	//using BumpyEllipse::BumpyEllipse;
+	BumpyDimer(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};
+	BumpyDimer() = default;
 	virtual void initializeGel(int NV, double phiDisk, double sizeDispersion, double delval) {
 		// local variables
 		int ci, vi, d, nvtmp;
@@ -44,6 +44,8 @@ public:
 
 			// get root area
 			lenscales.at(ci) = g1 * sizeDispersion + 1.0;
+			if (ci < NCELLS / 2)
+				lenscales.at(ci) *= 1.4;
 
 			// effective particle area
 			a0tmp = lenscales.at(ci) * lenscales.at(ci);
@@ -57,7 +59,7 @@ public:
 
 		// determine box length from particle sizes and input packing fraction
 		for (d = 0; d < NDIM; d++)
-			L.at(d) = sqrt(areaSum / phiDisk);
+			L.at(d) = sqrt(1.1 * areaSum * ratio_a_b / phiDisk);
 
 		// set phi to input
 		phi = phiDisk;
@@ -135,12 +137,16 @@ public:
 
 		// use FIRE in PBC box to relax overlaps
 		cout << "		-- Using FIRE to relax overlaps..." << endl;
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) *= 1.1;
 		fireMinimizeSP(diskradii);
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) /= 1.1;
 		lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 
-		printJammedConfig_yc();
-		printCalA();
-		printContact();
+		// printJammedConfig_yc();
+		// printCalA();
+		// printContact();
 
 	}
 
@@ -184,7 +190,7 @@ void deformableParticles2D::dimer(double ratio) {
 		setVRel(i, 1, b * sin(angleArg));
 	}
 	// output
-	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", compare to " << NV * tan(PI / NV) / PI << endl;
+	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", and calA = " << calA() <<", compare to " << NV * tan(PI / NV) / PI << endl;
 }
 
 #endif

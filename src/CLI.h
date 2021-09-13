@@ -56,7 +56,7 @@ public:
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
-	int NBx = 8;
+	int NBx = 10;
 	int NBy = NBx;
 
 	double Phi_to_PhiJ = 0.03;
@@ -69,6 +69,8 @@ public:
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
 	int index_i, index_j;
+	int timeStepCutOff = 9;
+	int numOfRuns = 40;
 
 	cellPacking2D* particles;
 
@@ -95,10 +97,13 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.85;
+		//phiDisk = 0.83;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		phiDisk = 0.70 + index_i * 0.015;
+		//phiDisk = 0.20 + index_i * (0.65/40);
+
+		//timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -108,7 +113,7 @@ public:
 		//double ratio = 100.0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		kb = 0;
+		kb = 0.01;
 		//kb = 0.1;
 		//double kl = ratio * kb;
 	}
@@ -205,10 +210,12 @@ public:
 		_NVE();
 	}
 
-	virtual double setV0(int j)
+	virtual double setV0(int i, int j)
 	{
-		double start = -9.0 + 0.20 * index_i;
-		double interval = 0.25 - 0.02 * index_i;
+		//i = 0; j = 4;
+		double start = -9.0 + 0.20 * i;
+		//double start = -8.5 + 0.22 * index_i;
+		double interval = 0.25 - 0.02 * i;
 		return exp(start + interval * (9 - j));
 	}
 
@@ -218,10 +225,10 @@ public:
 
 		double preset_time = T;
 
-		for (int j = 0; j < 100; j++) {
+		for (int j = 0; j < numOfRuns; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 
-			double v0 = setV0(j);
+			double v0 = setV0(index_i, j);
 
 			// output files
 			string extend = "_" + to_string(index_i) + to_string(j) + ".txt";
@@ -232,17 +239,24 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-			double time = timeStepMag * (j < 11 ? setV0(0)/ v0: setV0(0)/ setV0(10));
+			//double time = timeStepMag * (j < 11 ? DPM_CLI::setV0(0)/ v0: DPM_CLI::setV0(0)/ setV0(10));
+			double time = timeStepMag * (j < timeStepCutOff ? setV0(0, 0)/ v0: setV0(0, 0)/ setV0(index_i, timeStepCutOff));
 			local_cell_group.vertexDPMTimeScale(time);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, 10);
+			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, frames/10);
 			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
 			preset_time = result[0] * 10;
 			delete[] result;
 			local_cell_group.saveState(*particles);
 		}
+	}
+
+	void ArrheniusAngell(char const* argv[])
+	{
+		numOfRuns = 1;
+		calTao(argv);
 	}
 };
 
@@ -251,14 +265,16 @@ class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
 
-	virtual double setV0(int j)
-	{
-		double start = -7.8 + 0.25 * this->index_i;
-		double interval = 0.25 - 0.02 * this->index_i;
-		return exp(start + interval * (9 - j));
-	}
+	// virtual double setV0(int i, int j)
+	// {
+	// 	double start = -7.8 + 0.3 * i;
+	// 	double interval = 0.25 - 0.02 * i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	virtual void setPhiDisk(){
+		this->timeStepCutOff = 11;
+		this->kint = 10.0;
 		this->phiDisk = 0.7 + this->index_i * 0.02;
 	}
 
@@ -267,6 +283,7 @@ public:
 		cout << "	** Initializing at phiDisk = " << this->phiDisk << endl;
 		this->particles->initializeGel(this->NV, this->phiDisk, this->sizedev, this->del);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
+		this->particles->forceVals(this->calA0, 0, 0, 0, 0, this->kint, this->del, this->aInitial);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
 	}
@@ -280,15 +297,19 @@ public:
 
 	virtual void setPhiDisk(){
 		//this->phiDisk = 0.65 + 0.02 * this->index_i;
-		//this->phiDisk = 0.85;
+		//this->phiDisk = 0.82;
 		//this->phiDisk = 0.4;
+		this->timeStepCutOff = 8;
+		this->kint = 10.0;	
+
 		this->phiDisk = 0.70 + this->index_i * 0.015;
+		//this->phiDisk = 0.20 + this->index_i * (0.65/40);
 	}
 
-	virtual double setV0(int j)
+	virtual double setV0(int i, int j)
 	{
-		double start = -7.8 + 0.25 * this->index_i;
-		double interval = 0.25 - 0.02 * this->index_i;
+		double start = -7.8 + 0.3 * i;
+		double interval = 0.25 - 0.02 * i;
 		return exp(start + interval * (9 - j));
 	}
 

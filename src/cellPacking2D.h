@@ -105,7 +105,7 @@ public:
 	// new interface
 
 	virtual void printRoutine(int count, int print_frequency, double t, double init_E, double init_U);
-	void printSubRoutine(int count, int print_frequency);
+	virtual void printSubRoutine(int count, int print_frequency);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
@@ -231,7 +231,7 @@ public:
 	void updatePackingFraction() { phi = packingFraction(); };
 
 	// set force values for all cells to be the same
-	void forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a);
+	virtual void forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a);
 
 	void vertexDPMTimeScale(double timeStepMag);
 	void setPackingFraction(double val);

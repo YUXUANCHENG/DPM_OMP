@@ -10,7 +10,9 @@ class BumpyEllipse : public virtual Bumpy {
 public:
 	double ratio_a_b = 1.6;
 
-	using Bumpy::Bumpy;
+	//using Bumpy::Bumpy;
+    BumpyEllipse(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};
+	BumpyEllipse() = default;
 	virtual void setRatio(double calA0) {
 		double xpos = (double)rand() / (RAND_MAX + 1.0);
 		deformableParticles2D celltemp = deformableParticles2D();
@@ -29,12 +31,12 @@ public:
 		// initialize vertices as a regular polygon
 		initShape(ratio_a_b, celltemp);
 		double currentCalA = celltemp.calA();
-		while (!(currentCalA > calA0 * 0.995 && currentCalA < calA0 * 1.005))
+		while (!(currentCalA > calA0 * 0.999 && currentCalA < calA0 * 1.001))
 		{
 			if (currentCalA > calA0)		
-				ratio_a_b *= 0.995;
+				ratio_a_b *= 0.999;
 			else
-				ratio_a_b *= 1.005;
+				ratio_a_b *= 1.001;
 			initShape(ratio_a_b, celltemp);
 			currentCalA = celltemp.calA();
 		}
@@ -72,6 +74,8 @@ public:
 
 			// get root area
 			lenscales.at(ci) = g1 * sizeDispersion + 1.0;
+			if (ci < NCELLS / 2)
+				lenscales.at(ci) *= 1.4;
 
 			// effective particle area
 			a0tmp = lenscales.at(ci) * lenscales.at(ci);
@@ -85,7 +89,7 @@ public:
 
 		// determine box length from particle sizes and input packing fraction
 		for (d = 0; d < NDIM; d++)
-			L.at(d) = sqrt(areaSum / phiDisk);
+			L.at(d) = sqrt(1.1 * areaSum * ratio_a_b / phiDisk);
 
 		// set phi to input
 		phi = phiDisk;
@@ -163,12 +167,16 @@ public:
 
 		// use FIRE in PBC box to relax overlaps
 		cout << "		-- Using FIRE to relax overlaps..." << endl;
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) *= 1.1;
 		fireMinimizeSP(diskradii);
+		for (ci = 0; ci < NCELLS; ci++)
+			diskradii.at(ci) /= 1.1;
 		lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 
-		printJammedConfig_yc();
-		printCalA();
-		printContact();
+		// printJammedConfig_yc();
+		// printCalA();
+		// printContact();
 
 	}
 
@@ -195,38 +203,115 @@ public:
 		}
 	}
 };
+// https://stackoverflow.com/questions/6972331/how-can-i-generate-a-set-of-points-evenly-distributed-along-the-perimeter-of-an
+double ComputeArcOverAngle(double r1, double r2, double angle, double angleSeg);
+
+double GetLengthOfEllipse(double deltaAngle, double a, double b)
+{
+	// Distance in radians between angles
+	double numIntegrals = round(PI * 2.0 / deltaAngle);
+	double length = 0;
+
+	// integrate over the elipse to get the circumference
+	for (int i = 0; i < numIntegrals; i++)
+	{
+		length += ComputeArcOverAngle(a, b, i * deltaAngle, deltaAngle);
+	}
+
+	return length;
+}
+
+double GetAngleForArcLengthRecursively(double currentArcPos, double goalArcPos, double angle, double angleSeg, double a, double b)
+{
+	double ARC_ACCURACY = 0.1;
+	// Calculate arc length at new angle
+	double nextSegLength = ComputeArcOverAngle(a, b, angle + angleSeg, angleSeg);
+
+	// If we've overshot, reduce the delta angle and try again
+	if (currentArcPos + nextSegLength > goalArcPos) {
+		return GetAngleForArcLengthRecursively(currentArcPos, goalArcPos, angle, angleSeg / 2, a, b);
+
+		// We're below the our goal value but not in range (
+	} else if (currentArcPos + nextSegLength < goalArcPos - ((goalArcPos - currentArcPos) * ARC_ACCURACY)) {
+		return GetAngleForArcLengthRecursively(currentArcPos + nextSegLength, goalArcPos, angle + angleSeg, angleSeg, a, b);
+
+		// current arc length is in range (within error), so return the angle
+	} else
+		return angle;
+}
+
+double ComputeArcOverAngle(double r1, double r2, double angle, double angleSeg)
+{
+	double distance = 0.0;
+
+	double dpt_sin = pow(r1 * sin(angle), 2.0);
+	double dpt_cos = pow(r2 * cos(angle), 2.0);
+	distance = sqrt(dpt_sin + dpt_cos);
+
+	// Scale the value of distance
+	return distance * angleSeg;
+}
 
 // initialize vertex positions so cell begins as ellipses
-void deformableParticles2D::ellipse(double ratio) {
-	// local variables
-	int i;
-	double angleArg = 0.0;
+// void deformableParticles2D::ellipse(double ratio) {
+// 	// local variables
+// 	int i;
+// 	double angleArg = 0.0;
+// 	double a = sqrt(ratio * a0 / PI);;
+// 	double b = a / ratio;
+// 	double k, x, y, sign;
+
+// 	// check if NV has been set > 0
+// 	if (NV <= 0) {
+// 		cout << "	ERROR: in regularPolygon(), NV = " << NV << ", so not set properly. Ending." << endl;
+// 		exit(1);
+// 	}
+// 	else if (a0 < 0.1) {
+// 		cout << "	ERROR: in regularPolygon(), a0 = " << a0 << ", so too small and not set properly. Ending." << endl;
+// 		exit(1);
+// 	}
+
+// 	// loop over vertices, set positions using rotations
+// 	for (i = 0; i < NV; i++) {
+// 		angleArg = (2.0 * PI * i) / NV;
+// 		k = tan(angleArg);
+// 		sign = cos(angleArg) / (abs(cos(angleArg)) + 1e-30);
+// 		x = sign * a / sqrt(1 + ratio * ratio * k * k);
+// 		y = k * x;
+// 		setVRel(i, 0, x);
+// 		setVRel(i, 1, y);
+// 	}
+// 	// output
+// 	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", and calA = " << calA() <<", compare to " << NV * tan(PI / NV) / PI << endl;
+// }
+
+void deformableParticles2D::ellipse(double ratio)
+{
 	double a = sqrt(ratio * a0 / PI);;
 	double b = a / ratio;
-	double k, x, y, sign;
 
-	// check if NV has been set > 0
-	if (NV <= 0) {
-		cout << "	ERROR: in regularPolygon(), NV = " << NV << ", so not set properly. Ending." << endl;
-		exit(1);
-	}
-	else if (a0 < 0.1) {
-		cout << "	ERROR: in regularPolygon(), a0 = " << a0 << ", so too small and not set properly. Ending." << endl;
-		exit(1);
-	}
+	// Distance in radians between angles measured on the ellipse
+	double deltaAngle = 0.001;
+	double circumference = GetLengthOfEllipse(deltaAngle, a, b);
 
-	// loop over vertices, set positions using rotations
-	for (i = 0; i < NV; i++) {
-		angleArg = (2.0 * PI * i) / NV;
-		k = tan(angleArg);
-		sign = cos(angleArg) / (abs(cos(angleArg)) + 1e-30);
-		x = sign * a / sqrt(1 + ratio * ratio * k * k);
-		y = k * x;
-		setVRel(i, 0, x);
-		setVRel(i, 1, y);
+	double arcLength = circumference/ NV;
+
+	double angle = 0;
+
+	// Loop until we get all the points out of the ellipse
+	for (int numPoints = 0; numPoints < NV; numPoints++)
+	{
+		angle = GetAngleForArcLengthRecursively(0, arcLength, angle, deltaAngle, a, b);
+
+		double x = a * cos(angle);
+		double y = b * sin(angle);
+		setVRel(numPoints, 0, x);
+		setVRel(numPoints, 1, y);
 	}
-	// output
-	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", compare to " << NV * tan(PI / NV) / PI << endl;
+	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(), 2.0) / (4.0 * PI * polygonArea()) << ", and calA = " << calA() <<", compare to " << NV * tan(PI / NV) / PI << endl;
+
 }
+
+
 
 #endif
