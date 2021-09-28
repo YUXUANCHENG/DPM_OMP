@@ -124,6 +124,11 @@ public:
 		indexss >> index_i;
 	}
 
+	virtual void convert2double(string arg, double & para) {
+		stringstream indexss(arg);
+		indexss >> para;
+	}
+
 	void produceFileName(string extend, string& energyF, string& jammingF, string& lengthscaleF,
 		string& phiF, string& calAF, string& contactF, string& vF,  string& ISF) {
 		//string positionF = "position" + extend;

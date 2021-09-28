@@ -5,7 +5,12 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+
+#define optimizer 0
+
+# if optimizer
 #include <nlopt.hpp>
+#endif
 
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
@@ -101,28 +106,36 @@ public:
 	virtual void deformation(char const* argv[])
 	{
 		deformFlag = true;
-		this->NT = 1e7;
-		this->th = PI/4;
+		this->convert2double(argv[3], this->kl);
+		this->convert2double(argv[4], this->gamafactor1);
+		this->convert2double(argv[5], this->gamafactor2);
+		this->convert2double(argv[6], this->g);
+
+		this->timeStepMag = 0.0005;	
+		this->NT = 5e6;
+		this->NPRINT = 1e3;	
 		//this->timeStepMag = 0.00002;	
-		this->timeStepMag =  0.0001;	
+		this->timeStepMag =  0.0005;	
 		//this->timeStepMag = 0.0005;	
-		this->kl = 1.74307;
 		this->ka = 1;
 		this->kb = 0;
-		this->gamafactor1 = 0.0716771;
-		this->gamafactor2 = -0.0345413;
-		this->g = 0.170959;
 		this->NCELLS = 1;
 		this->NV = 64;
 		this->w0 = 3;
 		this->Lini = 5;
 		this->qscompress(argv);
+
 		this->particles->gDire = 1;
+		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
+		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
+		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
+		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->gOn = 0;
-		_hopperFlow();
+		this->particles->fireMinimizeHopperF(w0, w, th, g);
 		double originalHeight = this->particles->calOriginalHeight();
+		//double originalHeight = 1;
 		this->particles->gOn = 1;
-		this->particles->hopperSimulation(w0, w, th, g, b);
+		this->particles->fireMinimizeHopperF(w0, w, th, g);
 		double endHeight = this->particles->calHeight();
 		double angle = this->particles->calContactAng();
 		double length = this->particles->calContactLength();
@@ -136,8 +149,10 @@ public:
 
 	//void findParameter(char const* argv[]){
 	double findParameter(const std::vector<double> &x){
-		double presetCalA = 1.093;
-		double presetAngle = 20;
+		//double presetCalA = 1.142;
+		//double presetAngle = 17.9;
+		double presetCalA = 1.131;
+		double presetAngle = 22.13;
 		double threashold = 0.3;
 
 		deformFlag = true;
@@ -217,22 +232,7 @@ double myfunc(const std::vector<double> &x, std::vector<double> &grad, void *my_
 	return cli.findParameter(x);
     //return sqrt(x[1]);
 }
-
-// typedef struct {
-//     double kl, gama1, gama2;
-// } my_constraint_data;
-
-// double myconstraint(const std::vector<double> &x, std::vector<double> &grad, void *data)
-// {
-//     my_constraint_data *d = reinterpret_cast<my_constraint_data*>(data);
-//     double a = d->a, b = d->b;
-//     if (!grad.empty()) {
-//         grad[0] = 3 * a * (a*x[0] + b) * (a*x[0] + b);
-//         grad[1] = -1.0;
-//     }
-//     return ((a*x[0] + b) * (a*x[0] + b) * (a*x[0] + b) - x[1]);
-// }
-
+#if optimizer
 void optFun()
 {
 	nlopt::opt opt(nlopt::LN_COBYLA, 4);
@@ -243,12 +243,9 @@ void optFun()
 	ub[0] = 3; ub[1] = 0.2; ub[2] = 0.5; ub[3] = 0.6;
 	opt.set_upper_bounds(ub);
 	opt.set_min_objective(myfunc, NULL);
-	// my_constraint_data data[2] = { {2,0}, {-1,1} };
-	// opt.add_inequality_constraint(myconstraint, &data[0], 1e-8);
-	// opt.add_inequality_constraint(myconstraint, &data[1], 1e-8);
 	opt.set_xtol_rel(1e-4);
 	std::vector<double> x(4);
-	x[0] = 1; x[1] = 0.1; x[2] = 0.3; x[3] = 0.3;
+	x[0] = 1; x[1] = 0.1; x[2] = 0.2; x[3] = 0.4;
 	double minf;
 
 	try{
@@ -260,5 +257,5 @@ void optFun()
 		std::cout << "nlopt failed: " << e.what() << std::endl;
 	}
 }
-
+#endif
 #endif

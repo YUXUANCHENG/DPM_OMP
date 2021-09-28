@@ -500,7 +500,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g){
 	// HARD CODE IN FIRE PARAMETERS
-	double Ftol = 1e-12; double Fcheck = 0; double Kcheck = 0;
+	double Ftol = 1e-10; double Fcheck = 0; double Kcheck = 0;
 	const double alpha0 	= 0.1;
 	const double finc 		= 1.1;
 	const double fdec 		= 0.5;
@@ -2716,20 +2716,21 @@ double cellPacking2D::matchPreset(double presetCalA, double presetAngle, double 
 {
 	double angle = calContactAng();
 	double angleDev = abs(presetAngle - angle)/presetAngle;
-	double calAdev = abs(presetCalA - cell(0).calA())/presetCalA;
+	double calA_raw = pow(cell(0).perimeter(), 2.0) / (4.0 * PI * cell(0).polygonArea());
+	double calAdev = abs(presetCalA - calA_raw)/presetCalA;
 	std::ofstream debugInfo;
 	debugInfo.open("debug.txt", std::ios_base::app);
 
 	if (angleDev < threashold && calAdev < 0.01)
 	{
 		debugInfo << "match" << endl;
-		debugInfo << "angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle << ", calA = " << cell(0).calA() << endl;
+		debugInfo << "angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle << ", calA = " << calA_raw << endl;
 		//return true;
 		//exit(0);
 	}
 	else
 	{
-		debugInfo << "not match, angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle  << ", calA = " << cell(0).calA() << endl;
+		debugInfo << "not match, angleDev = " << angleDev << ", calAdev = " << calAdev << ", angle = " << angle  << ", calA = " << calA_raw << endl;
 		//return false;
 	}
 	return 10*calAdev + angleDev;
