@@ -8,7 +8,7 @@
 
 class BumpyEllipse : public virtual Bumpy {
 public:
-	double ratio_a_b = 1.6;
+	double ratio_a_b = 1.8;
 
 	//using Bumpy::Bumpy;
     BumpyEllipse(int ncells, int nt, int nprint, double l, double s) :cellPacking2D::cellPacking2D(ncells, nt, nprint, l, s) {};

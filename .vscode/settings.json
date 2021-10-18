@@ -69,6 +69,7 @@
         "cinttypes": "cpp",
         "hashtable": "cpp",
         "typeindex": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "core": "cpp"
     }
 }

@@ -38,11 +38,12 @@ public:
 	double kb = 0.0;				// bending energy constant
 	double gam = 0.0;				// surface tension force constant
 
-	double kint = 1.0;				// interaction energy constant
+	double kint = 10.0;				// interaction energy constant
 	const double del = 1.0;				// width of vertices in units of l0, vertex sep on regular polygon
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
+	//double calA0 = 1;
 	double calA0 = 1.18;
 
 	// tolerances
@@ -56,7 +57,7 @@ public:
 	int NV = 16;
 	int seed = 1;
 	double Lini = 1.0;
-	int NBx = 10;
+	int NBx = 20;
 	int NBy = NBx;
 
 	double Phi_to_PhiJ = 0.03;
@@ -64,7 +65,7 @@ public:
 	// activity
 	double T = 10000.0;
 	int frames = 20000;
-	double Dr;
+	double Dr = 1e-3;
 	double vtau = 1e-2;
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
@@ -97,13 +98,15 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.83;
+		phiDisk = 0.85;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
-		phiDisk = 0.70 + index_i * 0.015;
+		//phiDisk = 0.7 + index_i * 0.015;
+		//phiDisk = 0.67 + index_i * 0.015;
 		//phiDisk = 0.20 + index_i * (0.65/40);
 
-		//timeStepMag = 0.002;	
+		timeStepCutOff = 5;
+		timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -111,10 +114,14 @@ public:
 	}
 	virtual void setKB() {
 		//double ratio = 100.0;
+		//kb = 0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		kb = 0.01;
+		//kb = 0.01;
 		//kb = 0.1;
+		kb = 0.1;
+		ka = 10;
+		//kl = 10;
 		//double kl = ratio * kb;
 	}
 
@@ -140,7 +147,7 @@ public:
 	virtual void prepareSystem() {
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
-		particles->initializeGel(NV, phiDisk, sizedev, del);
+		particles->initializeGel(NV, 0.7, sizedev, del);
 		particles->initialize_subsystems(NBx, NBy);
 		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 		particles->vertexDPMTimeScale(timeStepMag);
@@ -163,15 +170,16 @@ public:
 	}
 
 	void _NVE() {
-		// T = 10000;
-		// frames = 2000;
-#pragma omp parallel for 
+		T = 100000;
+		frames = 20000;
+//#pragma omp parallel for 
 		for (int j = 0; j < 10; j++) {
 
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 			//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 			//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
-			double v0 = double(j + 1) * 0.0002;
+			//double v0 = double(j + 1) * 0.0002;
+			double v0 = double(j + 1) * 0.005;
 #pragma omp critical
 			{
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
@@ -185,10 +193,10 @@ public:
 			particles->saveState(local_cell_group);
 			local_cell_group.closeF();
 			local_cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			local_cell_group.NVEsimulation(T, v0, t_scale, frames);
+			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
+			local_cell_group.ActiveBrownianSimulation(T, v0, Dr, vtau, t_scale, frames);
 		}
 	}
 
@@ -216,8 +224,15 @@ public:
 		double start = -9.0 + 0.20 * i;
 		//double start = -8.5 + 0.22 * index_i;
 		double interval = 0.25 - 0.02 * i;
-		return exp(start + interval * (9 - j));
+		return 10 * exp(start + interval * (9 - j));
 	}
+	// virtual double setV0(int i, int j)
+	// {
+	// 	// double start = -7.8 + 0.3 * i;
+	// 	double start = -7.8 + 0.25 * i;
+	// 	double interval = 0.25 - 0.02 * i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	virtual void calTao(char const* argv[])
 	{
@@ -265,18 +280,21 @@ class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
 
-	// virtual double setV0(int i, int j)
-	// {
-	// 	double start = -7.8 + 0.3 * i;
-	// 	double interval = 0.25 - 0.02 * i;
-	// 	return exp(start + interval * (9 - j));
-	// }
-
-	virtual void setPhiDisk(){
-		this->timeStepCutOff = 11;
-		this->kint = 10.0;
-		this->phiDisk = 0.7 + this->index_i * 0.02;
+	virtual double setV0(int i, int j)
+	{
+		// double start = -7.8 + 0.3 * i;
+		double start = -7.8 + 0.25 * i;
+		double interval = 0.25 - 0.02 * i;
+		return exp(start + interval * (9 - j));
 	}
+
+	// virtual void setPhiDisk(){
+	// 	this->timeStepCutOff = 8;
+	// 	this->kint = 10.0;
+	// 	//this->phiDisk = 0.7 + this->index_i * 0.02;
+	// 	this->phiDisk = 0.67 + this->index_i * 0.015;
+
+	// }
 
 	virtual void prepareSystem() {
 		// Initialze the system as disks
@@ -302,13 +320,14 @@ public:
 		this->timeStepCutOff = 8;
 		this->kint = 10.0;	
 
-		this->phiDisk = 0.70 + this->index_i * 0.015;
+		this->phiDisk = 0.7 + this->index_i * 0.015;
 		//this->phiDisk = 0.20 + this->index_i * (0.65/40);
 	}
 
 	virtual double setV0(int i, int j)
 	{
-		double start = -7.8 + 0.3 * i;
+		// double start = -7.8 + 0.3 * i;
+		double start = -7.8 + 0.25 * i;
 		double interval = 0.25 - 0.02 * i;
 		return exp(start + interval * (9 - j));
 	}

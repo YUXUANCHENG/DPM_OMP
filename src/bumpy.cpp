@@ -139,6 +139,12 @@ void Bumpy::LangevinSimulation(double T, double v0, double t_scale, int frames) 
 	simulator.NVEsimulation(T, v0, t_scale, frames);
 }
 
+void Bumpy::ActiveBrownianSimulation(double T, double v0, double Dr, double vtau, double t_scale, int frames)
+{
+	BumpyActiveBrownian simulator = BumpyActiveBrownian(this, Dr, vtau);
+	simulator.NVEsimulation(T, v0, t_scale, frames);
+}
+
 void Bumpy::fireMinimizeF(double Ftol, double& Ftest, double& Ktest) {
 	for (int ci = 0; ci < NCELLS; ci++)
 		cell(ci).cal_inertia();

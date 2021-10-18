@@ -108,6 +108,8 @@ public:
 	virtual void printSubRoutine(int count, int print_frequency);
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
+	virtual void ActiveBrownianSimulation(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void sp_VelVerlet_ActiveBrown(double dt0, double Dr, double v0, std::normal_distribution<double> & dist, std::mt19937 & gen);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };

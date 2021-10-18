@@ -1846,7 +1846,7 @@ void cellPacking2D::fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck){
 			npPMIN = 0;
 
 		// check that P is not crazy
-		if (abs(P) > 800){
+		if (abs(P) > 1e5){
 			cout << "	ERROR: P = " << P << ", ending." << endl;
 			cout << "	** Kcheck = " << Kcheck << endl;
 			cout << "	** Fcheck = " << Fcheck << endl;
@@ -3550,8 +3550,8 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 	const double finc 		= 1.01;
 	const double fdec 		= 0.5;
 	const double falpha 	= 0.99;
-	const double dtmax 		= 10*dt0;
-	const double dtmin 		= 0.02*dt0;
+	const double dtmax 		= 1*dt0;
+	const double dtmin 		= 1e-6*dt0;
 	const int NMIN 			= 100;
 	const int NNEGMAX 		= 2000;
 	const int NDELAY 		= 1000;
@@ -4864,17 +4864,16 @@ void cellPacking2D::conserve_momentum_probe() {
 
 double cellPacking2D::scale_v(double v0) {
 
-	//double area0 = 0;
+	double area0 = 0;
 	double scaled_v;
-	/*
+	
 	for (int ci = 0; ci < NCELLS; ci++) {
 		area0 += cell(ci).geta0();
 	}
 
 	area0 /= NCELLS;
 	scaled_v = v0 * sqrt(area0 / PI);
-	*/
-	scaled_v = v0 * L.at(0);
+	//scaled_v = v0 * L.at(0);
 	return scaled_v;
 }
 
@@ -5613,6 +5612,38 @@ void cellPacking2D::sp_VelVerlet_Langevin(double drag, double KbT, std::normal_d
 			// update velocity
 			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt / cell(ci).getNV()) * dist(gen));
 			
+			// set new velocity and acceleration
+			cell(ci).setCVel(d, veltmp);
+			for (vi = 0; vi < cell(ci).getNV(); vi++)
+				cell(ci).setVAcc(vi, d, anew);
+		}
+	}
+	conserve_momentum();
+}
+
+void cellPacking2D::sp_VelVerlet_ActiveBrown(double dt0, double Dr, double v0, std::normal_distribution<double> & dist, std::mt19937 & gen) {
+	// local variables
+	int ci, vi, d;
+	double veltmp, aold, anew, random_angle;
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+		random_angle = dist(gen);
+		cell(ci).c_psi += sqrt( dt0 * Dr * 2) * random_angle;
+		// loop over velocities
+		for (d = 0; d < NDIM; d++) {
+			
+			// get current velocity
+			veltmp = cell(ci).cvel(d);
+
+			// calculate old com acceleration
+			aold = cell(ci).vacc(0, d);
+
+			// get new accelation
+			anew = cell(ci).cforce(d) / cell(ci).getNV();
+
+			// update velocity
+			veltmp = anew  + v0 * ((1 - d) * cos(cell(ci).c_psi) + d * sin(cell(ci).c_psi));
+
 			// set new velocity and acceleration
 			cell(ci).setCVel(d, veltmp);
 			for (vi = 0; vi < cell(ci).getNV(); vi++)

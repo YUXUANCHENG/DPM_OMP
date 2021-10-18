@@ -2322,10 +2322,17 @@ void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double Kb
 	// local variables
 	int i, d;
 	double veltmp, aold, anew;
+
+	double randN;
+
 	// update com velocity
-	// update vertex velocities
-	for (i = 0; i < NV; i++){
-		for (d=0; d < NDIM; d++){
+	// update vertex velocities	
+	for (d=0; d < NDIM; d++){
+		
+		randN = dist(gen);
+
+		for (i = 0; i < NV; i++){
+
 			// get current velocity
 			veltmp = vvel(i,d);
 
@@ -2336,7 +2343,8 @@ void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double Kb
 			anew = vforce(i,d);
 
 			// update velocity
-			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt) * dist(gen));
+			veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt) * randN);
+			//veltmp += (0.5 * dt * (anew + aold) - drag * veltmp * dt + sqrt(2 * drag * KbT * dt) * dist(gen));
 			
 			// set new velocity and acceleration
 			setVVel(i,d,veltmp);

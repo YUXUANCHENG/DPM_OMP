@@ -9,6 +9,7 @@ public:
 	cellPacking2D * cellpointer = nullptr;
 	double init_E = 0, init_U = 0, init_K = 0;
 	int dof = 2;
+	double scaled_v;
 
 	DPMNVEsimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -65,8 +66,9 @@ public:
 			//system_mass += cell(ci).getNV() * PI * pow(0.5 * cell(ci).getdel() * cell(ci).getl0(), 2);
 			totalNV += cellpointer->cell(ci).getNV();
 		}
-		totalDof = 2 * dof * totalNV / cellpointer->NCELLS;
-		double scaled_v = cellpointer->scale_v(v0);
+		//totalDof = 2 * dof * totalNV / cellpointer->NCELLS;
+		totalDof = dof;
+		scaled_v = cellpointer->scale_v(v0);
 		init_K = cellpointer->cal_temp(scaled_v);
 		init_U = cellpointer->totalPotentialEnergy();
 		init_E = totalDof * init_K + init_U;
@@ -107,7 +109,7 @@ public:
 	virtual void injectT(double v0) {
 		double totalDof;
 		totalDof = dof;
-		double scaled_v = cellpointer->scale_v(v0);
+		scaled_v = cellpointer->scale_v(v0);
 		init_K = cellpointer->cal_temp(scaled_v);
 		init_U = cellpointer->totalPotentialEnergy();
 		init_E = totalDof * init_K + init_U;
@@ -171,6 +173,44 @@ public:
 	// 	if (count % print_frequency == 0)
 	// 		cout << "t = " << t << endl;
 	// }
+};
+
+class DPMActiveBrownian: public DPMLangevin{
+public:
+	double random_angle;
+	double Dr, vtau;
+
+	DPMActiveBrownian() = default;
+	DPMActiveBrownian(cellPacking2D* cell, double Dr, double vtau):DPMLangevin(cell){
+		this->Dr = Dr;
+		this->vtau = vtau;
+	}
+
+	virtual void verletVelocityUpdate(){
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
+		{
+			random_angle = dist(gen);
+			cellpointer->cell(ci).activeVerletVelocityUpdateCOM_brownian(cellpointer->dt, Dr, random_angle, scaled_v);
+		}
+		cellpointer->conserve_momentum();
+	}
+};
+
+class BumpyActiveBrownian: public BumpyLangevin{
+public:
+	double random_angle;
+	double Dr, vtau;
+
+	BumpyActiveBrownian() = default;
+	BumpyActiveBrownian(cellPacking2D* cell, double Dr, double vtau):BumpyLangevin(cell){
+		this->Dr = Dr;
+		this->vtau = vtau;
+	}
+
+	virtual void verletVelocityUpdate(){
+		cellpointer->sp_VelVerlet_ActiveBrown(cellpointer->dt, Dr, scaled_v, dist, gen);
+		cellpointer->bumpy_angularV();
+	}
 };
 
 class DPMhopperSimulator {
