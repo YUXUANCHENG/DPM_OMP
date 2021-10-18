@@ -324,10 +324,10 @@ void deformableParticles2D::regularPolygon(){
 		cout << "	ERROR: in regularPolygon(), NV = " << NV << ", so not set properly. Ending." << endl;
 		exit(1);
 	}
-	else if (a0 < 0.1){
-		cout << "	ERROR: in regularPolygon(), a0 = " << a0 << ", so too small and not set properly. Ending." << endl;
-		exit(1);
-	}
+	// else if (a0 < 0.1){
+	// 	cout << "	ERROR: in regularPolygon(), a0 = " << a0 << ", so too small and not set properly. Ending." << endl;
+	// 	exit(1);
+	// }
 
 	// set radius of polygon
 	polyRad = sqrt((2.0*a0)/(NV*sin(2.0*PI/NV)));
@@ -1159,7 +1159,7 @@ void deformableParticles2D::shapeForces(){
 			li = segmentLength(i);
 
 			//double factor = 0.5, factor1 = 0.1;
-			double factor = gamafactor1, factor1 = gamafactor2;
+			double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
 			double l0li = (wallContactFlag[i] && wallContactFlag[ip1]) ? (1 - factor1) * l0: (1 - factor) * l0;
 			double l0lim1 = (wallContactFlag[im1] && wallContactFlag[i]) ? (1 - factor1) * l0: (1 - factor) * l0;
 
@@ -1198,7 +1198,7 @@ void deformableParticles2D::shapeForces(){
 
 	        	// add to force
 	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
-	            ftmp *= kl * NV/16.0;
+	            ftmp *= kl * pow((l0/0.05), 2)* NV/16.0;
 				//ftmp *= kl;
 	            setVForce(i,d,vforce(i,d)+ftmp);
 	        }
@@ -1209,8 +1209,10 @@ void deformableParticles2D::shapeForces(){
 			
 
 			// calculate force term in each direction (based on calc from notes)
-			fxTmp = ka *  astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
-			fyTmp = ka *  astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
+			fxTmp = ka * astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
+			fyTmp = ka * astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
+			// fxTmp = ka * pow(a0, 2) * astrain*0.5*(vrel(im1,1) - vrel(ip1,1));
+			// fyTmp = ka * pow(a0, 2) * astrain*0.5*(vrel(ip1,0) - vrel(im1,0));
 
 			// add to force on vertices
 			setVForce(i,0,vforce(i,0)+fxTmp);

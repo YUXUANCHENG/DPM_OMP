@@ -182,7 +182,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			cell(ci).setpbc(d,0);
 
 		// number of vertices ( SIGMA SETS # OF VERTS )
-		nvtmp = round(2.0*radii.at(ci)*NV);
+		//nvtmp = round(2.0*radii.at(ci)*NV);
+		nvtmp = NV;
 		if (nvtmp > nvmin)
  			cell(ci).setNV(nvtmp);
 		else
@@ -695,7 +696,7 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 			npPMIN = 0;
 
 		// check that P is not crazy
-		if (abs(P) > 800){
+		if (abs(P) > 1E5){
 			cout << "	ERROR: P = " << P << ", ending." << endl;
 			cout << "	** Kcheck = " << Kcheck << endl;
 			cout << "	** Fcheck = " << Fcheck << endl;

@@ -17,7 +17,9 @@ class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
 public:
 
 	double smallRadius = 0.5;			// radius fo smaller particles (diameter is length unit)
+	//double smallRadius = 0.3;			// radius fo smaller particles (diameter is length unit)
 	double sizeRatio = 1.4;			// ratio of small diameter to large diameter
+	//double sizeRatio = 4;			// ratio of small diameter to large diameter
 	//const double sizeRatio = 1;
 	double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
 
@@ -119,9 +121,9 @@ public:
 		//this->timeStepMag = 0.0005;	
 		this->ka = 1;
 		this->kb = 0;
-		this->NCELLS = 1;
+		this->NCELLS = 2;
 		this->NV = 64;
-		this->w0 = 3;
+		this->w0 = 10;
 		this->Lini = 5;
 		this->qscompress(argv);
 

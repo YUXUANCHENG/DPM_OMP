@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/jamming.o",
-            "args": ["0","10"],
+            "args": ["0","10", "1", "0.1", "0.15", "0.3"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -30,7 +30,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/jamming.o",
-            "args": ["0","10"],
+            "args": ["0","10", "1", "0.1", "0.15", "0.3"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -43,7 +43,8 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: g++ build nlopt",
+            //"preLaunchTask": "C/C++: g++ build nlopt",
+            "preLaunchTask": "C/C++: g++ build production",
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
