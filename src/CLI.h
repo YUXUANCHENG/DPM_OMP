@@ -98,10 +98,11 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		phiDisk = 0.85;
+		//phiDisk = 0.85;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		//phiDisk = 0.7 + index_i * 0.015;
+		phiDisk = 0.77 + index_i * 0.02;
 		//phiDisk = 0.67 + index_i * 0.015;
 		//phiDisk = 0.20 + index_i * (0.65/40);
 
@@ -114,12 +115,12 @@ public:
 	}
 	virtual void setKB() {
 		//double ratio = 100.0;
-		//kb = 0;
+		kb = 0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
 		//kb = 0.01;
 		//kb = 0.1;
-		kb = 0.1;
+		//kb = 0.1;
 		ka = 10;
 		//kl = 10;
 		//double kl = ratio * kb;
@@ -218,21 +219,21 @@ public:
 		_NVE();
 	}
 
-	virtual double setV0(int i, int j)
-	{
-		//i = 0; j = 4;
-		double start = -9.0 + 0.20 * i;
-		//double start = -8.5 + 0.22 * index_i;
-		double interval = 0.25 - 0.02 * i;
-		return 10 * exp(start + interval * (9 - j));
-	}
 	// virtual double setV0(int i, int j)
 	// {
-	// 	// double start = -7.8 + 0.3 * i;
-	// 	double start = -7.8 + 0.25 * i;
+	// 	//i = 0; j = 4;
+	// 	double start = -9.0 + 0.20 * i;
+	// 	//double start = -8.5 + 0.22 * index_i;
 	// 	double interval = 0.25 - 0.02 * i;
-	// 	return exp(start + interval * (9 - j));
+	// 	return 10 * exp(start + interval * (9 - j));
 	// }
+	virtual double setV0(int i, int j)
+	{
+		// double start = -7.8 + 0.3 * i;
+		double start = -7.8 + 0.25 * i;
+		double interval = 0.25 - 0.02 * i;
+		return exp(start + interval * (9 - j));
+	}
 
 	virtual void calTao(char const* argv[])
 	{
@@ -259,8 +260,9 @@ public:
 			local_cell_group.vertexDPMTimeScale(time);
 			//local_cell_group.sp_NVE(T, v0, Dr, vtau, t_scale, frames);
 			local_cell_group.initialize_subsystems();
-			if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, frames/10);
-			double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
+			//if (j == 0) local_cell_group.LangevinSimulation(4000, v0, t_scale, frames/10);
+			//double* result = local_cell_group.NVE_tao(preset_time, v0, Dr, vtau, t_scale, frames);
+			double* result = local_cell_group.NVT_tao(preset_time, v0, Dr, vtau, t_scale, frames);
 			v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << "," << result[0] << "," << result[1] << endl;
 			preset_time = result[0] * 10;
 			delete[] result;

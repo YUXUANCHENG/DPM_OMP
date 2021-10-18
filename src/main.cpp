@@ -26,11 +26,11 @@ int main(int argc, char const *argv[]){
 	//main_function.sp_NVE_tao(argv);
 
 	//Bumpy_CLI<> cli;
-	Bumpy_CLI<Bumpy_Parallel> cli;
+	//Bumpy_CLI<Bumpy_Parallel> cli;
 	//BumpyDimer_CLI<> cli;
 	//BumpyDimer_CLI<BumpyDimer_Parallel> cli;
 	//DPM_CLI<> cli;
-	//DPM_CLI<DPM_Parallel> cli;
+	DPM_CLI<DPM_Parallel> cli;
 	//BumpyEllipse_CLI<> cli;
 	//BumpyEllipse_CLI<BumpyEllipse_Parallel> cli;
 	
@@ -39,14 +39,14 @@ int main(int argc, char const *argv[]){
 	//Bumpy_Hopper_CLI<> cli;
 	//Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
 
-	cli.findJamming(argv);
+	//cli.findJamming(argv);
 	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
 	//cli.hopperFlow(argv);
 	//cli.deformation(argv);
 	
-	//cli.calTao(argv);
+	cli.calTao(argv);
 	//cli.ArrheniusAngell(argv);
 
 	system("pause");
