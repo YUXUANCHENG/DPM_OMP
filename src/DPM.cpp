@@ -92,6 +92,7 @@ double* cellPacking2D::NVE_tao(double T, double v0, double Dr, double vtau, doub
 
 double* cellPacking2D::NVT_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 	DPMActiveBrownian simulator = DPMActiveBrownian(this, Dr, vtau);
+	simulator.injectT(v0);
 	TaoSolver taoSolver = TaoSolver(this, &simulator);
 	return taoSolver.NVE_tao(T, v0, Dr, vtau, t_scale, frames);
 }

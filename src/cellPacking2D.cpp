@@ -5124,7 +5124,7 @@ double cellPacking2D::cal_temp(double scaled_v){
 
 	for (int ci=0; ci<NCELLS; ci++){
 		for (int d=0; d<NDIM; d++){
-			if (d == 0)
+			if ( (d + ci) % 2 == 0)
 				cell(ci).setCVel(d,scaled_v);
 			else
 				cell(ci).setCVel(d,0);

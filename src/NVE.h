@@ -195,9 +195,11 @@ public:
 		cellpointer->conserve_momentum();
 	}
 
-	virtual void NVEsimulation(double T, double v0, double t_scale, int frames) {
-		NVEsimulationNoInjection(T, v0, t_scale, frames);
+	virtual void injectT(double v0) {
+		scaled_v = cellpointer->scale_v(v0);
+		cellpointer->cal_temp(1e-5);
 	}
+
 };
 
 class BumpyActiveBrownian: public BumpyLangevin{
@@ -215,8 +217,8 @@ public:
 		cellpointer->sp_VelVerlet_ActiveBrown(cellpointer->dt, Dr, scaled_v, dist, gen);
 		cellpointer->bumpy_angularV();
 	}
-	virtual void NVEsimulation(double T, double v0, double t_scale, int frames) {
-		NVEsimulationNoInjection(T, v0, t_scale, frames);
+	virtual void injectT(double v0) {
+		scaled_v = cellpointer->scale_v(v0);
 	}
 };
 

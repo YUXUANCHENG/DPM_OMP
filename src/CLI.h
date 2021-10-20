@@ -107,7 +107,7 @@ public:
 		//phiDisk = 0.20 + index_i * (0.65/40);
 
 		timeStepCutOff = 5;
-		timeStepMag = 0.002;	
+		//timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
