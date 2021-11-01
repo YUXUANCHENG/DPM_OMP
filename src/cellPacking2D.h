@@ -188,6 +188,9 @@ public:
 
 	// box len
 	double getL(int d) { return L.at(d); };
+	virtual void rescaleAllLength(double tol);
+	void _rescaleAllLength();
+
 
 	// array of cell objects
 	deformableParticles2D& cell(int ci);		// return cell object ci
@@ -419,6 +422,7 @@ public:
 	virtual void bumpy_Forces();
 	void bumpyRotation();
 	void bumpy_angularV();
+	void bumpy_brownian_angularV();
 	void bumpy_angularV(double b);
 	double totalRotaionalK();
 	double cal_temp(double scaled_v);

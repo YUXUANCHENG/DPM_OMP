@@ -3393,7 +3393,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 		cell(ci).initializeCell();
 
 		// initialize cells as regular polygons
-		calA0tmp = nvtmp*tan(PI/NV)/PI;
+		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
 
 		// preferred area is lenscales squared
 		a0tmp = lenscales.at(ci)*lenscales.at(ci);
@@ -3440,7 +3440,6 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 	// use FIRE in PBC box to relax overlaps
 	cout << "		-- Using FIRE to relax overlaps..." << endl;
 	fireMinimizeSP(diskradii);
-	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
 
 	printJammedConfig_yc();
 	printCalA();
@@ -4867,11 +4866,14 @@ double cellPacking2D::scale_v(double v0) {
 	double area0 = 0;
 	double scaled_v;
 	
-	for (int ci = 0; ci < NCELLS; ci++) {
-		area0 += cell(ci).geta0();
-	}
+	// for (int ci = 0; ci < NCELLS; ci++) {
+	// 	area0 += cell(ci).geta0();
+	// }
 
-	area0 /= NCELLS;
+	// area0 /= NCELLS;
+
+	area0 = L.at(0) * L.at(1) * packingFraction() / NCELLS;
+
 	scaled_v = v0 * sqrt(area0 / PI);
 	//scaled_v = v0 * L.at(0);
 	return scaled_v;
@@ -6156,6 +6158,29 @@ void cellPacking2D::bumpy_angularV() {
 
 		// set new velocity and acceleration
 		cell(ci).angularV = veltmp;
+		cell(ci).b = anew;
+		
+	}
+}
+
+void cellPacking2D::bumpy_brownian_angularV() {
+	// local variables
+	int ci, vi;
+	double veltmp, aold, anew;
+
+	// update com velocity
+	for (ci = 0; ci < NCELLS; ci++) {
+	
+		// get current velocity
+		veltmp = cell(ci).angularV;
+
+		// calculate old com acceleration
+		aold = cell(ci).b;
+
+		// get new accelation
+		anew = cell(ci).torque / cell(ci).inertia;
+		// set new velocity and acceleration
+		cell(ci).angularV = anew;
 		cell(ci).b = anew;
 		
 	}

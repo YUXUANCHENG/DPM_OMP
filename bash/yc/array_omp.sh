@@ -33,6 +33,7 @@ slurmf=$workdir/slurm.sh
 rm -f $slurmf
 partition=pi_ohern
 #partition=general
+#partition=week
 job_name=DPM
 
 echo -- PRINTING SLURM FILE...

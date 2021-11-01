@@ -83,6 +83,43 @@ void cellPacking2D::compressToInitial(double phiTarget, double deltaPhi, double 
 	qsIsoCompression(phiTarget, deltaPhi, Ftol);
 }
 
+void cellPacking2D::_rescaleAllLength()
+{
+	double r0 = scale_v(1);
+	for (int d = 0; d < NDIM; d++)
+		L.at(d) /= r0;
+
+	for (int ci = 0; ci < NCELLS; ci++)
+	{
+		for (int d = 0; d < NDIM; d++)
+		{
+			cell(ci).setL(d, cell(ci).getL(d) / r0);
+			cell(ci).setCPos(d,cell(ci).cpos(d) / r0);
+		}
+		cell(ci).l0 /= r0;
+		cell(ci).a0 /= pow(r0,NDIM);
+		for (int i = 0; i < NDIM * cell(ci).getNV(); i++)
+			cell(ci).vertexPositions[i] /= r0;
+	}
+	initialize_subsystems();
+}
+
+
+void cellPacking2D::rescaleAllLength(double tol)
+{
+	_rescaleAllLength();
+
+	double Fcheck, Kcheck;
+	fireMinimizeF(tol, Fcheck, Kcheck);
+	phi = packingFraction();
+
+	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
+
+	printJammedConfig_yc();
+	printCalA();
+	printContact();
+}
+
 double* cellPacking2D::NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 	DPMNVEsimulator simulator = DPMNVEsimulator(this);
 	TaoSolver taoSolver = TaoSolver(this, &simulator);

@@ -43,14 +43,30 @@ void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance)
 	fireMinimize_bummpy();
 }
 
+void Bumpy::rescaleAllLength(double tol)
+{
+	
+	_rescaleAllLength();
+	
+	calInertia();
+	fireMinimize_bummpy();
+	phi = packingFraction();
+
+	lengthscalePrintObject << L.at(0) << endl << L.at(1) << endl;
+
+	printJammedConfig_yc();
+	printCalA();
+	printContact();
+}
+
 void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 	qsIsoCompression(phiTarget, deltaPhi, Ftol);
 	phi = packingFraction();
-	if (phi > 0.6)
+	if (phi > 0.7)
 	{
 		// loop until phi is the correct value
 		//for (int i = 0; i < 50; i++) 
-		while (phi > 0.3)	
+		while (phi > 0.7)	
 		{
 			// scale lengths
 			scaleLengths(0.99);
@@ -61,13 +77,14 @@ void Bumpy::compressToInitial(double phiTarget, double deltaPhi, double Ftol) {
 		while (phi < phiTarget)
 		{
 			// scale lengths
-			scaleLengths(1 / 0.995);
+			scaleLengths(1 / 0.999);
 			calInertia();
 			// relax shapes (energies calculated in relax function)
 			fireMinimize_bummpy();
 			phi = packingFraction();
 		}
 	}
+
 	printJammedConfig_yc();
 	printCalA();
 	printContact();
@@ -158,6 +175,13 @@ int Bumpy::hopperSimulation(double w0, double w, double th, double g, double b) 
 
 double* Bumpy::NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 	BumpyNVEsimulator simulator = BumpyNVEsimulator(this);
+	TaoSolver taoSolver = TaoSolver(this, &simulator);
+	return taoSolver.NVE_tao(T, v0, Dr, vtau, t_scale, frames);
+}
+
+double* Bumpy::NVT_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+	BumpyActiveBrownian simulator = BumpyActiveBrownian(this, Dr, vtau);
+	simulator.injectT(v0);
 	TaoSolver taoSolver = TaoSolver(this, &simulator);
 	return taoSolver.NVE_tao(T, v0, Dr, vtau, t_scale, frames);
 }

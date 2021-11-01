@@ -40,13 +40,13 @@ int main(int argc, char const *argv[]){
 	//Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
 
 	//cli.findJamming(argv);
-	//cli.NVE(argv);
+	cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
 	//cli.hopperFlow(argv);
 	//cli.deformation(argv);
 	
-	cli.calTao(argv);
+	//cli.calTao(argv);
 	//cli.ArrheniusAngell(argv);
 
 	system("pause");

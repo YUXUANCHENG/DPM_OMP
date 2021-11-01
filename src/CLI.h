@@ -11,6 +11,12 @@
 #include <cmath>
 #include <omp.h>
 
+// #include <chrono>
+// using std::chrono::high_resolution_clock;
+// using std::chrono::duration_cast;
+// using std::chrono::duration;
+// using std::chrono::milliseconds;
+
 template <class Ptype = cellPacking2D>
 class DPM_CLI {
 public:
@@ -43,8 +49,8 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	//double calA0 = 1;
-	double calA0 = 1.18;
+	double calA0 = 1;
+	//double calA0 = 1.18;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
@@ -98,16 +104,21 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.85;
+		phiDisk = 0.70;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		//phiDisk = 0.7 + index_i * 0.015;
-		phiDisk = 0.77 + index_i * 0.02;
+
+		//phiDisk = 0.77 + index_i * 0.02;
+
+		// double middlePhi = 0.78;
+		// phiDisk = index_i < 5 ? middlePhi - (4-index_i) * 0.03 : middlePhi + (index_i - 4) * 0.005;
+
 		//phiDisk = 0.67 + index_i * 0.015;
 		//phiDisk = 0.20 + index_i * (0.65/40);
 
 		timeStepCutOff = 5;
-		//timeStepMag = 0.002;	
+		timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -115,14 +126,14 @@ public:
 	}
 	virtual void setKB() {
 		//double ratio = 100.0;
-		kb = 0;
+		//kb = 0;
 		//kb = 0.00001 * pow(index_i + 1, 2);
 		//kb = 0.001;
 		//kb = 0.01;
 		//kb = 0.1;
-		//kb = 0.1;
+		kb = 1;
 		ka = 10;
-		//kl = 10;
+		kl = 10;
 		//double kl = ratio * kb;
 	}
 
@@ -153,6 +164,7 @@ public:
 		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 		particles->vertexDPMTimeScale(timeStepMag);
 		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
+		particles->rescaleAllLength(Ftolerance);
 	}
 
 	void findJamming(char const* argv[]) {
@@ -171,8 +183,10 @@ public:
 	}
 
 	void _NVE() {
-		T = 100000;
+		T = 1000000;
 		frames = 20000;
+		// T = 500;
+		// frames = 10;
 //#pragma omp parallel for 
 		for (int j = 0; j < 10; j++) {
 
@@ -180,7 +194,8 @@ public:
 			//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 			//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
 			//double v0 = double(j + 1) * 0.0002;
-			double v0 = double(j + 1) * 0.005;
+			//double v0 = double(j + 1) * 0.005;
+			double v0 = double(j + 1) * 0.0005;
 #pragma omp critical
 			{
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
@@ -197,7 +212,11 @@ public:
 			local_cell_group.initialize_subsystems();
 			//local_cell_group.NVEsimulation(T, v0, t_scale, frames);
 			//local_cell_group.LangevinSimulation(T, v0, t_scale, frames);
+			// auto t1 = high_resolution_clock::now();
 			local_cell_group.ActiveBrownianSimulation(T, v0, Dr, vtau, t_scale, frames);
+			// auto t2 = high_resolution_clock::now();
+			// duration<double, std::milli> ms_double_1 = t2 - t1;
+			// std::cout << "time = " << ms_double_1.count() << endl;
 		}
 	}
 
@@ -230,8 +249,10 @@ public:
 	virtual double setV0(int i, int j)
 	{
 		// double start = -7.8 + 0.3 * i;
-		double start = -7.8 + 0.25 * i;
-		double interval = 0.25 - 0.02 * i;
+		//double start = -7.8 + 0.25 * i;
+		double start = -7.8;
+		//double interval = 0.25 - 0.02 * i;
+		double interval = 0.25;
 		return exp(start + interval * (9 - j));
 	}
 
@@ -239,7 +260,7 @@ public:
 	{
 		qscompress(argv);
 
-		double preset_time = T;
+		double preset_time = T/10;
 
 		for (int j = 0; j < numOfRuns; j++) {
 			cout << "Loop i, j = " << index_i << "," << j << endl;
@@ -282,13 +303,13 @@ class Bumpy_CLI : public DPM_CLI<Ptype> {
 public:
 	//typedef Bumpy particleType;
 
-	virtual double setV0(int i, int j)
-	{
-		// double start = -7.8 + 0.3 * i;
-		double start = -7.8 + 0.25 * i;
-		double interval = 0.25 - 0.02 * i;
-		return exp(start + interval * (9 - j));
-	}
+	// virtual double setV0(int i, int j)
+	// {
+	// 	// double start = -7.8 + 0.3 * i;
+	// 	double start = -7.8 + 0.25 * i;
+	// 	double interval = 0.25 - 0.02 * i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	// virtual void setPhiDisk(){
 	// 	this->timeStepCutOff = 8;
@@ -306,6 +327,8 @@ public:
 		this->particles->forceVals(this->calA0, 0, 0, 0, 0, this->kint, this->del, this->aInitial);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->compressToInitial(this->phiDisk, this->deltaPhi, this->Ftolerance);
+		this->particles->rescaleAllLength(this->Ftolerance);
+
 	}
 
 };
@@ -315,24 +338,24 @@ class BumpyEllipse_CLI : public Bumpy_CLI<Ptype> {
 public:
 	//typedef BumpyEllipse particleType;
 
-	virtual void setPhiDisk(){
-		//this->phiDisk = 0.65 + 0.02 * this->index_i;
-		//this->phiDisk = 0.82;
-		//this->phiDisk = 0.4;
-		this->timeStepCutOff = 8;
-		this->kint = 10.0;	
+	// virtual void setPhiDisk(){
+	// 	//this->phiDisk = 0.65 + 0.02 * this->index_i;
+	// 	//this->phiDisk = 0.82;
+	// 	//this->phiDisk = 0.4;
+	// 	this->timeStepCutOff = 8;
+	// 	this->kint = 10.0;	
 
-		this->phiDisk = 0.7 + this->index_i * 0.015;
-		//this->phiDisk = 0.20 + this->index_i * (0.65/40);
-	}
+	// 	this->phiDisk = 0.7 + this->index_i * 0.015;
+	// 	//this->phiDisk = 0.20 + this->index_i * (0.65/40);
+	// }
 
-	virtual double setV0(int i, int j)
-	{
-		// double start = -7.8 + 0.3 * i;
-		double start = -7.8 + 0.25 * i;
-		double interval = 0.25 - 0.02 * i;
-		return exp(start + interval * (9 - j));
-	}
+	// virtual double setV0(int i, int j)
+	// {
+	// 	// double start = -7.8 + 0.3 * i;
+	// 	double start = -7.8 + 0.25 * i;
+	// 	double interval = 0.25 - 0.02 * i;
+	// 	return exp(start + interval * (9 - j));
+	// }
 
 	virtual void prepareSystem() {
 		// Initialze the system as disks

@@ -197,7 +197,7 @@ public:
 
 	virtual void injectT(double v0) {
 		scaled_v = cellpointer->scale_v(v0);
-		cellpointer->cal_temp(1e-5);
+		cellpointer->cal_temp(1e-15);
 	}
 
 };
@@ -215,10 +215,11 @@ public:
 
 	virtual void verletVelocityUpdate(){
 		cellpointer->sp_VelVerlet_ActiveBrown(cellpointer->dt, Dr, scaled_v, dist, gen);
-		cellpointer->bumpy_angularV();
+		cellpointer->bumpy_brownian_angularV();
 	}
 	virtual void injectT(double v0) {
 		scaled_v = cellpointer->scale_v(v0);
+		cellpointer->cal_temp(1e-15);
 	}
 };
 

@@ -22,6 +22,7 @@ void DPM_Parallel::split_into_subspace() {
 		temp.push_back(L.at(d) * factor - BoundaryCoor.at(d));
 	}
 	// initialize subsystems
+	reset_subsystems();
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);
 		subsystem[i].cal_cashed_fraction();

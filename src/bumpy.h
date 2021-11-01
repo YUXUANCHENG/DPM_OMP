@@ -22,8 +22,10 @@ public:
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	virtual void hopperForces(double w0, double w, double th, double g, int closed);
 	double* NVE_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	double* NVT_tao(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	virtual void forceVals(double calA0, double kl, double ka, double gam, double kb, double kint, double del, double a);
-	 
+	virtual void rescaleAllLength(double tol);
+
 };
 
 #endif
