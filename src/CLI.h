@@ -104,9 +104,9 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		//phiDisk = 0.79;
+		phiDisk = 0.95;
 		//phiDisk = 0.85;
-		phiDisk = 0.69;
+		//phiDisk = 0.69;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		//phiDisk = 0.7 + index_i * 0.015;
@@ -186,10 +186,10 @@ public:
 	}
 
 	void _NVE() {
-		// T = 1000000;
-		// frames = 20000;
-		T = 5;
-		frames = 2;
+		T = 1000000;
+		frames = 20000;
+		// T = 2;
+		// frames = 2;
 //#pragma omp parallel for 
 		for (int j = 0; j < 1; j++) {
 
