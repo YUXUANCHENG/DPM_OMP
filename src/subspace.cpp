@@ -348,7 +348,11 @@ void subspace::calculateForces_insub() {
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
-					continue;
+				{
+					int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
+					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+						continue;
+				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
@@ -379,7 +383,11 @@ void subspace::calculateForces_betweensub() {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
-					continue;
+				{
+					int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
+					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+						continue;
+				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {

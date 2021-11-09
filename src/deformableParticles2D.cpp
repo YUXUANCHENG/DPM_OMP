@@ -1129,6 +1129,7 @@ double deformableParticles2D::segmentCosine(int vi){
 
 *************************/
 
+extern bool pForceFlag;
 
 // all shape forces
 void deformableParticles2D::shapeForces(){
@@ -1145,6 +1146,14 @@ void deformableParticles2D::shapeForces(){
 	double totalArea = polygonArea();
 	double astrain = (totalArea/a0) - 1.0;
 
+	double avgL;
+	if (pForceFlag == 0)
+	{
+		avgL= perimeter() / NV;
+		l0 = avgL;
+		avgL *= 0.99;
+	}
+
 	// loop over vertices, calculate each force that is active
 	for (i=0; i<NV; i++){
 		// wrap vertices
@@ -1153,7 +1162,7 @@ void deformableParticles2D::shapeForces(){
 		ip1 = (i+1) % NV;
 
 		// calculate perimeter force
-		if (kl > 0){
+		if (kl > 0 && pForceFlag == 1){
 			// calculate segment lengths
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
@@ -1189,6 +1198,29 @@ void deformableParticles2D::shapeForces(){
 	        // get segment strains
 	        lStrainI = (li/l0li) - 1.0;
 	        lStrainIm1 = (lim1/l0lim1) - 1.0;
+
+	        // loop over dimensions, add to force                                                                                                                                                                                      
+	        for (d=0; d<NDIM; d++){
+	        	// get segment unit vectors
+	        	uli = segment(i,d)/li;
+	        	ulim1 = segment(im1,d)/lim1;
+
+	        	// add to force
+	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
+	            ftmp *= kl * NV/16.0;
+	            setVForce(i,d,vforce(i,d)+ftmp);
+	        }
+		}
+
+		// calculate perimeter force
+		if (kl > 0 and pForceFlag == 0){
+			// calculate segment lengths
+			lim1 = segmentLength(im1);
+			li = segmentLength(i);
+
+	        // get segment strains
+	        lStrainI = (li/avgL) - 1.0;
+	        lStrainIm1 = (lim1/avgL) - 1.0;
 
 	        // loop over dimensions, add to force                                                                                                                                                                                      
 	        for (d=0; d<NDIM; d++){

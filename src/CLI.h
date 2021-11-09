@@ -49,8 +49,8 @@ public:
 	const double aInitial = 0.0;				// attraction parameter to start
 
 	// ratio of preferred perimeter^2 to preferred area
-	double calA0 = 1;
-	//double calA0 = 1.18;
+	//double calA0 = 1;
+	double calA0 = 1.18;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
@@ -104,7 +104,9 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		phiDisk = 0.70;
+		//phiDisk = 0.79;
+		//phiDisk = 0.85;
+		phiDisk = 0.69;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
 		//phiDisk = 0.7 + index_i * 0.015;
@@ -118,7 +120,7 @@ public:
 		//phiDisk = 0.20 + index_i * (0.65/40);
 
 		timeStepCutOff = 5;
-		timeStepMag = 0.002;	
+		//timeStepMag = 0.002;	
 	}
 	virtual void setSeed() {
 		//seed = index_i;
@@ -127,13 +129,14 @@ public:
 	virtual void setKB() {
 		//double ratio = 100.0;
 		//kb = 0;
-		//kb = 0.00001 * pow(index_i + 1, 2);
+		//kb = 0.001 * pow(index_i + 1, 2);
 		//kb = 0.001;
 		//kb = 0.01;
 		//kb = 0.1;
-		kb = 1;
+		//kb = 1;
 		ka = 10;
-		kl = 10;
+		//kl = 10;
+		//calA0 = 1 + 0.2/10 * index_i;
 		//double kl = ratio * kb;
 	}
 
@@ -183,19 +186,20 @@ public:
 	}
 
 	void _NVE() {
-		T = 1000000;
-		frames = 20000;
-		// T = 500;
-		// frames = 10;
+		// T = 1000000;
+		// frames = 20000;
+		T = 5;
+		frames = 2;
 //#pragma omp parallel for 
-		for (int j = 0; j < 10; j++) {
+		for (int j = 0; j < 1; j++) {
 
 			cout << "Loop i, j = " << index_i << "," << j << endl;
 			//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 			//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
 			//double v0 = double(j + 1) * 0.0002;
-			//double v0 = double(j + 1) * 0.005;
-			double v0 = double(j + 1) * 0.0005;
+			double v0 = double(j + 1) * 0.005;
+			//double v0 = double(j + 1) * 0.0005;
+			//double v0 = double(j + 1) * 0.002;
 #pragma omp critical
 			{
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;

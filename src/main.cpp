@@ -10,8 +10,8 @@
 
 // use std name space
 using namespace std;
-
-
+extern bool pForceFlag;
+bool pForceFlag = 1;
 
 int main(int argc, char const *argv[]){
 

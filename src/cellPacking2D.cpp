@@ -3386,7 +3386,10 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 		if (nvtmp > nvmin)
  			cell(ci).setNV(nvtmp);
 		else
+		{
 			cell(ci).setNV(nvmin);
+			nvtmp = nvmin;
+		}
 
 		// array information
 		cell(ci).initializeVertices();
