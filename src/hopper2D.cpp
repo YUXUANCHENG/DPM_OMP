@@ -187,7 +187,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		if (nvtmp > nvmin)
  			cell(ci).setNV(nvtmp);
 		else
+		{
 			cell(ci).setNV(nvmin);
+			nvtmp = nvmin;
+		}
 
 		// array information
 		cell(ci).initializeVertices();

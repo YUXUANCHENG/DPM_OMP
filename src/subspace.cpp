@@ -347,7 +347,11 @@ void subspace::calculateForces_insub() {
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
-					continue;
+				{
+					int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
+					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+						continue;
+				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
@@ -357,7 +361,7 @@ void subspace::calculateForces_insub() {
 				}
 				// calculate forces, add to number of vertex-vertex contacts
 				inContact = vertexForce(resident_cells[ci], resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				if (inContact > 0) {
+				if (resident_cells[ci]->ci != resident_cells[cj]->ci && inContact > 0) {
 					// add to cell-cell contacts
 					if (pointer_to_system->contacts(resident_cells[ci]->ci, resident_cells[cj]->ci) == 0)
 					{
@@ -378,7 +382,11 @@ void subspace::calculateForces_betweensub() {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
-					continue;
+				{
+					int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
+					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+						continue;
+				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
@@ -389,13 +397,15 @@ void subspace::calculateForces_betweensub() {
 				// notice that stress between resident and cashed cells are double counted
 				int inContact = vertexForce(resident_cells[ci], cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				// add to cell-cell contacts
-				if (pointer_to_system->contacts(resident_cells[ci]->ci, cashed_cells[ck]->ci) == 0)
-				{
-					pointer_to_system->addContact(resident_cells[ci]->ci, cashed_cells[ck]->ci);
-					Ncc++;
+				if (resident_cells[ci]->ci != cashed_cells[ck]->ci && inContact > 0){
+					if (pointer_to_system->contacts(resident_cells[ci]->ci, cashed_cells[ck]->ci) == 0)
+					{
+						pointer_to_system->addContact(resident_cells[ci]->ci, cashed_cells[ck]->ci);
+						Ncc++;
+					}
+					// increment vertex-vertex contacts
+					Nvv++;
 				}
-				// increment vertex-vertex contacts
-				Nvv++;
 			}
 		}
 	}
