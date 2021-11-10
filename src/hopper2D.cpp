@@ -510,7 +510,7 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 	const double fdec 		= 0.5;
 	const double falpha 	= 0.99;
 	const double dtmax 		= 10*dt0;
-	const double dtmin 		= 1e-8*dt0;
+	const double dtmin 		= 1e-6*dt0;
 	const double Trescale 	= 1e-12*NCELLS;
 	const int NMIN 			= 20;
 	const int NNEGMAX 		= 2000;
@@ -699,7 +699,7 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 			npPMIN = 0;
 
 		// check that P is not crazy
-		if (abs(P) > 1E5){
+		if (abs(P) > 1E6){
 			cout << "	ERROR: P = " << P << ", ending." << endl;
 			cout << "	** Kcheck = " << Kcheck << endl;
 			cout << "	** Fcheck = " << Fcheck << endl;
@@ -1303,7 +1303,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 		double factor = 0.001 * cell(ci).geta0() * 16.0 / cell(ci).NV;
 		//double factor = 0;
 		sigma = cell(ci).getl0()*cell(ci).getdel();
-		double a = 0.1* sqrt(cell(ci).geta0()/PI)/ sigma;
+		double a = 0.01* sqrt(cell(ci).geta0()/PI)/ sigma;
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			cFlag = false;
 
@@ -1770,7 +1770,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 				}
 			}
 
-			cell(ci).wallContactFlag[vi] = cFlag? 1 : 0;
+			cell(ci).wallContactFlag[vi] = cFlag? (1 + a - overlap) : 0;
 		}
 	}
 }

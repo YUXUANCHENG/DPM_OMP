@@ -113,15 +113,14 @@ public:
 		this->convert2double(argv[5], this->gamafactor2);
 		this->convert2double(argv[6], this->g);
 
-		this->timeStepMag = 0.0005;	
-		this->NT = 5e6;
+		this->NT = 1e6;
 		this->NPRINT = 1e3;	
 		//this->timeStepMag = 0.00002;	
 		this->timeStepMag =  0.0005;	
 		//this->timeStepMag = 0.0005;	
-		this->ka = 1;
+		this->ka = 10;
 		this->kb = 0;
-		this->NCELLS = 2;
+		this->NCELLS = 1;
 		this->NV = 64;
 		this->w0 = 10;
 		this->Lini = 5;

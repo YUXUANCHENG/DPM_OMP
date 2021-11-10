@@ -59,7 +59,7 @@ public:
 	double* interactionPotential;
 
 	// wall contact indicator
-	int* wallContactFlag;
+	double* wallContactFlag;
 	
 	// force parameters
 	double kl;			// perimeter energy scale

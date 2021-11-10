@@ -278,7 +278,7 @@ void deformableParticles2D::initializeVertices(){
 	vertexVelocity = new double[NDIM*NV];
 	vertexAcceleration = new double[NDIM*NV];
 	interactionPotential = new double[NV];
-	wallContactFlag = new int[NV];
+	wallContactFlag = new double[NV];
 
 	// set equal to 0
 	for (i=0; i<NV; i++){
@@ -1157,11 +1157,16 @@ void deformableParticles2D::shapeForces(){
 			// calculate segment lengths
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
-
+			double sigma = getl0()*getdel();
+			double a = 0.01* sqrt(geta0()/PI)/ sigma;
 			//double factor = 0.5, factor1 = 0.1;
+			if (wallContactFlag[i]>(1+a))
+				wallContactFlag[i] = (1+a);
+			if (wallContactFlag[im1]>(1+a))
+				wallContactFlag[im1] = (1+a);	
 			double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
-			double l0li = (wallContactFlag[i] && wallContactFlag[ip1]) ? (1 - factor1) * l0: (1 - factor) * l0;
-			double l0lim1 = (wallContactFlag[im1] && wallContactFlag[i]) ? (1 - factor1) * l0: (1 - factor) * l0;
+			double l0li = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - (wallContactFlag[i]/(1+a))*factor1 - (1 - wallContactFlag[i]/(1+a))*factor) * l0: (1 - factor) * l0;
+			double l0lim1 = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - (wallContactFlag[im1]/(1+a))*factor1 - (1 - wallContactFlag[im1]/(1+a))*factor) * l0: (1 - factor) * l0;
 
 			// double factor = 0.5;
 			// double l0li = (1 - factor) * l0, l0lim1 = (1 - factor) * l0;
