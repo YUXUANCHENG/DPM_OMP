@@ -50,13 +50,14 @@ public:
 
 	// ratio of preferred perimeter^2 to preferred area
 	//double calA0 = 1;
-	double calA0 = 1.18;
+	double calA0 = 1.1;
 
 	// tolerances
 	double Ftolerance = 1e-10;			// force tolerance (for FIRE min)
 	double Ptolerance = 1e-8;
 	double Ktolerance = 1e-16;
 	string extend;
+	bool rescalFlag = true;
 
 	// system size
 	int NCELLS = 64;
@@ -66,7 +67,7 @@ public:
 	int NBx = 20;
 	int NBy = NBx;
 
-	double Phi_to_PhiJ = 0.03;
+	double Phi_to_PhiJ = -1;
 
 	// activity
 	double T = 10000.0;
@@ -104,8 +105,8 @@ public:
 
 	}
 	virtual void setPhiDisk(){
-		phiDisk = 0.95;
-		//phiDisk = 0.85;
+		//phiDisk = 0.95;
+		phiDisk = 0.75;
 		//phiDisk = 0.69;
 		//this->phiDisk = 0.4;
 		//phiDisk = 0.70 + index_i * 0.02;
@@ -131,7 +132,7 @@ public:
 		//kb = 0;
 		//kb = 0.001 * pow(index_i + 1, 2);
 		//kb = 0.001;
-		//kb = 0.01;
+		kb = 0.01;
 		//kb = 0.1;
 		//kb = 1;
 		ka = 10;
@@ -167,12 +168,15 @@ public:
 		particles->forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 		particles->vertexDPMTimeScale(timeStepMag);
 		particles->compressToInitial(phiDisk, deltaPhi, Ftolerance);
-		particles->rescaleAllLength(Ftolerance);
+		if (rescalFlag)
+			particles->rescaleAllLength(Ftolerance);
 	}
 
 	void findJamming(char const* argv[]) {
+		rescalFlag = false;
 		qscompress(argv);
 		particles->findJamming(deltaPhi, Ftolerance, Ptolerance);
+		particles->rescaleAllLength(Ftolerance);
 	}
 
 	void qscompress(char const* argv[]) {
@@ -181,13 +185,16 @@ public:
 	}
 
 	void toDeltaPhi(double delta) {
-		double phi = particles->getphi();
-		particles->qsIsoCompression(phi + delta, deltaPhi, Ftolerance);
+		if (delta > 0)
+		{
+			double phi = particles->getphi();
+			particles->qsIsoCompression(phi + delta, deltaPhi, Ftolerance);
+		}
 	}
 
 	void _NVE() {
-		T = 1000000;
-		frames = 20000;
+		T = 100000;
+		frames = 2000;
 		// T = 2;
 		// frames = 2;
 //#pragma omp parallel for 
@@ -197,9 +204,9 @@ public:
 			//double v0 = 0.0004 * double(i) + double(j+1) * 0.0015;
 			//double v0 = 0.0004 * double(i) + double(j + 1) * 0.002;
 			//double v0 = double(j + 1) * 0.0002;
-			double v0 = double(j + 1) * 0.005;
+			//double v0 = double(j + 1) * 0.005;
 			//double v0 = double(j + 1) * 0.0005;
-			//double v0 = double(j + 1) * 0.002;
+			double v0 = double(index_i + 1) * 0.0005;
 #pragma omp critical
 			{
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;

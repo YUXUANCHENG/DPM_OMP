@@ -34,6 +34,7 @@ rm -f $slurmf
 partition=pi_ohern
 #partition=general
 #partition=week
+#partition=day
 job_name=DPM
 
 echo -- PRINTING SLURM FILE...
