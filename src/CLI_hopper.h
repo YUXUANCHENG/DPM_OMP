@@ -11,6 +11,8 @@
 # if optimizer
 #include <nlopt.hpp>
 #endif
+extern bool constPressureFlag;
+extern bool frictionFlag;
 
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
@@ -21,12 +23,14 @@ public:
 	double sizeRatio = 1.4;			// ratio of small diameter to large diameter
 	//double sizeRatio = 4;			// ratio of small diameter to large diameter
 	//const double sizeRatio = 1;
-	double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
+	// double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
+	double w0 = 60.0;			// width of hopper reservoir (in units of small diameter)
 
-	double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
+	// double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
+	double th =  (90.0 - 89.0)/180 * PI;		// hopper angle (pi - th = deflection angle from horizontal)
 	double phi0 = 0.4;			// initial packing fraction
 	double b = 0.1;
-	//double b = 0.01;
+	// double b = 0;
 	double g = 0.05;
 	vector<double> radii;
 	double w_scale = 2;
@@ -35,25 +39,42 @@ public:
 	double gamafactor2 = 0;
 	bool deformFlag = false;
 
+	double scaleFactor = 1;
+
 	DPM_Hopper_CLI() {
-		this->NT = 5e6;			// number of time steps for flow simulation
-		this->NPRINT = 1e2;			// number of steps between printing
-		// this->kl = 0.01;
-		// this->ka = 0.5;
-		this->kl = 1;
-		this->ka = 10;
-		this->kb = 0;
+		// this->NT = 5e6;			// number of time steps for flow simulation
+		this->NT = 1e6;			// number of time steps for flow simulation
+		this->NPRINT = 1e3;			// number of steps between printing
+		this->kl = 1*scaleFactor;
+		this->ka = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
+		if (frictionFlag)
+			this->b = 0;
+		this->b *= scaleFactor;
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
-		this->g = 0.05;
-		//this->Lini = 5;
-		this->NBx = 30;
-		this->NBy = 10;
-		this->NCELLS = 800;
+		//this->g = 0.05;
+		if (constPressureFlag)
+		{
+			this->g = 0.5*scaleFactor;
+		}
+		else
+			this->g = 0.05*scaleFactor;
+		// this->NBx = 30;
+		// this->NBy = 10;
+		this->NCELLS = 1600;
+		// this->NCELLS = 64;
+		// this->NCELLS = 512;
+		this->NBy = 15 * round(w0/10);
+		this->NBx = 5 * (this->NCELLS/64) / (this->NBy/30);
+		//this->NV = 64;
 		this->NV = 16;
-		this->calA0 = 1.0;
-		this->kint = 2.0;
-		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.75 / pow(w0, 2);
+		// this->calA0 = 1.0;
+		//this->calA0 = 1.15;
+		this->calA0 = 1;
+		// this->kint = 2.0*scaleFactor;
+		this->kint = 10*scaleFactor;
+		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
 		//this->timeStepMag = 0.001;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
@@ -79,13 +100,15 @@ public:
 	}
 
 	virtual void setSeed() {
-		//seed = index_i;
-		this->seed = 1;
+		this->seed = this->index_i;
+		//this->seed = 1;
 	}
 
 	virtual void prepareSystem() {
-		//w_scale = 0.5 + 0.05 * this->index_j;
-		w_scale = 0.5 + 0.15 * this->index_j;
+		// w_scale = 0.5 + 0.05 * this->index_j;
+		w_scale = 3 + 0.1 * this->index_j;
+		// w_scale = 0.3 + 0.06 * this->index_j;
+		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
@@ -117,13 +140,17 @@ public:
 		this->NPRINT = 1e3;	
 		//this->timeStepMag = 0.00002;	
 		this->timeStepMag =  0.0005;	
-		//this->timeStepMag = 0.0005;	
-		this->ka = 10;
-		this->kb = 0;
+		this->ka = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
+		this->kl = this->kl*scaleFactor;
+		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 64;
+		this->NV = 32;
 		this->w0 = 10;
 		this->Lini = 5;
+		this->calA0 = 1;
+		this->kint = 2.0*scaleFactor;
+		//this->calA0 = 1.08;
 		this->qscompress(argv);
 
 		this->particles->gDire = 1;
@@ -131,10 +158,21 @@ public:
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
 		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
-		this->particles->gOn = 0;
-		this->particles->fireMinimizeHopperF(w0, w, th, g);
-		double originalHeight = this->particles->calOriginalHeight();
-		//double originalHeight = 1;
+		double originalHeight;
+		if (this->calA0 < 1 + 1e-7)
+		//if (false)
+		{
+			this->particles->gOn = 0;
+			this->particles->fireMinimizeHopperF(w0, w, th, g);
+			originalHeight = this->particles->calOriginalHeight();
+		}
+		else
+		{
+			this->particles->gOn = 1;
+			this->particles->fireMinimizeHopperF(w0, w, th, 1e-5);
+			originalHeight = this->particles->calHeight();
+		}
+
 		this->particles->gOn = 1;
 		this->particles->fireMinimizeHopperF(w0, w, th, g);
 		double endHeight = this->particles->calHeight();
@@ -188,13 +226,15 @@ public:
 	}
 
 	virtual void _hopperFlow() {
+		if (constPressureFlag)
+			this->particles->gOn = 0;
 		this->extend = "_" + to_string(this->index_i) + to_string(this->index_j) + ".txt";
 		string energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF;
 		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		//this->particles->initialize_subsystems();
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
-		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << endl;
+		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << "," << this->ka << endl;
 		cout << "	** FINISHED **   " << endl;
 		//clogPrintObject.close();
 		this->v0PrintObject.close();

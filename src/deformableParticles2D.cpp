@@ -2448,7 +2448,8 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
             // calculate force damping update                                                                                                                                                                                  
             ftmp = vforce(i,d);
             dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
-            dampDenom = 1.0 + 0.5*b*dt;
+            // dampDenom = 1.0 + 0.5*b*dt;
+            dampDenom = 1.0;
             dampUpdate = (ftmp - dampNum)/dampDenom;
 
 			// update force                                                                                                                                                                                                    

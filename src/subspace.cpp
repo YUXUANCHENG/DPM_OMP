@@ -7,6 +7,8 @@
 #include <omp.h>
 
 using namespace std;
+extern bool replaceFlag;
+extern bool frictionFlag;
 
 // split the packing system into smaller subsystems
 void DPM_Parallel::split_into_subspace() {
@@ -62,13 +64,27 @@ int DPM_Parallel::look_for_new_box(cvpair* pair) {
 	//add periodic boundary just in case
 	if (cell(0).pbc.at(0))
 		x_id = x_id % N_systems[0];
-	else if (x_id < 0 || x_id >= N_systems[0])
-		return -1;
+	// else if (x_id < 0 || x_id >= N_systems[0])
+	// 	return -1;
+	else if (x_id < 0)
+	{
+		if (replaceFlag)
+			x_id = 0;
+		else 
+			return -1;
+	}
+	else if (x_id >= N_systems[0])
+	{
+		if (replaceFlag)
+			x_id = N_systems[0] - 1;
+		else 
+			return -1;
+	}
 
-	if (cell(0).pbc.at(1))
-		y_id = y_id % N_systems[1];
-	else if (y_id < 0 || y_id >= N_systems[1])
-		return -1;
+	// if (cell(0).pbc.at(1))
+		y_id = (y_id + N_systems[1]) % N_systems[1];
+	// else if (y_id < 0 || y_id >= N_systems[1])
+	// 	return -1;
 
 	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
@@ -86,7 +102,8 @@ double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 	else
 	{
 		double pos = cell(pair->ci).vpos(pair->vi, direction) - BoundaryCoor.at(direction);
-		pos = (!direction && pos < 0)? 1e-10 : pos;
+		if (!replaceFlag)
+			pos = (!direction && pos < 0)? 1e-10 : pos;
 		return pos;
 	}
 }
@@ -314,6 +331,8 @@ void subspace::migrate_out() {
 			// migrate
 			if (new_box_index >= 0)
 				pointer_to_system->migrate_into(new_box_index, target_cell);
+			else
+				cout << "error" << endl;
 			// pop from list
 			migrate_out_list.pop();
 			migrate_out_destination.pop();
@@ -577,6 +596,20 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 			std::vector<double> force(2);
 			std::vector<double> r1(2);
 			std::vector<double> r2(2);
+
+			double normF = forceScale * (1 - distScale) * vertexDist / vertexDist;
+			std::vector<double> dv(2);
+			std::vector<double> friction(2);
+			for (d = 0; d < NDIM; d++) {
+				if (frictionFlag){
+					dv.at(d) = leftCell.vvel(onTheLeft->vi,d) - rightCell.vvel(onTheRight->vi,d);
+					friction.at(d) = - 0.1 * normF * dv.at(d);
+				}
+				else
+					friction.at(d) = 0;
+			}
+
+
 			// add to vectorial forces
 			for (d = 0; d < NDIM; d++) {
 				// get force value
@@ -587,10 +620,10 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 				// add to force on i
 #pragma omp critical
 			{
-				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp);
+				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp + friction.at(d));
 
 				// subtract off complement from force on j
-				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp);
+				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp - friction.at(d));
 			}
 				// add to stress tensor
 				if (d == 0) {

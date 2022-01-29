@@ -11,8 +11,8 @@
 
 // namespace
 using namespace std;
-
-
+extern bool wallAttracFlag;
+extern bool constPressureFlag;
 // 2D HOPPER FLOW FUNCTIONS
 
 
@@ -220,6 +220,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	L.at(1) = w0;
 	BoundaryCoor.at(0) = -Lmin*L.at(1);
 	BoundaryCoor.at(1) = 0;
+	pistonX = BoundaryCoor.at(0) * 1.1;
+
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++)
 			cell(ci).setL(d,Ltmp);
@@ -230,7 +232,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	for (ci=0; ci<NCELLS; ci++){
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
-		xmax = L.at(0) * 0.5;
+		//xmax = L.at(0) * 0.5;
+		xmax = -radii.at(ci);
 		
 
 		// get random x location in hopper
@@ -555,7 +558,7 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 	rescaleVelocities(Trescale);
 
 	// iterate until system converged
-	kmax = 1e6;
+	kmax = 1e7;
 	for (k=0; k<kmax; k++){
 		// Step 1. calculate P and norms
 		P = 0.0;
@@ -690,6 +693,10 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 
 		// scale P and K for convergence checking
 		Fcheck = F;
+		// if (abs(F) < 1e-6)
+		// {
+		// 	cout << "hit" << endl;
+		// }
 		Kcheck = K/NCELLS;
 
 		// update if Fcheck under tol
@@ -920,13 +927,15 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 	sigmaXY = 0.0;
 	sigmaYX = 0.0;
 	sigmaYY = 0.0;
-
+	
 	// wall forces
 	hopperWallForcesDP(w0,w,th,closed);
 	for (ci=0; ci<NCELLS; ci++){
 		cell(ci).shapeForces();
 		//cell(ci).contactLineRepul();
 	}
+	if (constPressureFlag)
+		pistonForce(w0, w, th, g);
 
 
 }
@@ -949,6 +958,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	double yline;							// line separating edge force from wall force
 	double factor = 10;
 	// preliminary calculations
+	th = PI/2 - th;
 	t = tan(th);
 	c = cos(th);
 	s = sin(th);
@@ -1300,8 +1310,9 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	for (ci=0; ci<NCELLS; ci++){
 		//double factor = 10 * cell(ci).NV/16.0;
 		// get vertex diameter
-		double factor = 0.001 * cell(ci).geta0() * 16.0 / cell(ci).NV;
-		//double factor = 0;
+		double factor = 0;
+		if (wallAttracFlag)
+			factor = 0.001 * cell(ci).geta0() * 16.0 / cell(ci).NV;
 		sigma = cell(ci).getl0()*cell(ci).getdel();
 		double a = 0.01* sqrt(cell(ci).geta0()/PI)/ sigma;
 		for (vi=0; vi<cell(ci).getNV(); vi++){
@@ -1431,7 +1442,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					// check on top wall
 					if (y > 0.5*w0){
 						// define line separating wall force and edge force regime
-						yline = (x - xtb)/t + ytb;
+						yline = (x - xtb)*t + ytb;
 
 						// if above yline, use wall force from top wall
 						if (y > yline){
@@ -1489,7 +1500,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					// check on bottom wall
 					else{
 						// define line separating wall force and edge force regime
-						yline = (xbb - x)/t + ybb;
+						yline = (xbb - x)*t + ybb;
 
 						// if below yline, use wall force
 						if (y < yline){
@@ -1776,9 +1787,83 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 }
 
 
+void cellPacking2D::pistonForce(double w0, double w, double th, double pressure){
+	// local variables
+	int ci, vi; 							// indices
+	double x, y;							// vertex positions
+	double sigma; 							// vertex diameter
+	double sb, sib, xtb, ytb, xbb, ybb;		// bead information
+	double Lx, xedge;						// hopper nozzle length variables
+	double t, c, s;							// tangent, cosine, sine
+	double hPlus, hMinus;					// height of angled wall
+	double dyPlus, dyMinus; 				// distance from top/bottom wall
+	double yPlusMin, yMinusMax; 			// cutoff positions for wall forces
+	double lw, lwx, lwy;					// elements of vector pointing from wall to vertex
+	double overlap;							// overlap of vertex with wall
+	double ftmp, utmp;						// force/energy of particle overlap with walls
+	double yline;							// line separating edge force from wall force
 
+	//double a = 0.3;
+	//double a = -0.3;
 
+	// hopper nozzle length
+	Lx = L.at(0);
 
+	// trig factors
+	t = tan(th);
+	c = cos(th);
+	s = sin(th);
+
+	// edge bead information
+	sb 		= cell(0).getl0()*cell(0).getdel();
+	xtb 	= Lx - 0.5*sb;
+	ytb 	= 0.5*(w0 + w + sb);
+	xbb 	= xtb;
+	ybb 	= 0.5*(w0 - w - sb);
+	
+
+	double pistonF = 0;
+
+	// hopper nozzle length
+	Lx = L.at(0);
+	for (ci=0; ci<NCELLS; ci++){
+		sigma = cell(ci).getl0()*cell(ci).getdel();
+		sib = 0.5*(sigma + sb);
+		xedge = xtb - sib*c;
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			x = cell(ci).vpos(vi,0);
+			if (x > pistonX && x < pistonX + 0.5*sigma){
+				// interacting with vertical wall, force only in +x direction
+
+				// vector from wall to particle
+				lwx = x - pistonX;
+
+				// overlap with wall
+				overlap = 2.0*lwx/sigma;
+
+				// add to y force ONLY (points in positive y direction)
+				ftmp = 10 * (2.0/sigma)*(1 - overlap);
+				cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp);
+
+				// add to energies
+				utmp = 0.5*pow(1 - overlap,2);
+				cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+				pistonF -= ftmp;
+			}
+		}
+	}
+	if (pistonX > 0){
+		if (pistonX < xedge){
+			pistonF += pressure * (w0 - 2 * pistonX / s);
+		}
+		else
+			pistonF += pressure * w0;
+	}
+	else
+		pistonF += pressure * w0;
+
+	pistonX += pistonF * dt / 100;
+}
 
 
 // function to run NVE dynamics on DP particles using velocity-verlet to check energy conservation

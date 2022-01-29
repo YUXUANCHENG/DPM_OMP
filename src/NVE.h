@@ -3,6 +3,10 @@
 
 #include "cellPacking2D.h"
 #include <random>
+#include <stack>
+#include "deformableParticles2D.h"
+
+extern bool replaceFlag;
 
 class DPMNVEsimulator{
 public:
@@ -179,6 +183,7 @@ public:
 	int closed = 1;
 	int N_inside = 0;
 	int clog_count = 0;
+	int flowCount = 0;
 
 	DPMhopperSimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -187,10 +192,18 @@ public:
 	DPMhopperSimulator() = default;
 
 	int hopperFlow(double w0, double w, double th, double g, double b) {
+		std::ofstream flowRobj;
+		flowRobj.open("flowRate.txt");
 		int result;
 		for (int t = 0; t < cellpointer->NT; t++) {
-			if (closed == 1 && t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside) closed = 0;
+			if (closed == 1 && (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside)) closed = 0;
 			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
+			if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*10) == 0) {
+				addBack();
+				double rate = (double) flowCount / (double) cellpointer->NPRINT;
+				flowRobj << rate << endl;
+				flowCount = 0;
+			}
 			hopperRoutine(w0, w, th, g, b);
 			result = checkTermination();
 			if (result < 2)
@@ -200,7 +213,7 @@ public:
 	}
 
 	int checkTermination() {
-		if (N_inside == 0)
+		if (N_inside == 0 || cellpointer->pistonX > cellpointer->L.at(0))
 		{
 			return 0;
 		}
@@ -228,7 +241,7 @@ public:
 				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
 				cellpointer->cell(ci).updateCPos();
 				// if still inside hopper
-				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4)
+				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 					cellpointer->cell(ci).inside_hopper = 0;
 			}
@@ -240,6 +253,66 @@ public:
 		// update velocities
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
 			cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
+	}
+	double getMaxHight(double y)
+	{
+		double maxHight = 10;
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).cpos(1) < y + 2 && cellpointer->cell(ci).cpos(1) > y - 2 ){
+				if (cellpointer->cell(ci).cpos(0) < maxHight)
+					maxHight = cellpointer->cell(ci).cpos(0);
+			}
+		}
+		return maxHight;
+	}
+
+	void addBack()
+	{
+		int outside = 0;
+		double meanV = 0;
+		stack<deformableParticles2D *> stack;
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).inside_hopper == 0)
+			{
+				outside ++;
+				flowCount ++;
+				meanV += cellpointer->cell(ci).cvel(0);
+				stack.push(&(cellpointer->cell(ci)));
+			}
+		}
+		
+		if (outside > 0)
+		{
+			meanV /= outside;
+			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
+			while (!stack.empty())
+			{
+				for(int i = 0; i < NperLine; i++)
+				{
+					double displace = round((i+1e-4)/2.0) * 2 * pow(-1,i);
+
+					if (!stack.empty())
+					{
+						deformableParticles2D * currentCell = stack.top();
+						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
+						currentCell->setCPos(0,maxHight - 2);
+						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
+						currentCell->regularPolygon();
+						currentCell->setCVel(0,meanV);
+						currentCell->setCVel(1,0);
+
+						// update real-space positions
+						for (int vi=0; vi<currentCell->getNV(); vi++){
+							for (int d=0; d<cellpointer->NDIM; d++)
+								currentCell->setVPos(vi,d,currentCell->cpos(d) + currentCell->vrel(vi,d));
+						}
+
+						currentCell->inside_hopper = 1;
+						stack.pop();
+					}
+				}
+			}
+		}
 	}
 };
 class BumpyHopperSimulator : public DPMhopperSimulator {
@@ -263,9 +336,10 @@ public:
 		cellpointer->spPosVerlet();
 		cellpointer->bumpyRotation();
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4)
+			if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				cellpointer->cell(ci).inside_hopper = 0;
 		}
+		//addBack();
 		// reset contacts before force calculation
 		cellpointer->resetContacts();
 		// calculate forces

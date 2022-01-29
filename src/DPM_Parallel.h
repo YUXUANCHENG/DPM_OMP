@@ -3,7 +3,7 @@
 
 #include "cellPacking2D.h"
 #include "NVE.h"
-
+extern bool constPressureFlag;
 class DPM_Parallel : public virtual cellPacking2D {
 public:
 	using cellPacking2D::cellPacking2D;
@@ -98,6 +98,8 @@ public:
 				cell(ci).gravityForces(g, gDire);
 		}
 		hopperWallForcesDP(w0,w,th,closed);
+		if (constPressureFlag)
+			pistonForce(w0, w, th, g);
 	}
 
 

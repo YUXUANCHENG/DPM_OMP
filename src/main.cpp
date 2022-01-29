@@ -10,7 +10,16 @@
 
 // use std name space
 using namespace std;
-
+extern bool wallAttracFlag;
+bool wallAttracFlag = 0;
+extern bool constPressureFlag;
+// bool constPressureFlag = 1;
+bool constPressureFlag = 0;
+extern bool replaceFlag;
+bool replaceFlag = 1;
+extern bool frictionFlag;
+// bool frictionFlag = 1;
+bool frictionFlag = 0;
 
 
 int main(int argc, char const *argv[]){
@@ -34,8 +43,8 @@ int main(int argc, char const *argv[]){
 	//BumpyEllipse_CLI<> cli;
 	//BumpyEllipse_CLI<BumpyEllipse_Parallel> cli;
 	
-	DPM_Hopper_CLI<> cli;
-	//DPM_Hopper_CLI<DPM_Parallel> cli;
+	//DPM_Hopper_CLI<> cli;
+	DPM_Hopper_CLI<DPM_Parallel> cli;
 	//Bumpy_Hopper_CLI<> cli;
 	//Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
 
@@ -43,8 +52,8 @@ int main(int argc, char const *argv[]){
 	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
-	//cli.hopperFlow(argv);
-	cli.deformation(argv);
+	cli.hopperFlow(argv);
+	//cli.deformation(argv);
 	//cli.findParameter(argv);
 	
 	//cli.calTao(argv);

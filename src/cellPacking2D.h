@@ -68,6 +68,7 @@ public:
 	// boundary lengths
 	std::vector<double> L;
 	std::vector<double> BoundaryCoor;
+	double pistonX;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
@@ -109,6 +110,7 @@ public:
 	virtual void NVEsimulation(double T, double v0, double t_scale, int frames);
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
+	void pistonForce(double w0, double w, double th, double pressure);
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };
 	void calInertia();

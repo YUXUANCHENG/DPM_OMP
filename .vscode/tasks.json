@@ -4,10 +4,10 @@
         {
             "type": "shell",
             "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
+            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
             "args": [
                 "-g",
-                "--std=c++11",
+                "--std=c++17",
                 "-fopenmp",
                 "${workspaceFolder}/src/*.cpp",
                 "-I",
@@ -29,10 +29,10 @@
         {
             "type": "shell",
             "label": "C/C++: g++ build production",
-            "command": "/usr/bin/g++",
+            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
             "args": [
                 "-O3",
-                "--std=c++11",
+                "--std=c++17",
                 "-fopenmp",
                 "${workspaceFolder}/src/*.cpp",
                 "-I",

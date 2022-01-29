@@ -70,6 +70,12 @@
         "hashtable": "cpp",
         "typeindex": "cpp",
         "chrono": "cpp",
-        "ratio": "cpp"
-    }
+        "ratio": "cpp",
+        "__nullptr": "cpp",
+        "optional": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }
