@@ -81,10 +81,10 @@ int DPM_Parallel::look_for_new_box(cvpair* pair) {
 			return -1;
 	}
 
-	// if (cell(0).pbc.at(1))
+	if (cell(0).pbc.at(1) || replaceFlag)
 		y_id = (y_id + N_systems[1]) % N_systems[1];
-	// else if (y_id < 0 || y_id >= N_systems[1])
-	// 	return -1;
+	else if (y_id < 0 || y_id >= N_systems[1])
+		return -1;
 
 	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
@@ -331,7 +331,7 @@ void subspace::migrate_out() {
 			// migrate
 			if (new_box_index >= 0)
 				pointer_to_system->migrate_into(new_box_index, target_cell);
-			else
+			else if (replaceFlag)
 				cout << "error" << endl;
 			// pop from list
 			migrate_out_list.pop();

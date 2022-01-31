@@ -23,11 +23,11 @@ public:
 	double sizeRatio = 1.4;			// ratio of small diameter to large diameter
 	//double sizeRatio = 4;			// ratio of small diameter to large diameter
 	//const double sizeRatio = 1;
-	// double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
-	double w0 = 60.0;			// width of hopper reservoir (in units of small diameter)
+	double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
+	// double w0 = 60.0;			// width of hopper reservoir (in units of small diameter)
 
-	// double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
-	double th =  (90.0 - 89.0)/180 * PI;		// hopper angle (pi - th = deflection angle from horizontal)
+	double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
+	// double th =  (90.0 - 89.0)/180 * PI;		// hopper angle (pi - th = deflection angle from horizontal)
 	double phi0 = 0.4;			// initial packing fraction
 	double b = 0.1;
 	// double b = 0;
@@ -42,12 +42,12 @@ public:
 	double scaleFactor = 1;
 
 	DPM_Hopper_CLI() {
-		// this->NT = 5e6;			// number of time steps for flow simulation
-		this->NT = 1e6;			// number of time steps for flow simulation
+		this->NT = 5e6;			// number of time steps for flow simulation
+		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e3;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 0*scaleFactor;
+		this->kb = 10*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -62,21 +62,21 @@ public:
 			this->g = 0.05*scaleFactor;
 		// this->NBx = 30;
 		// this->NBy = 10;
-		this->NCELLS = 1600;
-		// this->NCELLS = 64;
+		// this->NCELLS = 1600;
+		this->NCELLS = 64;
 		// this->NCELLS = 512;
 		this->NBy = 15 * round(w0/10);
 		this->NBx = 5 * (this->NCELLS/64) / (this->NBy/30);
-		//this->NV = 64;
-		this->NV = 16;
+		this->NV = 32;
+		// this->NV = 16;
 		// this->calA0 = 1.0;
-		//this->calA0 = 1.15;
-		this->calA0 = 1;
-		// this->kint = 2.0*scaleFactor;
-		this->kint = 10*scaleFactor;
+		this->calA0 = 1.15;
+		// this->calA0 = 1;
+		this->kint = 2.0*scaleFactor;
+		// this->kint = 10*scaleFactor;
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
-		//this->timeStepMag = 0.001;		
+		this->timeStepMag = 0.001;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -106,7 +106,8 @@ public:
 
 	virtual void prepareSystem() {
 		// w_scale = 0.5 + 0.05 * this->index_j;
-		w_scale = 3 + 0.1 * this->index_j;
+		// w_scale = 3 + 0.1 * this->index_j;
+		w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 0.3 + 0.06 * this->index_j;
 		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
@@ -141,16 +142,16 @@ public:
 		//this->timeStepMag = 0.00002;	
 		this->timeStepMag =  0.0005;	
 		this->ka = 10*scaleFactor;
-		this->kb = 0*scaleFactor;
+		this->kb = 10*scaleFactor;
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
 		this->NV = 32;
 		this->w0 = 10;
 		this->Lini = 5;
-		this->calA0 = 1;
+		// this->calA0 = 1;
 		this->kint = 2.0*scaleFactor;
-		//this->calA0 = 1.08;
+		this->calA0 = 1.15;
 		this->qscompress(argv);
 
 		this->particles->gDire = 1;

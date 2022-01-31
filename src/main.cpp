@@ -16,7 +16,7 @@ extern bool constPressureFlag;
 // bool constPressureFlag = 1;
 bool constPressureFlag = 0;
 extern bool replaceFlag;
-bool replaceFlag = 1;
+bool replaceFlag = 0;
 extern bool frictionFlag;
 // bool frictionFlag = 1;
 bool frictionFlag = 0;

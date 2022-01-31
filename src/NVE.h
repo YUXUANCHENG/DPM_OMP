@@ -196,7 +196,15 @@ public:
 		flowRobj.open("flowRate.txt");
 		int result;
 		for (int t = 0; t < cellpointer->NT; t++) {
-			if (closed == 1 && (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside)) closed = 0;
+			bool startFlag;
+			if (replaceFlag)
+				startFlag = (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside);
+			else 
+				startFlag = (t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside);
+
+			if (closed == 1 && startFlag) 
+				closed = 0;
+
 			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
 			if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*10) == 0) {
 				addBack();
@@ -209,6 +217,7 @@ public:
 			if (result < 2)
 				return result;
 		}
+		cout << "time out" << endl;
 		return 1;
 	}
 
