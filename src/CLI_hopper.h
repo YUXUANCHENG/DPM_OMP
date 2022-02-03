@@ -44,7 +44,7 @@ public:
 	DPM_Hopper_CLI() {
 		this->NT = 5e6;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
-		this->NPRINT = 1e3;			// number of steps between printing
+		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
 		this->kb = 10*scaleFactor;
@@ -139,14 +139,14 @@ public:
 
 		this->NT = 1e6;
 		this->NPRINT = 1e3;	
-		//this->timeStepMag = 0.00002;	
+		// this->timeStepMag = 0.00005;	
 		this->timeStepMag =  0.0005;	
 		this->ka = 10*scaleFactor;
 		this->kb = 10*scaleFactor;
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 32;
+		this->NV = 16;
 		this->w0 = 10;
 		this->Lini = 5;
 		// this->calA0 = 1;
