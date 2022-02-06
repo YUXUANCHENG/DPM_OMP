@@ -1203,8 +1203,13 @@ void deformableParticles2D::shapeForces(){
 
 	        	// add to force
 	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
-	            ftmp *= kl * pow((l0/0.05), 1)* NV/16.0;
+	            ftmp *= kl * (l0/0.05) * NV/16.0;
+				if (sqrt(a0/PI) < 1.2/2)
+					ftmp *= 0.2119/0.05;
+				else
+					ftmp *= 0.2967/0.05;
 				//ftmp *= kl;
+				// cout << l0 << "," << NV << endl;
 	            setVForce(i,d,vforce(i,d)+ftmp);
 	        }
 		}

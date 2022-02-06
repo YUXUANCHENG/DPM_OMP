@@ -9,7 +9,7 @@ srcdir=$cellsdir/src
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
 jobnumber=20
-factor1=2
+factor1=4
 factor2=2
 # jobnumber=1
 # factor1=1
@@ -39,6 +39,7 @@ slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
 partition=pi_ohern
+# partition=general
 job_name=DPM
 let total_job=$jobnumber*$jobnumber*$factor1*$factor2
 
@@ -55,5 +56,5 @@ echo \#sbatch --mail-type=ALL >> $slurmf
 echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
-sbatch -t 10:00:00 $slurmf
-# sbatch -t 1-00:00:00 $slurmf
+# sbatch -t 10:00:00 $slurmf
+sbatch -t 1-00:00:00 $slurmf

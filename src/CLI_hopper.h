@@ -13,6 +13,7 @@
 #endif
 extern bool constPressureFlag;
 extern bool frictionFlag;
+extern bool replaceFlag;
 
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
@@ -62,8 +63,17 @@ public:
 			this->g = 0.05*scaleFactor;
 		// this->NBx = 30;
 		// this->NBy = 10;
-		// this->NCELLS = 1600;
-		this->NCELLS = 64;
+		this->kint = 2.0*scaleFactor;
+		if (replaceFlag)
+		{
+			this->NPRINT = 1e3;	
+			this->NCELLS = 1600;
+			w0 = 60.0;
+			th =  (90.0 - 89.0)/180 * PI;
+			this->kint = 10*scaleFactor;
+		}
+		else
+			this->NCELLS = 64;
 		// this->NCELLS = 512;
 		this->NBy = 15 * round(w0/10);
 		this->NBx = 5 * (this->NCELLS/64) / (this->NBy/30);
@@ -71,12 +81,10 @@ public:
 		// this->NV = 16;
 		// this->calA0 = 1.0;
 		this->calA0 = 1.15;
-		// this->calA0 = 1;
-		this->kint = 2.0*scaleFactor;
-		// this->kint = 10*scaleFactor;
+		
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
-		this->timeStepMag = 0.001;		
+		this->timeStepMag = 0.002;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -142,16 +150,16 @@ public:
 		// this->timeStepMag = 0.00005;	
 		this->timeStepMag =  0.0005;	
 		this->ka = 10*scaleFactor;
-		this->kb = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 16;
+		this->NV = 32;
 		this->w0 = 10;
 		this->Lini = 5;
-		// this->calA0 = 1;
+		// this->calA0 = 1.15;
+		this->calA0 = 1;
 		this->kint = 2.0*scaleFactor;
-		this->calA0 = 1.15;
 		this->qscompress(argv);
 
 		this->particles->gDire = 1;
