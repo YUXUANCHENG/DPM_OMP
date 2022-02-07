@@ -48,7 +48,7 @@ public:
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -75,16 +75,18 @@ public:
 		else
 			this->NCELLS = 64;
 		// this->NCELLS = 512;
-		this->NBy = 15 * round(w0/10);
-		this->NBx = 5 * (this->NCELLS/64) / (this->NBy/30);
-		this->NV = 32;
-		// this->NV = 16;
-		// this->calA0 = 1.0;
-		this->calA0 = 1.15;
 		
+		this->NV = 64;
+		// this->NV = 16;
+		this->calA0 = 1.0;
+		// this->calA0 = 1.15;
+		this->NBy = 15 * round(w0/10) * this->NV/16;
+		this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
+
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
-		this->timeStepMag = 0.002;		
+		if (this->kb > 9)
+			this->timeStepMag = 0.002;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -113,9 +115,9 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		// w_scale = 0.5 + 0.05 * this->index_j;
+		w_scale = 0.5 + 0.05 * this->index_j;
 		// w_scale = 3 + 0.1 * this->index_j;
-		w_scale = 0.5 + 0.1 * this->index_j;
+		// w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 0.3 + 0.06 * this->index_j;
 		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
