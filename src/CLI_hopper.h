@@ -48,7 +48,7 @@ public:
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 0*scaleFactor;
+		this->kb = 1*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -76,8 +76,8 @@ public:
 			this->NCELLS = 64;
 		// this->NCELLS = 512;
 		
-		this->NV = 64;
-		// this->NV = 16;
+		// this->NV = 64;
+		this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 15 * round(w0/10) * this->NV/16;
@@ -86,7 +86,8 @@ public:
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
 		if (this->kb > 9)
-			this->timeStepMag = 0.002;		
+			this->timeStepMag = 0.001;		
+			// this->timeStepMag = 0.002;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -115,9 +116,9 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		w_scale = 0.5 + 0.05 * this->index_j;
+		// w_scale = 0.5 + 0.05 * this->index_j;
 		// w_scale = 3 + 0.1 * this->index_j;
-		// w_scale = 0.5 + 0.1 * this->index_j;
+		w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 0.3 + 0.06 * this->index_j;
 		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
@@ -195,6 +196,42 @@ public:
 		deformationPrint << (originalHeight - endHeight)/originalHeight << "," << angle << "," << length <<endl;
 		deformationPrint.close();
 
+	}
+
+	virtual void measureFriction(char const* argv[])
+	{
+		deformFlag = true;
+		this->convert2double(argv[3], this->kl);
+		this->convert2double(argv[4], this->gamafactor1);
+		this->convert2double(argv[5], this->gamafactor2);
+		this->convert2double(argv[6], this->g);
+
+		this->NT = 1e6;
+		this->NPRINT = 1e2;	
+		// this->timeStepMag = 0.00005;	
+		this->timeStepMag =  0.0005;	
+		this->ka = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
+		this->kl = this->kl*scaleFactor;
+		this->g = this->g*scaleFactor;
+		this->NCELLS = 1;
+		this->NV = 16;
+		this->w0 = 10;
+		this->Lini = 5;
+		// this->calA0 = 1.15;
+		this->calA0 = 1;
+		this->kint = 2.0*scaleFactor;
+		this->qscompress(argv);
+
+		this->particles->gDire = 1;
+		this->particles->gOn = 0;
+
+		this->particles->fireMinimizeHopperF(w0, w, th, g);
+
+
+		this->particles->gDire = 0;
+		this->particles->gOn = 1;
+		_hopperFlow();
 	}
 
 	//void findParameter(char const* argv[]){

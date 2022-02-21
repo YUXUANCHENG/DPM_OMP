@@ -7,6 +7,7 @@
 #include "deformableParticles2D.h"
 
 extern bool replaceFlag;
+extern bool variableExtFflag;
 
 class DPMNVEsimulator{
 public:
@@ -184,6 +185,8 @@ public:
 	int N_inside = 0;
 	int clog_count = 0;
 	int flowCount = 0;
+	int placementNumber = 0;
+	bool startPullFlag = false;
 
 	DPMhopperSimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -212,6 +215,22 @@ public:
 				flowRobj << rate << endl;
 				flowCount = 0;
 			}
+
+			if (variableExtFflag)
+			{
+				if (t < 100000)
+				{
+					g = 0;
+				}
+				else if (t%1000 == 0)
+				{
+					startPullFlag = true;
+					g += 0.01;
+					// flowRobj << g << "," << cellpointer->cell(0).cforce(0)  << endl;
+					flowRobj << g << "," << Ke()  << endl;
+				}
+			}
+
 			hopperRoutine(w0, w, th, g, b);
 			result = checkTermination();
 			if (result < 2)
@@ -226,7 +245,10 @@ public:
 		{
 			return 0;
 		}
-		if (Ke() < 1e-16 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
+		if (cellpointer->NCELLS == 1 && Ke() > 0.1 && startPullFlag)
+			return 0;
+
+		if (cellpointer->NCELLS > 1 && Ke() < 1e-16 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
 		{
 			clog_count++;
 			if (clog_count > 100)
@@ -298,10 +320,12 @@ public:
 			{
 				for(int i = 0; i < NperLine; i++)
 				{
-					double displace = round((i+1e-4)/2.0) * 2 * pow(-1,i);
+					placementNumber = placementNumber%NperLine;
+					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,i);
 
 					if (!stack.empty())
 					{
+						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
 						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
 						currentCell->setCPos(0,maxHight - 2);

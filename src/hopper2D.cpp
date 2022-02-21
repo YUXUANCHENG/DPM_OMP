@@ -13,9 +13,13 @@
 using namespace std;
 extern bool wallAttracFlag;
 extern bool constPressureFlag;
+extern bool frictionFlag;
+extern bool horrizontalPistonFlag;
+extern bool frictionalWallFlag;
 // 2D HOPPER FLOW FUNCTIONS
 
-
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 // FUNCTION TO INITALIZE PARTICLE POSITIONS AS IF THEY WERE SOFT PARTICLES
 // WITH DIAMETER SIGMA
@@ -182,7 +186,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			cell(ci).setpbc(d,0);
 
 		// number of vertices ( SIGMA SETS # OF VERTS )
-		//nvtmp = round(2.0*radii.at(ci)*NV);
+		// nvtmp = round(2.0*radii.at(ci)*NV);
 		nvtmp = NV;
 		if (nvtmp > nvmin)
  			cell(ci).setNV(nvtmp);
@@ -221,6 +225,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	BoundaryCoor.at(0) = -Lmin*L.at(1);
 	BoundaryCoor.at(1) = 0;
 	pistonX = BoundaryCoor.at(0) * 1.1;
+	pistonY = w0;
 
 	for (ci=0; ci<NCELLS; ci++){
 		for (d=0; d<NDIM; d++)
@@ -937,6 +942,8 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 	if (constPressureFlag)
 		pistonForce(w0, w, th, g);
 
+	if (frictionalWallFlag)
+		hopperWallFriction(w0, w, th, g);
 
 }
 
@@ -1259,7 +1266,233 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	}
 }
 
+void cellPacking2D::hopperWallFriction(double w0, double w, double th, int closed){
+	// local variables
+	int ci, vi; 							// indices
+	double x, y;							// vertex positions
+	double sigma; 							// vertex diameter
+	double sb, sib, xtb, ytb, xbb, ybb;		// bead information
+	double Lx, xedge;						// hopper nozzle length variables
+	double t, c, s;							// tangent, cosine, sine
+	double hPlus, hMinus;					// height of angled wall
+	double dyPlus, dyMinus; 				// distance from top/bottom wall
+	double yPlusMin, yMinusMax; 			// cutoff positions for wall forces
+	double lw, lwx, lwy;					// elements of vector pointing from wall to vertex
+	double overlap;							// overlap of vertex with wall
+	double ftmp, utmp;						// force/energy of particle overlap with walls
+	double yline;							// line separating edge force from wall force
+	double pistonF = 0;
+	//double a = 0.3;
+	//double a = -0.3;
 
+	// hopper nozzle length
+	Lx = L.at(0);
+
+	// trig factors
+	t = tan(th);
+	c = cos(th);
+	s = sin(th);
+
+	// edge bead information
+	sb 		= cell(0).getl0()*cell(0).getdel();
+	xtb 	= Lx - 0.5*sb;
+	ytb 	= 0.5*(w0 + w + sb);
+	xbb 	= xtb;
+	ybb 	= 0.5*(w0 - w - sb);
+
+	// reset wall forces 
+	// 	** forces on top wall in x/y direction stored in sigmaXX/sigmaXY
+	// 	** forces on bottom wall in x/y direction stored in sigmaYX/sigmaYY
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	bool cFlag = false;
+	int bottomBumpMumber = ceil((0 - BoundaryCoor.at(0))/cell(0).getl0());
+	std::vector<double> bottomX;
+	std::vector<double> bottomY;
+
+	std::vector<double> pistonPosX;
+	std::vector<double> pistonPosY;
+	for (int i = 0; i < bottomBumpMumber; i++)
+	{
+		bottomX.push_back(BoundaryCoor.at(0)+cell(0).getl0() * i);
+		bottomY.push_back(0.0);
+	}
+	if (horrizontalPistonFlag){
+		
+		for (int i = 0; i < bottomBumpMumber; i++)
+		{
+			pistonPosX.push_back(BoundaryCoor.at(0)+cell(0).getl0() * i);
+			pistonPosY.push_back(pistonY);
+		}
+	}
+	// loop over cells and vertices
+	for (ci=0; ci<NCELLS; ci++){
+		sigma = cell(ci).getl0()*cell(ci).getdel();
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			// determine sigma_ij with edge bead
+			sib = 0.5*(sigma + sb);
+
+			// x cutoff for bead interaction
+			xedge = xtb - sib*c;
+
+			// get particle positions
+			x = cell(ci).vpos(vi,0);
+			y = cell(ci).vpos(vi,1);
+			if (x < 0){
+				// check ymin for walls
+				yPlusMin 	= w0 - 0.5*sigma;
+				yMinusMax 	= 0.5*sigma;
+
+				// if true, interacting with bottom wall
+				if (y < yMinusMax + sigma ){
+					vertexWallForce(ci, vi, bottomX, bottomY);
+				}
+
+				if (horrizontalPistonFlag && y > pistonY - 1.5 * sigma)
+				{
+					pistonF += vertexWallForce(ci, vi, pistonPosX, pistonPosY);
+				}
+			}
+		}
+	}
+
+	if (horrizontalPistonFlag){
+		pistonF += -0.1 * w0;
+		pistonY += pistonF * dt / 1.0;
+	}
+}
+double cellPacking2D::vertexWallForce(int onTheLeftC, int onTheLeftV, std::vector<double> & posX, std::vector<double> & posY) {
+	double forceOnWall = 0;
+
+	deformableParticles2D& leftCell = cell(onTheLeftC);
+
+	// local variables
+	int d, dd;
+
+	// -------------------------
+	// 
+	// 	   Vertex forces
+	//
+	// -------------------------
+
+	double forceScale = leftCell.kint;				// force scale
+	double energyScale = forceScale;		// energy scale
+	double distScale = 0.0;					// distance scale
+	double p1 = 1.0 + leftCell.a;					// edge of interaction zone, units of delta
+	double ftmp = 0.0;						// temporary force variable
+	double uTmp = 0.0;						// temporary energy variable
+	double vertexDist = 0.0;				// distance variable
+	vector<double> vertexVec(NDIM, 0.0);		// vector to hold vectorial distance quantity
+	double contactDistance = 0.0;			// contact distance variable
+	double distTmp = 0.0;
+	int maxSize = posX.size();
+	int startIndex =  MAX(ceil((leftCell.vpos(onTheLeftV,0) - BoundaryCoor.at(0))/cell(0).getl0()) -2, 0.0);
+	int endIndex =  MIN(ceil((leftCell.vpos(onTheLeftV,0) - BoundaryCoor.at(0))/cell(0).getl0()) + 1, maxSize);
+	
+	for (int index = startIndex; index < endIndex; index++){
+		double pos[2] = {posX.at(index), posY.at(index)};
+	// get distance between vertices i and j
+	vertexDist = 0.0;
+	for (d = 0; d < NDIM; d++) {
+		// get distance to nearest image
+
+		// calculate distance between points
+		distTmp = pos[d] - leftCell.vpos(onTheLeftV,d);
+
+		// add to vertex distance
+		vertexVec.at(d) = distTmp;
+
+		// add to scalar distance
+		vertexDist += distTmp * distTmp;
+	}
+
+	// get contact distance
+	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + cell(0).del * cell(0).l0);
+
+	// get vertex distance
+	vertexDist = sqrt(vertexDist);
+
+	// check overlap distances
+	if (vertexDist < contactDistance * p1) {
+		// increment number of vertex-vertex contacts
+
+		// define scaled distance (x = distance/contact distance)
+		distScale = vertexDist / contactDistance;
+
+		// update force and energy scales
+		forceScale = leftCell.kint / contactDistance;
+		energyScale = leftCell.kint;
+
+		// IF in zone to use repulsive force (and, if a > 0, bottom of attractive well)
+		if (vertexDist < contactDistance) {
+
+			// add to interaction potential
+			uTmp = 0.5 * energyScale * pow(1 - distScale, 2) - (energyScale * leftCell.a * leftCell.a) / 6.0;
+
+			leftCell.setUInt(onTheLeftV, leftCell.uInt(onTheLeftV) + 0.5 * uTmp);
+
+			std::vector<double> force(2);
+			std::vector<double> r1(2);
+			std::vector<double> r2(2);
+
+			// double normF = forceScale * (1 - distScale) * vertexDist / vertexDist;
+			std::vector<double> dv(2);
+			std::vector<double> dv_along_norm(2);
+			std::vector<double> dv_along_tang(2);
+			std::vector<double> friction(2);
+			std::vector<double> friction_norm(2);
+			std::vector<double> friction_tang(2);
+			for (d = 0; d < NDIM; d++) {
+				if (frictionFlag){
+					dv.at(d) = leftCell.vvel(onTheLeftV,d) - 0;
+					friction.at(d) = - 0.1 * dv.at(d);
+				}
+				else
+				{
+					friction.at(d) = 0;
+					friction_norm.at(d) = 0;
+					friction_tang.at(d) = 0;
+				}
+			}
+			if (frictionFlag){
+				for (d = 0; d < NDIM; d++) {
+					dv_along_norm.at(d) = dv.at(d) * vertexVec.at(d) / vertexDist;
+					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
+					friction_norm.at(d) = - 0.1 * dv_along_norm.at(d);
+					friction_tang.at(d) = - 0.1 * dv_along_tang.at(d);
+				}
+			}
+			// cout << "friction force" << endl;
+			// cout << friction.at(0) << "," << friction_norm.at(0) + friction_tang.at(0) << endl;
+			// add to vectorial forces
+			for (d = 0; d < NDIM; d++) {
+				// get force value
+				ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+				force[d] = ftmp;
+				r1[d] = leftCell.vrel(onTheLeftV, d) + vertexVec.at(d) / 2;
+				// add to force on i
+			{
+				leftCell.setVForce(onTheLeftV, d, leftCell.vforce(onTheLeftV, d) + ftmp + friction_norm.at(d) + friction_tang.at(d));
+
+				// subtract off complement from force on j
+				if (d == 1)
+					forceOnWall += (- ftmp - friction_norm.at(d) - friction_tang.at(d));
+			}
+			}
+			{
+				// torque calculation
+				leftCell.torque += r1[0] * force[1] - r1[1] * force[0];
+			}
+		}
+
+	}
+	}
+	// return if in contact or not
+	return forceOnWall;
+}
 // wall forces between cells as droplets (DP model)
 // 	** if closed = 1, orifice is closed off by wall
 void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int closed){

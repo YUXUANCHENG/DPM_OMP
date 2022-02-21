@@ -5733,9 +5733,10 @@ void cellPacking2D::sp_VelVerlet(double b) {
 	int ci, vi, d;
 	double veltmp, aold, anew;
 	double ftmp, dampNum, dampDenom, dampUpdate;
-
+	
 	// update com velocity
 	for (ci = 0; ci < NCELLS; ci++) {
+		double bCoeff = b*cell(ci).a0;
 		// loop over velocities
 		for (d = 0; d < NDIM; d++) {
 			// get current velocity
@@ -5744,9 +5745,11 @@ void cellPacking2D::sp_VelVerlet(double b) {
 			// calculate old com acceleration
 			aold = cell(ci).vacc(0, d);
 
-			ftmp = cell(ci).cforce(d) / cell(ci).getNV();
-			dampNum = b * (veltmp - 0.5 * aold * dt);
-			dampDenom = 1.0 + 0.5 * b * dt;
+			// ftmp = cell(ci).cforce(d) / cell(ci).getNV();
+			ftmp = cell(ci).cforce(d) / (cell(ci).a0 * 16);
+			dampNum = bCoeff * (veltmp - 0.5 * aold * dt);
+			// dampDenom = 1.0 + 0.5 * bCoeff * dt;
+			dampDenom = 1.0;
 			dampUpdate = (ftmp - dampNum) / dampDenom;
 			// get new accelation
 			anew = dampUpdate;
@@ -6146,10 +6149,11 @@ void cellPacking2D::bumpy_angularV(double b) {
 
 		// calculate old com acceleration
 		aold = cell(ci).b;
-
+		double bCoeff = b*cell(ci).a0;
 		ftmp = cell(ci).torque / cell(ci).inertia;
-		dampNum = b * (veltmp - 0.5 * aold * dt);
-		dampDenom = 1.0 + 0.5 * b * dt;
+		dampNum = bCoeff * (veltmp - 0.5 * aold * dt);
+		// dampDenom = 1.0 + 0.5 * b * dt;
+		dampDenom = 1.0;
 		dampUpdate = (ftmp - dampNum) / dampDenom;
 		// get new accelation
 		anew = dampUpdate;

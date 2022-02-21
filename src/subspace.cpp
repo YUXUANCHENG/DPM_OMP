@@ -597,19 +597,35 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 			std::vector<double> r1(2);
 			std::vector<double> r2(2);
 
-			double normF = forceScale * (1 - distScale) * vertexDist / vertexDist;
+			// double normF = forceScale * (1 - distScale) * vertexDist / vertexDist;
 			std::vector<double> dv(2);
+			std::vector<double> dv_along_norm(2);
+			std::vector<double> dv_along_tang(2);
 			std::vector<double> friction(2);
+			std::vector<double> friction_norm(2);
+			std::vector<double> friction_tang(2);
 			for (d = 0; d < NDIM; d++) {
 				if (frictionFlag){
 					dv.at(d) = leftCell.vvel(onTheLeft->vi,d) - rightCell.vvel(onTheRight->vi,d);
-					friction.at(d) = - 0.1 * normF * dv.at(d);
+					friction.at(d) = - 0.1 * dv.at(d);
 				}
 				else
+				{
 					friction.at(d) = 0;
+					friction_norm.at(d) = 0;
+					friction_tang.at(d) = 0;
+				}
 			}
-
-
+			if (frictionFlag){
+				for (d = 0; d < NDIM; d++) {
+					dv_along_norm.at(d) = dv.at(d) * vertexVec.at(d) / vertexDist;
+					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
+					friction_norm.at(d) = - 0.1 * dv_along_norm.at(d);
+					friction_tang.at(d) = - 0.1 * dv_along_tang.at(d);
+				}
+			}
+			// cout << "friction force" << endl;
+			// cout << friction.at(0) << "," << friction_norm.at(0) + friction_tang.at(0) << endl;
 			// add to vectorial forces
 			for (d = 0; d < NDIM; d++) {
 				// get force value
@@ -620,10 +636,10 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 				// add to force on i
 #pragma omp critical
 			{
-				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp + friction.at(d));
+				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp + friction_norm.at(d) + friction_tang.at(d));
 
 				// subtract off complement from force on j
-				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp - friction.at(d));
+				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp - friction_norm.at(d) - friction_tang.at(d));
 			}
 				// add to stress tensor
 				if (d == 0) {

@@ -1,6 +1,10 @@
 #include "bumpy.h"
 #include "taoSolver.h"
-
+extern bool wallAttracFlag;
+extern bool constPressureFlag;
+extern bool frictionFlag;
+extern bool horrizontalPistonFlag;
+extern bool frictionalWallFlag;
 void Bumpy::qsIsoCompression(double phiDisk, double deltaPhi, double Ftolerance) {
 	int ci;
 	double dr;
@@ -173,6 +177,11 @@ void Bumpy::hopperForces(double w0, double w, double th, double g, int closed){
 
 	// wall forces
 	hopperWallForcesDP(w0, w, th, closed);
+	if (constPressureFlag)
+		pistonForce(w0, w, th, g);
+
+	if (frictionalWallFlag)
+		hopperWallFriction(w0, w, th, g);
 
 	for (ci = 0; ci < NCELLS; ci++) {
 		for (d = 0; d < NDIM; d++)

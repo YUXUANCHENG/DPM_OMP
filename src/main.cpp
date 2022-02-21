@@ -17,10 +17,17 @@ extern bool constPressureFlag;
 bool constPressureFlag = 0;
 extern bool replaceFlag;
 bool replaceFlag = 0;
+// bool replaceFlag = 1;
 extern bool frictionFlag;
 // bool frictionFlag = 1;
 bool frictionFlag = 0;
 
+extern bool variableExtFflag;
+bool variableExtFflag = 1;
+extern bool horrizontalPistonFlag;
+bool horrizontalPistonFlag = 1;
+extern bool frictionalWallFlag;
+bool frictionalWallFlag = 1;
 
 int main(int argc, char const *argv[]){
 
@@ -43,16 +50,17 @@ int main(int argc, char const *argv[]){
 	//BumpyEllipse_CLI<> cli;
 	//BumpyEllipse_CLI<BumpyEllipse_Parallel> cli;
 	
-	//DPM_Hopper_CLI<> cli;
-	DPM_Hopper_CLI<DPM_Parallel> cli;
-	//Bumpy_Hopper_CLI<> cli;
-	//Bumpy_Hopper_CLI<BumpyDimer_Parallel> cli;
+	DPM_Hopper_CLI<> cli;
+	// DPM_Hopper_CLI<DPM_Parallel> cli;
+	// Bumpy_Hopper_CLI<> cli;
+	// Bumpy_Hopper_CLI<Bumpy_Parallel> cli;
 
 	//cli.findJamming(argv);
 	//cli.NVE(argv);
 	//cli.NVEvsDPhi(argv);
 
-	cli.hopperFlow(argv);
+	// cli.hopperFlow(argv);
+	cli.measureFriction(argv);
 	//cli.deformation(argv);
 	//cli.findParameter(argv);
 	

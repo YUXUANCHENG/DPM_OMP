@@ -68,7 +68,7 @@ public:
 	// boundary lengths
 	std::vector<double> L;
 	std::vector<double> BoundaryCoor;
-	double pistonX;
+	double pistonX, pistonY;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
@@ -380,6 +380,8 @@ public:
 	void hopperVelVerletSP(std::vector<double>& radii);
 	void printHopperSP(std::vector<double>& radii, double w0, double w, double th, double g);
 	void printHopperDP(double w0, double w, double th);
+	double vertexWallForce(int onTheLeftC, int onTheLeftV, std::vector<double> & posX, std::vector<double> & posY);
+	void hopperWallFriction(double w0, double w, double th, int closed);
 
 	// printers
 	void printSystemPositions();
