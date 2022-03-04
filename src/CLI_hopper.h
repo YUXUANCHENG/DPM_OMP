@@ -73,21 +73,32 @@ public:
 			this->kint = 10*scaleFactor;
 		}
 		else
-			this->NCELLS = 64;
-		// this->NCELLS = 512;
+		{
+			// this->NCELLS = 64;
+			// this->NCELLS = 800;
+			this->NCELLS = 200;
+			if (this->NCELLS > 100)
+			{
+				this->NT = 1e8;			// number of time steps for flow simulation
+				this->NPRINT = 1e5;	
+				w0 = 60.0;
+			}
+		}
 		
-		// this->NV = 64;
-		this->NV = 16;
+		this->NV = 64;
+		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
-		this->NBy = 15 * round(w0/10) * this->NV/16;
-		this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
+		this->NBy = 10 * round(w0/10) * this->NV/16;
+		this->NBx = 2 * (this->NCELLS/64) * pow(this->NV/16, 1) * (this->NBy/30);
+		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
+		// if (this->kb > 9 || this->NV > 16)
 		if (this->kb > 9)
-			this->timeStepMag = 0.001;		
-			// this->timeStepMag = 0.002;		
+			// this->timeStepMag = 0.001;		
+			this->timeStepMag = 0.002;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -153,11 +164,11 @@ public:
 		// this->timeStepMag = 0.00005;	
 		this->timeStepMag =  0.0005;	
 		this->ka = 10*scaleFactor;
-		this->kb = 0*scaleFactor;
+		this->kb = 10*scaleFactor;
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 32;
+		this->NV = 16;
 		this->w0 = 10;
 		this->Lini = 5;
 		// this->calA0 = 1.15;
@@ -171,8 +182,8 @@ public:
 		this->produceFileName(this->extend, energyF, jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		double originalHeight;
-		if (this->calA0 < 1 + 1e-7)
-		//if (false)
+		// if (this->calA0 < 1 + 1e-7)
+		if (false)
 		{
 			this->particles->gOn = 0;
 			this->particles->fireMinimizeHopperF(w0, w, th, g);
@@ -215,7 +226,7 @@ public:
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 16;
+		this->NV = 64;
 		this->w0 = 10;
 		this->Lini = 5;
 		// this->calA0 = 1.15;

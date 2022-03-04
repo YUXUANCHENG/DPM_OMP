@@ -8,12 +8,12 @@ srcdir=$cellsdir/src
 # compile into binary using packing.h
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
-# jobnumber=20
-# factor1=4
-# factor2=2
 jobnumber=1
-factor1=1
-factor2=100
+factor1=10
+factor2=40
+
+# factor1=1
+# factor2=100
 # mainf=$maindir/jamming/cellJamming.cpp
 
 # run compiler
@@ -57,4 +57,4 @@ echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
 # sbatch -t 10:00:00 $slurmf
-sbatch -t 1-00:00:00 $slurmf
+sbatch -t 4-00:00:00 $slurmf

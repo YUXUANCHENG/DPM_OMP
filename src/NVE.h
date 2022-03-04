@@ -203,7 +203,8 @@ public:
 			if (replaceFlag)
 				startFlag = (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside);
 			else 
-				startFlag = (t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside);
+				startFlag = (t > 1e4 && Ke() < 1e-4 * N_inside);
+				// startFlag = (t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside);
 
 			if (closed == 1 && startFlag) 
 				closed = 0;

@@ -237,8 +237,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	for (ci=0; ci<NCELLS; ci++){
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
-		//xmax = L.at(0) * 0.5;
-		xmax = -radii.at(ci);
+		if (th < (90.0 - 85.0)/180 * PI)
+			xmax = -radii.at(ci);
+		else
+			xmax = L.at(0) * 0.5;
 		
 
 		// get random x location in hopper

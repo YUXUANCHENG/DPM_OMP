@@ -13,13 +13,11 @@ using namespace std;
 extern bool wallAttracFlag;
 bool wallAttracFlag = 0;
 extern bool constPressureFlag;
-// bool constPressureFlag = 1;
 bool constPressureFlag = 0;
+
 extern bool replaceFlag;
 bool replaceFlag = 0;
-// bool replaceFlag = 1;
 extern bool frictionFlag;
-// bool frictionFlag = 1;
 bool frictionFlag = 0;
 
 extern bool variableExtFflag;
@@ -61,7 +59,7 @@ int main(int argc, char const *argv[]){
 
 	// cli.hopperFlow(argv);
 	cli.measureFriction(argv);
-	//cli.deformation(argv);
+	// cli.deformation(argv);
 	//cli.findParameter(argv);
 	
 	//cli.calTao(argv);
