@@ -11,7 +11,7 @@ public:
 	virtual void initialize_subsystems(int N_x, int N_y);
 	void reset_subsystems();
 	void delete_subsystems();
-	void split_into_subspace();
+	virtual void split_into_subspace();
 	void cashe_into(int i, vector<cvpair*>& cash_list);
 	void migrate_into(int i, cvpair* const& migration);
 	int look_for_new_box(cvpair* pair);
@@ -136,6 +136,148 @@ public:
 			cout << "total vetex count = " << countTotalVertices() << endl;
 	}
 
+};
+
+
+class DPM_Parallel_frictionless : public virtual DPM_Parallel {
+public:
+	using DPM_Parallel::DPM_Parallel;
+	virtual void split_into_subspace();
+
+	virtual void calculateForces() {
+		DPM_Parallel::calculateForces();
+		resolveForces();
+	}
+	
+	void resolveForces()
+	{
+		for (auto const& x : collisionMap)
+		{
+			const cvpair & onTheLeft = x.first;
+			const std::vector<cvpair> & onTheRightList = x.second;
+			cvpair smallestDistPair;
+			double smallestDist = 1e9;
+			for (cvpair onTheRight : onTheRightList)
+			{
+				double vertexDist = abs(subsystem[onTheLeft.boxid].vertexEdgeDist(&onTheLeft, &onTheRight));
+				if (vertexDist < smallestDist)
+				{
+					smallestDistPair = onTheRight;
+					smallestDist = vertexDist;
+				}
+			}
+			vector<VECTOR2> v, e;
+			v.resize(3);
+			VECTOR2 v0, v1, vColission; 
+			int nextVi = (smallestDistPair.vi + 1) % cell(smallestDistPair.ci).getNV();
+			for (int d = 0; d < 2; d++)
+			{
+				vColission[d] = cell(onTheLeft.ci).vpos(onTheLeft.vi,d);
+				v0[d] = cell(smallestDistPair.ci).vpos(smallestDistPair.vi,d);
+				v1[d] = cell(smallestDistPair.ci).vpos(nextVi,d);
+			}
+			// v[0][0] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,0);
+			// v[0][1] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,1);
+			// v[1][0] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,0);
+			// v[1][1] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,1);
+			// int nextVi = (onTheRight->vi + 1) % pointer_to_system->cell(onTheRight->ci).getNV();
+			// v[2][0] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,0);
+			// v[2][1] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,1);
+
+			v[0] = vColission;
+			v[1] = v0;
+			v[2] = v1;
+
+			e.resize(2);
+			e[0] = v[2] - v[1];
+			e[1] = v[0] - v[1];
+			deformableParticles2D& leftCell = cell(onTheLeft.ci);
+			deformableParticles2D& rightCell = cell(smallestDistPair.ci);
+			double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * 0.2;
+			VECTOR6 forces = gradient(v, e, eps);
+			for (int d = 0; d < 2; d++)
+			{
+				leftCell.setVForce(onTheLeft.vi, d, leftCell.vforce(onTheLeft.vi, d) + forces[d]);
+				rightCell.setVForce(smallestDistPair.vi, d, rightCell.vforce(onTheLeft.vi, d) + forces[d + 2]);
+				rightCell.setVForce(nextVi, d, rightCell.vforce(nextVi, d) + forces[d + 4]);
+			}
+		}
+		collisionMap.clear();
+	}
+
+	VECTOR6 springLengthGradient(const vector<VECTOR2>& v,
+														const vector<VECTOR2>& e,
+														const VECTOR2& n)
+	{
+	const MATRIX2x6 nPartial = normalGradientVF(e);
+	const VECTOR2 tvf = v[0] - v[2];
+
+	MATRIX2x6 tvfPartial;
+	tvfPartial.setZero();
+	tvfPartial(0,0) = tvfPartial(1,1) = 1.0;
+	tvfPartial(0,4) = tvfPartial(1,5) = -1.0;
+
+	//f = nPartial' * (v2 - v0) + tvfPartial' * n;
+	return nPartial.transpose() * tvf + tvfPartial.transpose() * n;
+	}
+
+	///////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////
+	VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps)
+	{
+	// convert to vertices and edges
+	//   vector<VECTOR2> v;
+	//   vector<VECTOR2> e;
+	//   getVerticesAndEdges(x, v, e);
+	
+	// get the normal
+	VECTOR2 n = VECTOR2(e[0][1],-e[0][0]);
+	n = n / n.norm();
+	
+	// get the spring length, non-zero rest-length
+	const VECTOR2 tvf = v[0] - v[1];
+	double springLength = n.dot(tvf) - eps;
+	return 2.0 * 1 * springLength * springLengthGradient(v,e,n);
+	}
+
+	///////////////////////////////////////////////////////////////////////
+	// gradient of the triangle normal, vertex-face case
+	///////////////////////////////////////////////////////////////////////
+	MATRIX2x6 normalGradientVF(const std::vector<VECTOR2>& e)
+	{
+	//crossed = cross(e2, e0);
+	VECTOR2 crossed = VECTOR2(e[0][1],-e[0][0]);
+	double crossNorm = crossed.norm();
+	const double crossNormCubedInv = 1.0 / pow(crossed.dot(crossed), 1.5);
+	MATRIX2x6 crossMatrix = crossGradientVF(e);
+
+	//final = zeros(3,12);
+	//for i = 1:12
+	//  crossColumn = crossMatrix(:,i);
+	//  final(:,i) = (1 / crossNorm) * crossColumn - ((crossed' * crossColumn) / crossNormCubed) * crossed;
+	//end
+	MATRIX2x6 result;
+	for (int i = 0; i < 6; i++)
+	{
+		const VECTOR2 crossColumn = crossMatrix.col(i);
+		result.col(i) = (1.0 / crossNorm) * crossColumn - 
+						((crossed.dot(crossColumn)) * crossNormCubedInv) * crossed;
+	}
+	return result;
+	}
+
+	MATRIX2x6 crossGradientVF(const std::vector<VECTOR2>& e)
+	{
+		MATRIX2x6 crossMatrix;
+
+		crossMatrix.col(0) = VECTOR2(0, 0); 
+		crossMatrix.col(1) = VECTOR2(0, 0); 
+		crossMatrix.col(2) = VECTOR2(0, 1); 
+		crossMatrix.col(3) = VECTOR2(-1, 0);
+		crossMatrix.col(4) = VECTOR2(0, -1);
+		crossMatrix.col(5) = VECTOR2(1, 0);
+		return crossMatrix;
+	}
 };
 
 #endif

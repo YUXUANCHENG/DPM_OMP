@@ -29,6 +29,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <random>
+#include <map>
 
 // constants
 const double PI = 4 * atan(1);
@@ -40,6 +41,7 @@ class cellPacking2D{
 public:
 
 	subspace* subsystem = nullptr;
+	std::map<cvpair, std::vector<cvpair>> collisionMap;
 	std::vector<int> N_systems;
 	virtual void initialize_subsystems() { ; };
 	virtual void initialize_subsystems(int N_x, int N_y){ ; };

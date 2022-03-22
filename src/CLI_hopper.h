@@ -74,9 +74,9 @@ public:
 		}
 		else
 		{
-			// this->NCELLS = 64;
+			this->NCELLS = 64;
 			// this->NCELLS = 800;
-			this->NCELLS = 200;
+			// this->NCELLS = 200;
 			if (this->NCELLS > 100)
 			{
 				this->NT = 1e8;			// number of time steps for flow simulation
@@ -85,8 +85,8 @@ public:
 			}
 		}
 		
-		this->NV = 64;
-		// this->NV = 16;
+		// this->NV = 64;
+		this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 10 * round(w0/10) * this->NV/16;

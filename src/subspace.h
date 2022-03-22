@@ -11,6 +11,32 @@
 #include <cmath>
 #include <vector>
 #include <stack>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+
+typedef Eigen::Matrix<double, 2,  2>  MATRIX2;
+typedef Eigen::Matrix<double, 3,  3>  MATRIX3;
+typedef Eigen::Matrix<double, 4,  4>  MATRIX4;
+typedef Eigen::Matrix<double, 6,  6>  MATRIX6;
+typedef Eigen::Matrix<double, 9,  9>  MATRIX9;
+typedef Eigen::Matrix<double, 4,  6>  MATRIX4x6;
+typedef Eigen::Matrix<double, 3,  12> MATRIX3x12;
+typedef Eigen::Matrix<double, 9,  12> MATRIX9x12;
+typedef Eigen::Matrix<double, 12, 12> MATRIX12;
+typedef Eigen::Matrix<double, 2,  1>  VECTOR2;
+typedef Eigen::Matrix<double, 3,  1>  VECTOR3;
+typedef Eigen::Matrix<double, 4,  1>  VECTOR4;
+typedef Eigen::Matrix<double, 6,  1>  VECTOR6;
+typedef Eigen::Matrix<double, 9,  1>  VECTOR9;
+typedef Eigen::Matrix<double, 12, 1>  VECTOR12;
+typedef Eigen::Matrix<double, 2,  6> MATRIX2x6;
+
+typedef Eigen::Matrix<int, 2, 1> VECTOR2I;
+typedef Eigen::Matrix<int, 3, 1> VECTOR3I;
+typedef Eigen::Matrix<int, 4, 1> VECTOR4I;
+
+typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VECTOR;
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MATRIX;
 
 class cvpair {
 public:
@@ -22,6 +48,11 @@ public:
 		ci = c;
 		vi = v;
 	}
+	cvpair(){};
+	bool operator<(const cvpair& src)const
+    {
+        return (this->ci < src.ci || this->vi < src.vi);
+    }
 };
 using namespace std;
 
@@ -75,6 +106,7 @@ public:
 
 	void initialize(DPM_Parallel* const& pointer, vector<double> const& L, vector<int> const& N_systems, int box_id, double const& dt0) {
 		pointer_to_system = pointer;
+		this->L.reserve(2);
 		this->L = L;
 		this->box_id = box_id;
 		this->N_systems = N_systems;
@@ -91,20 +123,27 @@ public:
 	void cashe_in(vector<cvpair*>& cash_list);
 	void migrate_in(cvpair* const& migration);
 
-	void calculateForces_insub();
-	void calculateForces_betweensub();
+	virtual void calculateForces_insub();
+	virtual void calculateForces_betweensub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
 	double totalKineticEnergy_insub();
 	void print_information();
 	void cal_cashed_fraction();
-	int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+	virtual int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	int vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
-	
+	virtual double vertexEdgeDist(const cvpair* onTheLeft, const cvpair* onTheRight){return 0;};
 
 };
 
-
+class frictionlessSubspace: public subspace {
+public:
+	double cutoff = 0.2;
+	virtual void calculateForces_insub();
+	virtual void calculateForces_betweensub();
+	virtual int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+	virtual double vertexEdgeDist(const cvpair* onTheLeft, const cvpair* onTheRight);
+};
 
 
 
