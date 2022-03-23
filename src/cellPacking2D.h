@@ -31,6 +31,7 @@
 #include <random>
 #include <map>
 
+
 // constants
 const double PI = 4 * atan(1);
 
@@ -40,11 +41,12 @@ const double PI = 4 * atan(1);
 class cellPacking2D{
 public:
 
-	subspace* subsystem = nullptr;
+	frictionlessSubspace* subsystem = nullptr;
 	std::map<cvpair, std::vector<cvpair>> collisionMap;
 	std::vector<int> N_systems;
 	virtual void initialize_subsystems() { ; };
 	virtual void initialize_subsystems(int N_x, int N_y){ ; };
+	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps){return VECTOR6();};
 	
 
 	// int scalars
@@ -66,6 +68,8 @@ public:
 	double shearStrain;				// applied shear strain to compute shear modulus
 	int gDire = 0;
 	int gOn = 1;
+	double cutoff = 0.2;
+	double insideCutoffFactor = 5;
 
 	// boundary lengths
 	std::vector<double> L;

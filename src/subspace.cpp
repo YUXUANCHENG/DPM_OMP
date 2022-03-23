@@ -44,6 +44,7 @@ void DPM_Parallel::split_into_subspace() {
 void DPM_Parallel_frictionless::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
+	//cout << N_systems[0] << ", " << N_systems[1] << endl;
 	if (subsystem == nullptr)
 		// subsystem = new subspace[N_systems[0] * N_systems[1]];
 		subsystem = new frictionlessSubspace[N_systems[0] * N_systems[1]];
@@ -142,14 +143,12 @@ double DPM_Parallel::transformPos(cvpair* pair, int direction) {
 
 // initialization
 void DPM_Parallel::initialize_subsystems(int N_x, int N_y) {
-
 	// set how many boxes along each direction
 	if (N_systems.size() < 2)
 	{
-		N_systems.push_back(N_x);
-		N_systems.push_back(N_y);
+		N_systems.resize(2);
 	}
-	else
+
 	{
 		N_systems.at(0) = N_x;
 		N_systems.at(1) = N_y;
@@ -599,7 +598,7 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	}
 
 	// get contact distance
-	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0);
+	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * pointer_to_system->cutoff;
 
 	// get vertex distance
 	vertexDist = sqrt(vertexDist);
@@ -697,7 +696,7 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	return inContact;
 }
 
-int frictionlessSubspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
+int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
 //int subspace::vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
 	// return variable
 	int inContact = 0;
@@ -729,14 +728,57 @@ int frictionlessSubspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, dou
 
 
 	// get contact distance
-	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
+	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * pointer_to_system->cutoff;
 
 
 	// check overlap distances
-	if (vertexDist < contactDistance && vertexDist > -10 * contactDistance) {
+	if (vertexDist < contactDistance && vertexDist > -pointer_to_system->insideCutoffFactor * contactDistance) {
 		// increment number of vertex-vertex contacts
 		inContact++;
-		pointer_to_system->collisionMap[*onTheLeft].push_back(*onTheRight);
+		// cvpair onTheLeftV = *onTheLeft;
+		// cvpair onTheRightV = *onTheRight;
+
+			// std::vector<cvpair> & onTheRightList = pointer_to_system->collisionMap[onTheLeftV];
+			// if (onTheRightList.size() > 0)
+			// {
+			// 	cout << onTheRightList.size() << endl;
+			// 	cout << onTheLeftV.ci << " " << onTheLeftV.vi << " " << onTheLeftV.boxid << endl;
+			// 	for (cvpair i : onTheRightList)
+			// 	{
+			// 		cout << i.ci << " " << i.vi <<  " " << i.boxid <<endl;
+			// 	}
+			// }
+			// onTheRightList.push_back(onTheRightV);
+			vector<VECTOR2> v, e;
+			v.resize(3);
+			VECTOR2 v0, v1, vColission; 
+			int nextVi = (onTheRight->vi + 1) % pointer_to_system->cell(onTheRight->ci).getNV();
+			for (int d = 0; d < 2; d++)
+			{
+				vColission[d] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,d);
+				v0[d] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,d);
+				v1[d] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,d);
+			}
+			v[0] = vColission;
+			v[1] = v0;
+			v[2] = v1;
+
+			e.resize(2);
+			e[0] = v[2] - v[1];
+			e[1] = v[0] - v[1];
+			// deformableParticles2D& leftCell = cell(onTheLeft.ci);
+			// deformableParticles2D& rightCell = cell(onTheRight.ci);
+			// double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
+			VECTOR6 forces = -1 * pointer_to_system->gradient(v, e, contactDistance);
+		#pragma omp critical
+		{
+			for (int d = 0; d < 2; d++)
+			{
+				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + forces[d]);
+				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) + forces[d + 2]);
+				rightCell.setVForce(nextVi, d, rightCell.vforce(nextVi, d) + forces[d + 4]);
+			}
+		}
 	}
 
 	// return if in contact or not
@@ -767,6 +809,8 @@ double frictionlessSubspace::vertexEdgeDist(const cvpair* onTheLeft, const cvpai
     const double normalDistance = (nHat.dot(v - v0));
     return normalDistance;
   }
+  else
+	return 1e8;
 
   // get the distance to each vertex
   const VECTOR2 vertexDistances((v - v0).norm(), 
@@ -781,7 +825,7 @@ double frictionlessSubspace::vertexEdgeDist(const cvpair* onTheLeft, const cvpai
 
 
 // calculate forces 
-void frictionlessSubspace::calculateForces_insub() {
+void frictionlessSubspace::calculateEdgeForces_insub() {
 	// local variables
 	int ci, cj, ck, vi, d, dd, inContact;
 
@@ -801,12 +845,13 @@ void frictionlessSubspace::calculateForces_insub() {
 		for (ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cells
 			// loop over pairs, add info to contact matrix
+			// int edgeContactForCi = 0;
 			for (cj = 0; cj < resident_cells.size(); cj++) {
 				if (ci == cj) continue;
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
 				{
-					int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
-					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+					// int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
+					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
 						continue;
 				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
@@ -817,7 +862,8 @@ void frictionlessSubspace::calculateForces_insub() {
 					continue;
 				}
 				// calculate forces, add to number of vertex-vertex contacts
-				inContact = vertexForce(resident_cells[ci], resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				inContact = vertexEdgeForce(resident_cells[ci], resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				// edgeContactForCi += inContact;
 				if (resident_cells[ci]->ci != resident_cells[cj]->ci && inContact > 0) {
 					// add to cell-cell contacts
 					if (pointer_to_system->contacts(resident_cells[ci]->ci, resident_cells[cj]->ci) == 0)
@@ -833,15 +879,15 @@ void frictionlessSubspace::calculateForces_insub() {
 	}
 }
 
-void frictionlessSubspace::calculateForces_betweensub() {
+void frictionlessSubspace::calculateEdgeForces_betweensub() {
 	if (!resident_cells.empty() && !cashed_cells.empty()) {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
 				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
 				{
-					int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
-					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+					// int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
+					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
 						continue;
 				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
@@ -852,8 +898,8 @@ void frictionlessSubspace::calculateForces_betweensub() {
 					continue;
 				}
 				// notice that stress between resident and cashed cells are double counted
-				int inContact = vertexForce(resident_cells[ci], cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				inContact += vertexForce(cashed_cells[ck], resident_cells[ci], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				int inContact = vertexEdgeForce(resident_cells[ci], cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+				inContact += vertexEdgeForce(cashed_cells[ck], resident_cells[ci], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				// add to cell-cell contacts
 				if (resident_cells[ci]->ci != cashed_cells[ck]->ci && inContact > 0){
 					if (pointer_to_system->contacts(resident_cells[ci]->ci, cashed_cells[ck]->ci) == 0)

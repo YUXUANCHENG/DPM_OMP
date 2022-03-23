@@ -275,7 +275,11 @@ public:
 				// if still inside hopper
 				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
+				{
 					cellpointer->cell(ci).inside_hopper = 0;
+					cellpointer->cell(ci).setCVel(0,0);
+					cellpointer->cell(ci).setCVel(1,0);
+				}
 			}
 		}
 		// reset contacts before force calculation

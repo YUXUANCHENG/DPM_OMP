@@ -151,58 +151,70 @@ public:
 	
 	void resolveForces()
 	{
-		for (auto const& x : collisionMap)
-		{
-			const cvpair & onTheLeft = x.first;
-			const std::vector<cvpair> & onTheRightList = x.second;
-			cvpair smallestDistPair;
-			double smallestDist = 1e9;
-			for (cvpair onTheRight : onTheRightList)
-			{
-				double vertexDist = abs(subsystem[onTheLeft.boxid].vertexEdgeDist(&onTheLeft, &onTheRight));
-				if (vertexDist < smallestDist)
-				{
-					smallestDistPair = onTheRight;
-					smallestDist = vertexDist;
-				}
-			}
-			vector<VECTOR2> v, e;
-			v.resize(3);
-			VECTOR2 v0, v1, vColission; 
-			int nextVi = (smallestDistPair.vi + 1) % cell(smallestDistPair.ci).getNV();
-			for (int d = 0; d < 2; d++)
-			{
-				vColission[d] = cell(onTheLeft.ci).vpos(onTheLeft.vi,d);
-				v0[d] = cell(smallestDistPair.ci).vpos(smallestDistPair.vi,d);
-				v1[d] = cell(smallestDistPair.ci).vpos(nextVi,d);
-			}
-			// v[0][0] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,0);
-			// v[0][1] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,1);
-			// v[1][0] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,0);
-			// v[1][1] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,1);
-			// int nextVi = (onTheRight->vi + 1) % pointer_to_system->cell(onTheRight->ci).getNV();
-			// v[2][0] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,0);
-			// v[2][1] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,1);
+#pragma omp parallel for schedule (dynamic, 4)
+		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+			subsystem[i].calculateEdgeForces_insub();
+#pragma omp parallel for schedule (dynamic, 4)
+		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+			subsystem[i].calculateEdgeForces_betweensub();
+// 		for (auto const& x : collisionMap)
+// 		{
+// 			const cvpair & onTheLeft = x.first;
+// 			const std::vector<cvpair> & onTheRightList = x.second;
+// 			cvpair smallestDistPair;
+// 			double smallestDist = 1e9;
+// 			for (cvpair onTheRight : onTheRightList)
+// 			{
+// 				// double vertexDist = abs(subsystem[onTheLeft.boxid].vertexEdgeDist(&onTheLeft, &onTheRight));
+// 				// if (vertexDist < smallestDist)
+// 				{
+// 					smallestDistPair = onTheRight;
+// 					// smallestDist = vertexDist;
+// 				}
+// 			// }
+// 			vector<VECTOR2> v, e;
+// 			v.resize(3);
+// 			VECTOR2 v0, v1, vColission; 
+// 			int nextVi = (smallestDistPair.vi + 1) % cell(smallestDistPair.ci).getNV();
+// 			for (int d = 0; d < 2; d++)
+// 			{
+// 				vColission[d] = cell(onTheLeft.ci).vpos(onTheLeft.vi,d);
+// 				v0[d] = cell(smallestDistPair.ci).vpos(smallestDistPair.vi,d);
+// 				v1[d] = cell(smallestDistPair.ci).vpos(nextVi,d);
+// 			}
+// 			// v[0][0] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,0);
+// 			// v[0][1] = pointer_to_system->cell(onTheLeft->ci).vpos(onTheLeft->vi,1);
+// 			// v[1][0] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,0);
+// 			// v[1][1] = pointer_to_system->cell(onTheRight->ci).vpos(onTheRight->vi,1);
+// 			// int nextVi = (onTheRight->vi + 1) % pointer_to_system->cell(onTheRight->ci).getNV();
+// 			// v[2][0] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,0);
+// 			// v[2][1] = pointer_to_system->cell(onTheRight->ci).vpos(nextVi,1);
 
-			v[0] = vColission;
-			v[1] = v0;
-			v[2] = v1;
+// 			v[0] = vColission;
+// 			v[1] = v0;
+// 			v[2] = v1;
 
-			e.resize(2);
-			e[0] = v[2] - v[1];
-			e[1] = v[0] - v[1];
-			deformableParticles2D& leftCell = cell(onTheLeft.ci);
-			deformableParticles2D& rightCell = cell(smallestDistPair.ci);
-			double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * 0.2;
-			VECTOR6 forces = gradient(v, e, eps);
-			for (int d = 0; d < 2; d++)
-			{
-				leftCell.setVForce(onTheLeft.vi, d, leftCell.vforce(onTheLeft.vi, d) + forces[d]);
-				rightCell.setVForce(smallestDistPair.vi, d, rightCell.vforce(onTheLeft.vi, d) + forces[d + 2]);
-				rightCell.setVForce(nextVi, d, rightCell.vforce(nextVi, d) + forces[d + 4]);
-			}
-		}
-		collisionMap.clear();
+// 			e.resize(2);
+// 			e[0] = v[2] - v[1];
+// 			e[1] = v[0] - v[1];
+// 			deformableParticles2D& leftCell = cell(onTheLeft.ci);
+// 			deformableParticles2D& rightCell = cell(smallestDistPair.ci);
+// 			double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
+// 			VECTOR6 forces = -1 * gradient(v, e, eps);
+// #pragma omp critical
+// {
+// 			for (int d = 0; d < 2; d++)
+// 			{
+// 				leftCell.setVForce(onTheLeft.vi, d, leftCell.vforce(onTheLeft.vi, d) + forces[d]);
+// 				rightCell.setVForce(smallestDistPair.vi, d, rightCell.vforce(smallestDistPair.vi, d) + forces[d + 2]);
+// 				rightCell.setVForce(nextVi, d, rightCell.vforce(nextVi, d) + forces[d + 4]);
+// 			}
+// }
+// 			}
+// 			collisionMap[onTheLeft].clear();
+// 			collisionMap[onTheLeft].resize(0);
+// 		}
+// 		collisionMap.clear();
 	}
 
 	VECTOR6 springLengthGradient(const vector<VECTOR2>& v,
@@ -223,7 +235,7 @@ public:
 
 	///////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////
-	VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps)
+	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps)
 	{
 	// convert to vertices and edges
 	//   vector<VECTOR2> v;

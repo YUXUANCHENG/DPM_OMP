@@ -70,8 +70,6 @@ public:
 	double sigmaYY = 0.0;
 	vector<double> L;
 
-public:
-
 	// resident cells and cashed cells
 	vector<cvpair*> resident_cells;
 	vector<cvpair*> cashed_cells;
@@ -102,7 +100,6 @@ public:
 	vector<double> cashed_fraction{ 0.1, 0.1 };
 	double cashed_length = 2;
 
-public:
 
 	void initialize(DPM_Parallel* const& pointer, vector<double> const& L, vector<int> const& N_systems, int box_id, double const& dt0) {
 		pointer_to_system = pointer;
@@ -123,25 +120,25 @@ public:
 	void cashe_in(vector<cvpair*>& cash_list);
 	void migrate_in(cvpair* const& migration);
 
-	virtual void calculateForces_insub();
-	virtual void calculateForces_betweensub();
+	void calculateForces_insub();
+	void calculateForces_betweensub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
 	double totalKineticEnergy_insub();
 	void print_information();
 	void cal_cashed_fraction();
-	virtual int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+	int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	int vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	virtual double vertexEdgeDist(const cvpair* onTheLeft, const cvpair* onTheRight){return 0;};
 
 };
 
-class frictionlessSubspace: public subspace {
+class frictionlessSubspace: public virtual subspace {
 public:
-	double cutoff = 0.2;
-	virtual void calculateForces_insub();
-	virtual void calculateForces_betweensub();
-	virtual int vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
+
+	void calculateEdgeForces_insub();
+	void calculateEdgeForces_betweensub();
+	int vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	virtual double vertexEdgeDist(const cvpair* onTheLeft, const cvpair* onTheRight);
 };
 
