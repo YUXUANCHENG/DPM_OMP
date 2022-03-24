@@ -42,7 +42,7 @@ class cellPacking2D{
 public:
 
 	frictionlessSubspace* subsystem = nullptr;
-	std::map<cvpair, std::vector<cvpair>> collisionMap;
+	// std::map<cvpair, std::vector<cvpair>> collisionMap;
 	std::vector<int> N_systems;
 	virtual void initialize_subsystems() { ; };
 	virtual void initialize_subsystems(int N_x, int N_y){ ; };
@@ -69,7 +69,7 @@ public:
 	int gDire = 0;
 	int gOn = 1;
 	double cutoff = 0.2;
-	double insideCutoffFactor = 5;
+	double insideCutoffFactor = 2;
 
 	// boundary lengths
 	std::vector<double> L;

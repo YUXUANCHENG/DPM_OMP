@@ -15,7 +15,7 @@ void DPM_Parallel::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
 	if (subsystem == nullptr)
-		subsystem = new subspace[N_systems[0] * N_systems[1]];
+		subsystem = new frictionlessSubspace[N_systems[0] * N_systems[1]];
 
 	std::vector<double> temp;
 	for (int d = 0; d < NDIM; d++)
@@ -563,6 +563,8 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	int inContact = 0;
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
+	if (leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci)
+		return 0;
 	// local variables
 	int d, dd;
 
@@ -769,9 +771,10 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 			// deformableParticles2D& leftCell = cell(onTheLeft.ci);
 			// deformableParticles2D& rightCell = cell(onTheRight.ci);
 			// double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
-			VECTOR6 forces = -1 * pointer_to_system->gradient(v, e, contactDistance);
+			VECTOR6 forces = -1 * leftCell.kint * pow(contactDistance, -2) * pointer_to_system->gradient(v, e, contactDistance);
 		#pragma omp critical
 		{
+			leftCell.vertexEdgeContact[onTheLeft->vi] = onTheRight->ci;
 			for (int d = 0; d < 2; d++)
 			{
 				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + forces[d]);

@@ -78,6 +78,7 @@ public:
 			// this->NPRINT = 1e2;
 			// this->NCELLS = 800;
 			this->NCELLS = 100;
+			// this->timeStepMag = 0.002;		
 			// this->NCELLS = 200;
 			if (this->NCELLS > 100)
 			{

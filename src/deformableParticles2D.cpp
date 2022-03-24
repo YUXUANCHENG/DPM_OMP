@@ -57,6 +57,7 @@ deformableParticles2D::deformableParticles2D(){
 	cellPosition 			= nullptr;
 	interactionPotential 	= nullptr;
 	wallContactFlag         = nullptr;
+	vertexEdgeContact       = nullptr;
 
 	// periodic boundary conditions set to on
 	pbc.resize(NDIM);
@@ -145,6 +146,10 @@ deformableParticles2D::~deformableParticles2D(){
 		delete [] wallContactFlag;
 		wallContactFlag = nullptr;
 	}
+	if (vertexEdgeContact){
+		delete [] vertexEdgeContact;
+		vertexEdgeContact = nullptr;
+	}
 }
 
 
@@ -222,6 +227,7 @@ void deformableParticles2D::operator=(deformableParticles2D& onTheRight){
 		}		
 		setUInt(i,onTheRight.uInt(i));
 		wallContactFlag[i] = onTheRight.wallContactFlag[i];
+		vertexEdgeContact[i] = onTheRight.vertexEdgeContact[i];
 	}
 
 	// deep copy com pos
@@ -279,6 +285,7 @@ void deformableParticles2D::initializeVertices(){
 	vertexAcceleration = new double[NDIM*NV];
 	interactionPotential = new double[NV];
 	wallContactFlag = new double[NV];
+	vertexEdgeContact = new int[NV];
 
 	// set equal to 0
 	for (i=0; i<NV; i++){
@@ -290,6 +297,7 @@ void deformableParticles2D::initializeVertices(){
 			setVForce(i,d,0.0);
 		}
 		wallContactFlag[i] = 0;
+		vertexEdgeContact[i] = 0;
 	}
 }
 

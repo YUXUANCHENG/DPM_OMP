@@ -288,7 +288,8 @@ public:
 		cellpointer->hopperForces(w0, w, th, g, closed);
 		// update velocities
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
-			cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
+			if (cellpointer->cell(ci).inside_hopper)
+				cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
 	}
 	double getMaxHight(double y)
 	{

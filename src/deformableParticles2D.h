@@ -60,6 +60,7 @@ public:
 
 	// wall contact indicator
 	double* wallContactFlag;
+	int* vertexEdgeContact;
 	
 	// force parameters
 	double kl;			// perimeter energy scale
