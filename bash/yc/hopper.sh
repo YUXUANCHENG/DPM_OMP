@@ -9,11 +9,11 @@ srcdir=$cellsdir/src
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
 jobnumber=1
-factor1=10
-factor2=40
+# factor1=10
+# factor2=40
 
-# factor1=1
-# factor2=100
+factor1=1
+factor2=100
 # mainf=$maindir/jamming/cellJamming.cpp
 
 # run compiler
@@ -38,9 +38,10 @@ done
 slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
-partition=pi_ohern
+# partition=pi_ohern
 # partition=general
-job_name=DPM
+partition=day
+job_name=hopper
 let total_job=$jobnumber*$jobnumber*$factor1*$factor2
 
 echo -- PRINTING SLURM FILE...
@@ -56,5 +57,5 @@ echo \#sbatch --mail-type=ALL >> $slurmf
 echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
-# sbatch -t 10:00:00 $slurmf
-sbatch -t 4-00:00:00 $slurmf
+sbatch -t 1-00:00:00 $slurmf
+# sbatch -t 4-00:00:00 $slurmf

@@ -210,7 +210,8 @@ public:
 				closed = 0;
 
 			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
-			if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*10) == 0) {
+			if (replaceFlag && closed == 0 && (t+1) % int(1e4) == 0) {
+			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
 				addBack();
 				double rate = (double) flowCount / (double) cellpointer->NPRINT;
 				flowRobj << rate << endl;
@@ -249,7 +250,7 @@ public:
 		if (cellpointer->NCELLS == 1 && Ke() > 0.1 && startPullFlag)
 			return 0;
 
-		if (cellpointer->NCELLS > 1 && Ke() < 1e-16 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
+		if (cellpointer->NCELLS > 1 && Ke() < 1e-12 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
 		{
 			clog_count++;
 			if (clog_count > 100)
@@ -270,15 +271,25 @@ public:
 			if (cellpointer->cell(ci).inside_hopper)
 			{
 				N_inside++;
+				// cellpointer->cell(0).inside_hopper = 0;
 				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
 				cellpointer->cell(ci).updateCPos();
 				// if still inside hopper
-				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
+				int checkEk = cellpointer->cell(ci).totalKineticEnergy() > 1e3;
+				if (checkEk)
+				{
+					cout << "error" << endl;
+					cout << ci << endl;
+				}
+				if (checkEk || (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI)))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 				{
 					cellpointer->cell(ci).inside_hopper = 0;
 					cellpointer->cell(ci).setCVel(0,0);
 					cellpointer->cell(ci).setCVel(1,0);
+					cellpointer->cell(ci).setCPos(0,100);
+					cellpointer->cell(ci).setCPos(1,cellpointer->L.at(1)/2);
+					cellpointer->cell(ci).regularPolygon();
 				}
 			}
 		}
@@ -295,7 +306,7 @@ public:
 	{
 		double maxHight = 10;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).cpos(1) < y + 2 && cellpointer->cell(ci).cpos(1) > y - 2 ){
+			if (cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
 				if (cellpointer->cell(ci).cpos(0) < maxHight)
 					maxHight = cellpointer->cell(ci).cpos(0);
 			}
@@ -307,20 +318,26 @@ public:
 	{
 		int outside = 0;
 		double meanV = 0;
+		double maxV = 0;
 		stack<deformableParticles2D *> stack;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper == 0)
 			{
 				outside ++;
 				flowCount ++;
-				meanV += cellpointer->cell(ci).cvel(0);
 				stack.push(&(cellpointer->cell(ci)));
+			}
+			else
+			{
+				if (cellpointer->cell(ci).cvel(0) > maxV)
+					maxV = cellpointer->cell(ci).cvel(0);
+				meanV += cellpointer->cell(ci).cvel(0);
 			}
 		}
 		
 		if (outside > 0)
 		{
-			meanV /= outside;
+			meanV /= (cellpointer->NCELLS - outside);
 			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
 			while (!stack.empty())
 			{
@@ -334,10 +351,13 @@ public:
 						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
 						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
-						currentCell->setCPos(0,maxHight - 2);
+						currentCell->setCPos(0,maxHight - 1.5);
 						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
 						currentCell->regularPolygon();
-						currentCell->setCVel(0,meanV);
+						// if (frictionFlag)
+							currentCell->setCVel(0,meanV);
+						// else
+							// currentCell->setCVel(0,maxV);
 						currentCell->setCVel(1,0);
 
 						// update real-space positions

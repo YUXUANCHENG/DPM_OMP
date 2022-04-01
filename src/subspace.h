@@ -38,6 +38,9 @@ typedef Eigen::Matrix<int, 4, 1> VECTOR4I;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VECTOR;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MATRIX;
 
+extern bool frictionFlag;
+
+
 class cvpair {
 public:
 	int ci;
@@ -48,7 +51,7 @@ public:
 		ci = c;
 		vi = v;
 	}
-	cvpair(){};
+	cvpair(){ci = -1; vi = -1;};
 	bool operator<(const cvpair& src)const
     {
         return (this->ci < src.ci || this->vi < src.vi);
@@ -69,6 +72,7 @@ public:
 	double sigmaYX = 0.0;
 	double sigmaYY = 0.0;
 	vector<double> L;
+	double coefu = 1, coefV = 5;
 
 	// resident cells and cashed cells
 	vector<cvpair*> resident_cells;

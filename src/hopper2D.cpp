@@ -217,6 +217,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	}
 
 	// initialize L based on smallest vertex radius
+	// vrmin = 0.5*cell(0).getl0()*cutoff;
 	vrmin = 0.5*cell(0).getl0();
 	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	L.at(0) = Ltmp;
@@ -1497,6 +1498,64 @@ double cellPacking2D::vertexWallForce(int onTheLeftC, int onTheLeftV, std::vecto
 }
 // wall forces between cells as droplets (DP model)
 // 	** if closed = 1, orifice is closed off by wall
+int cellPacking2D::forceWithBead(int ci, int vi, std::vector<double> bead){
+	VECTOR2 v0, v1, v; 
+	int nextVi = (vi + 1) % cell(ci).getNV();
+	double normalDistance = 0;
+	for (int d = 0; d < 2; d++)
+	{
+		v[d] = bead.at(d);
+		v0[d] = cell(ci).vpos(vi,d);
+		v1[d] = cell(ci).vpos(nextVi,d);
+	}
+	
+	const VECTOR2 e = v1 - v0;
+	const VECTOR2 e1 = v - v0;
+	const VECTOR2 n = VECTOR2(e[1],-e[0]);
+	
+	const double check = e1.dot(e);
+
+	// if the point projects to inside the segment
+	if (check > 0 && check < e.dot(e))
+	{
+		const VECTOR2 nHat = n / n.norm();
+		normalDistance = (nHat.dot(v - v0));
+	}
+	else
+		return 0;
+
+	double contactDistance = (cell(0).del * cell(0).l0);
+	// double contactDistance = (cell(0).del * cell(0).l0) * cutoff;
+
+	if (normalDistance < contactDistance && normalDistance > -insideCutoffFactor * contactDistance) {
+		vector<VECTOR2> vVec, eVec;
+		vVec.resize(3);
+		vVec[0] = v;
+		vVec[1] = v0;
+		vVec[2] = v1;
+
+		eVec.resize(2);
+		eVec[0] = vVec[2] - vVec[1];
+		eVec[1] = vVec[0] - vVec[1];
+		// deformableParticles2D& leftCell = cell(onTheLeft.ci);
+		// deformableParticles2D& rightCell = cell(onTheRight.ci);
+		// double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
+		VECTOR6 forces = -1 * cell(ci).kint * pow(contactDistance, -2) * gradient(vVec, eVec, contactDistance, 0);
+		#pragma omp critical
+		{
+			for (int d = 0; d < 2; d++)
+			{
+				// leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + forces[d]);
+				cell(ci).setVForce(vi, d, cell(ci).vforce(vi, d) + forces[d + 2]);
+				cell(ci).setVForce(nextVi, d, cell(ci).vforce(nextVi, d) + forces[d + 4]);
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
+
 void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int closed){
 	// local variables
 	int ci, vi; 							// indices
@@ -1526,6 +1585,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 	// edge bead information
 	sb 		= cell(0).getl0()*cell(0).getdel();
+	// sb 		= cell(0).getl0()*cell(0).getdel() * cutoff;
 	xtb 	= Lx - 0.5*sb;
 	ytb 	= 0.5*(w0 + w + sb);
 	xbb 	= xtb;
@@ -1543,12 +1603,16 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
+		if (!cell(ci).inside_hopper)
+			continue;
 		//double factor = 10 * cell(ci).NV/16.0;
 		// get vertex diameter
 		double factor = 0;
 		if (wallAttracFlag)
 			factor = 0.001 * cell(ci).geta0() * 16.0 / cell(ci).NV;
 		sigma = cell(ci).getl0()*cell(ci).getdel();
+		// sigma = cell(ci).getl0()*cell(ci).getdel() * cutoff;
+		// sigma = sb;
 		double a = 0.01* sqrt(cell(ci).geta0()/PI)/ sigma;
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			cFlag = false;
@@ -1565,6 +1629,30 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 			// check hopper walls
 			if (x > -sigma*s){
+				
+				int edgeForceFlag = 0;
+				int inContactWithEdge = 0;
+				if (edgeForceFlag)
+				// if (replaceFlag)
+				{
+					int factor = 4;
+					if (x > xtb - cell(0).getl0() * factor && x < xtb + cell(0).getl0() * factor)
+					{
+						if (y > ytb - cell(0).getl0() * factor && y < ytb + cell(0).getl0() * factor)
+						{
+							std::vector<double> bead{xtb, ytb};
+							inContactWithEdge += forceWithBead(ci, vi, bead);
+						}
+						if (y > ybb - cell(0).getl0() * factor && y < ybb + cell(0).getl0() * factor)
+						{
+							std::vector<double> bead{xbb, ybb};
+							inContactWithEdge += forceWithBead(ci, vi, bead);
+						}
+					}
+				}
+				// inContactWithEdge = 0;
+
+
 				// if vertex in hopper bulk
 				if (x < xedge){
 					// check ymin for walls
@@ -1710,16 +1798,22 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							lwy = y - ytb;
 
 							// distance to bead center edge
+							// lw = sqrt(lwx*lwx + lwy*lwy);
 							lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
 
-							if (lw < 0.5*sigma){
+							if (lw < 0.5*sigma && !inContactWithEdge){
+							// if (lw < sigma && !inContactWithEdge){
 								// overlap with wall (use bead edge, not center)
+								// overlap = lw/sigma;
 								overlap = 2.0*lw/sigma;
 
 								// force
 								ftmp = (2.0/sigma)*(1 - overlap);
 								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
 								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+								// ftmp = (cell(ci).kint/sigma)*(1 - overlap);
+								// cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+								// cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
 
 								// add to energies
 								utmp = 0.5*pow(1 - overlap,2);
@@ -1768,16 +1862,22 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							lwy = y - ybb;
 
 							// distance
+							// lw = sqrt(lwx*lwx + lwy*lwy);
 							lw = sqrt(lwx*lwx + lwy*lwy) - 0.5*sb;
 
-							if (lw < 0.5*sigma){
+							if (lw < 0.5*sigma && !inContactWithEdge){
+							// if (lw < sigma && !inContactWithEdge){
 								// overlap with wall (use bead edge, not center)
+								// overlap = lw/sigma;
 								overlap = 2.0*lw/sigma;
 
 								// force
 								ftmp = (2.0/sigma)*(1 - overlap);
 								cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
 								cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
+								// ftmp = (cell(ci).kint/sigma)*(1 - overlap);
+								// cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) + ftmp*(lwx/lw));
+								// cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*(lwy/lw));
 
 								// add to energies
 								utmp = 0.5*pow(1 - overlap,2);

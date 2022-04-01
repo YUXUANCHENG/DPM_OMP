@@ -297,7 +297,7 @@ void deformableParticles2D::initializeVertices(){
 			setVForce(i,d,0.0);
 		}
 		wallContactFlag[i] = 0;
-		vertexEdgeContact[i] = 0;
+		vertexEdgeContact[i] = -1;
 	}
 }
 

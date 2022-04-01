@@ -46,7 +46,7 @@ public:
 	std::vector<int> N_systems;
 	virtual void initialize_subsystems() { ; };
 	virtual void initialize_subsystems(int N_x, int N_y){ ; };
-	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps){return VECTOR6();};
+	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps, int mode){return VECTOR6();};
 	
 
 	// int scalars
@@ -69,7 +69,7 @@ public:
 	int gDire = 0;
 	int gOn = 1;
 	double cutoff = 0.2;
-	double insideCutoffFactor = 2;
+	double insideCutoffFactor = 1;
 
 	// boundary lengths
 	std::vector<double> L;
@@ -117,6 +117,7 @@ public:
 	virtual void LangevinSimulation(double T, double v0, double t_scale, int frames);
 	virtual int hopperSimulation(double w0, double w, double th, double g, double b);
 	void pistonForce(double w0, double w, double th, double pressure);
+	int forceWithBead(int ci, int vi, std::vector<double> bead);
 	virtual void resetV();
 	virtual void setRatio(double ratio) { ; };
 	void calInertia();

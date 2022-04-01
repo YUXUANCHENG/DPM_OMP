@@ -48,10 +48,11 @@ public:
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 0*scaleFactor;
+		this->kb = 0.01*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
+		int factorNx = 5;
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
 		//this->g = 0.05;
@@ -66,25 +67,27 @@ public:
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{
-			this->NPRINT = 1e3;	
+			// this->NPRINT = 1e3;	
 			this->NCELLS = 1600;
+			// this->timeStepMag = 0.002;
 			w0 = 60.0;
 			th =  (90.0 - 89.0)/180 * PI;
 			this->kint = 10*scaleFactor;
+			factorNx = 1;
 		}
 		else
 		{
 			// this->NCELLS = 64;
 			// this->NPRINT = 1e2;
 			// this->NCELLS = 800;
-			this->NCELLS = 100;
-			// this->timeStepMag = 0.002;		
-			// this->NCELLS = 200;
+			// this->NCELLS = 100;
+			this->NCELLS = 200;
 			if (this->NCELLS > 100)
 			{
 				this->NT = 1e8;			// number of time steps for flow simulation
 				this->NPRINT = 1e5;	
-				w0 = 60.0;
+				// this->timeStepMag = 0.002;
+				w0 = 40.0;
 			}
 		}
 		
@@ -93,7 +96,7 @@ public:
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 10 * round(w0/10) * this->NV/16;
-		this->NBx = 5 * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
+		this->NBx = factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);

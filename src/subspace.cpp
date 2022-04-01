@@ -179,7 +179,7 @@ void subspace::cal_cashed_fraction() {
 	for (int d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 2 * pointer_to_system->cell(0).l0 / spacing;
+		cashed_fraction.at(d) = 2.5 * pointer_to_system->cell(0).l0 / spacing;
 		if (N_systems[d] == 2 && cashed_fraction.at(d) > 0.5) {
 			cout << " Too much boxes for too few cells " << endl;
 			// has to be exactly 0.5, otherwise there could be problem of untracked bonds
@@ -363,7 +363,12 @@ void subspace::migrate_out() {
 			if (new_box_index >= 0)
 				pointer_to_system->migrate_into(new_box_index, target_cell);
 			else if (replaceFlag)
+			{
 				cout << "error" << endl;
+				cout << target_cell->ci << ", " << target_cell->vi << endl;
+				pointer_to_system->printRoutine(0, 10, 0, 0, 0);
+				exit(0);
+			}
 			// pop from list
 			migrate_out_list.pop();
 			migrate_out_destination.pop();
@@ -563,7 +568,7 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	int inContact = 0;
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
-	if (leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci)
+	if (leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci && onTheRight->ci != onTheLeft->ci)
 		return 0;
 	// local variables
 	int d, dd;
@@ -637,10 +642,12 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 			std::vector<double> friction(2);
 			std::vector<double> friction_norm(2);
 			std::vector<double> friction_tang(2);
+			double projection = 0;
 			for (d = 0; d < NDIM; d++) {
 				if (frictionFlag){
 					dv.at(d) = leftCell.vvel(onTheLeft->vi,d) - rightCell.vvel(onTheRight->vi,d);
 					friction.at(d) = - 0.1 * dv.at(d);
+					projection += dv.at(d) * vertexVec.at(d) / vertexDist;
 				}
 				else
 				{
@@ -650,11 +657,14 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 				}
 			}
 			if (frictionFlag){
+			// if (0){
+				
 				for (d = 0; d < NDIM; d++) {
-					dv_along_norm.at(d) = dv.at(d) * vertexVec.at(d) / vertexDist;
+					dv_along_norm.at(d) = projection * vertexVec.at(d) / vertexDist;
 					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
-					friction_norm.at(d) = - 0.1 * dv_along_norm.at(d);
-					friction_tang.at(d) = - 0.1 * dv_along_tang.at(d);
+					friction_norm.at(d) = - coefu * dv_along_norm.at(d);
+					friction_tang.at(d) = - coefV * dv_along_tang.at(d);
+					// friction_tang.at(d) = 0;
 				}
 			}
 			// cout << "friction force" << endl;
@@ -702,6 +712,12 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 //int subspace::vertexForce_with_Torque(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY) {
 	// return variable
 	int inContact = 0;
+	if (onTheLeft->ci == onTheRight->ci)
+	{
+		int distance = onTheLeft->vi - onTheRight->vi;
+		if (distance == 1 || distance == (-1 * pointer_to_system->cell(onTheRight->ci).getNV() + 1))
+			return 0;
+	}
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
 	// local variables
@@ -771,7 +787,54 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 			// deformableParticles2D& leftCell = cell(onTheLeft.ci);
 			// deformableParticles2D& rightCell = cell(onTheRight.ci);
 			// double eps = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * cutoff;
-			VECTOR6 forces = -1 * leftCell.kint * pow(contactDistance, -2) * pointer_to_system->gradient(v, e, contactDistance);
+			int mode = onTheLeft->ci == onTheRight->ci;
+			VECTOR6 forces = -1 * leftCell.kint * pow(contactDistance, -2) * pointer_to_system->gradient(v, e, contactDistance, mode);
+			VECTOR6 friction;
+			friction.setZero();
+			if (frictionFlag){
+			// if (0){
+				std::vector<double> dv(2);
+				std::vector<double> dv_along_norm(2);
+				std::vector<double> dv_along_tang(2);
+				std::vector<double> frictionT(2);
+				std::vector<double> friction_norm(2);
+				std::vector<double> friction_tang(2);
+				std::vector<double> vAtContact(2);
+				VECTOR2 crossed = (-1) * VECTOR2(e[0][1],-e[0][0]);
+				double bondL = e[0].norm();
+				double distToV1 = e[1].dot(e[0]) / bondL;
+				for (d = 0; d < NDIM; d++) {
+					vAtContact.at(d) = (rightCell.vvel(onTheRight->vi,d) * (bondL - distToV1) + rightCell.vvel(nextVi,d) * distToV1) / bondL;
+					dv.at(d) = leftCell.vvel(onTheLeft->vi,d) - vAtContact.at(d);
+					frictionT.at(d) = - 0.1 * dv.at(d);
+				}
+				double projection = VECTOR2(dv[0],dv[1]).dot(crossed)/crossed.norm();
+				for (d = 0; d < NDIM; d++) {
+					dv_along_norm.at(d) = projection * crossed[d] / crossed.norm();
+					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
+					friction[d] = - coefu * dv_along_norm.at(d) - coefV * dv_along_tang.at(d);
+					friction[d + 2] = - friction[d] * (bondL - distToV1) / bondL;
+					friction[d + 4] = - friction[d] * distToV1 / bondL;
+				}
+				forces += friction;
+			}
+			// if (onTheLeft->ci == 0 || onTheRight->ci == 0)
+			// 	if (forces.maxCoeff() > 1)
+			// 	{
+			// 		cout << "large force" << endl;
+			// 		cout << onTheLeft->ci << " " << onTheRight->ci << endl;
+			// 			for (int i = 0; i < 6; i++)
+			// 				cout << forces[i];
+			// 	}
+			// VECTOR6 absF = forces.cwiseAbs();
+			// double maxF = absF.maxCoeff();
+			// if (maxF > 1e3)
+			// {
+			// 	forces /= maxF;
+			// 	cout << "error" << endl;
+			// 	cout << onTheRight->ci << ", " << onTheRight->vi << endl;
+			// 	pointer_to_system->printRoutine(0, 10, 0, 0, 0);
+			// }
 		#pragma omp critical
 		{
 			leftCell.vertexEdgeContact[onTheLeft->vi] = onTheRight->ci;
@@ -851,12 +914,12 @@ void frictionlessSubspace::calculateEdgeForces_insub() {
 			// int edgeContactForCi = 0;
 			for (cj = 0; cj < resident_cells.size(); cj++) {
 				if (ci == cj) continue;
-				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
-				{
-					// int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
-					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
-						continue;
-				}
+				// if (resident_cells[ci]->ci == resident_cells[cj]->ci)
+				// {
+				// 	int distance = resident_cells[ci]->vi - resident_cells[cj]->vi;
+				// 	if (distance == 1 || distance == (-1 * pointer_to_system->cell(resident_cells[ci]->ci).getNV() + 1))
+				// 		continue;
+				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
@@ -887,12 +950,12 @@ void frictionlessSubspace::calculateEdgeForces_betweensub() {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
-				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
-				{
-					// int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
-					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
-						continue;
-				}
+				// if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
+				// {
+				// 	int distance = resident_cells[ci]->vi - cashed_cells[ck]->vi;
+				// 	if (distance == 1 || distance == (-1 * pointer_to_system->cell(resident_cells[ci]->ci).getNV() + 1))
+				// 		continue;
+				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {

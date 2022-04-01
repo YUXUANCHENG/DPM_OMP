@@ -77,7 +77,8 @@ public:
 			subsystem[i].calculateForces_betweensub();
 #pragma omp parallel for
 		for (int ci = 0; ci < NCELLS; ci++) {
-			cell(ci).shapeForces();
+			if (cell(ci).inside_hopper)
+				cell(ci).shapeForces();
 		}
 		addUpStress();
 	}
@@ -95,7 +96,8 @@ public:
 		if (gOn){
 #pragma omp parallel for
 			for (int ci = 0; ci < NCELLS; ci++) 
-				cell(ci).gravityForces(g, gDire);
+				if (cell(ci).inside_hopper)
+					cell(ci).gravityForces(g, gDire);
 		}
 		hopperWallForcesDP(w0,w,th,closed);
 		if (constPressureFlag)
@@ -159,7 +161,7 @@ public:
 
 				// energies
 				cell(ci).setUInt(vi, 0.0);
-				cell(ci).vertexEdgeContact[vi] = 0;
+				cell(ci).vertexEdgeContact[vi] = -1;
 			}
 		}
 
@@ -181,7 +183,8 @@ public:
 			subsystem[i].calculateForces_betweensub();
 #pragma omp parallel for
 		for (int ci = 0; ci < NCELLS; ci++) {
-			cell(ci).shapeForces();
+			if (cell(ci).inside_hopper)
+				cell(ci).shapeForces();
 		}
 		addUpStress();
 		// resolveForces();
@@ -273,7 +276,7 @@ public:
 
 	///////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////
-	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps)
+	virtual VECTOR6 gradient(vector<VECTOR2> & v, vector<VECTOR2> & e, double eps, int mode)
 	{
 	// convert to vertices and edges
 	//   vector<VECTOR2> v;
@@ -286,7 +289,10 @@ public:
 	
 	// get the spring length, non-zero rest-length
 	const VECTOR2 tvf = v[0] - v[1];
-	double springLength = n.dot(tvf) - eps;
+	double normalDist = n.dot(tvf);
+	double springLength = normalDist - eps;
+	if (mode && normalDist < 0)
+		springLength = normalDist + eps;
 	return 2.0 * springLength * springLengthGradient(v,e,n);
 	}
 
