@@ -14,6 +14,7 @@
 extern bool constPressureFlag;
 extern bool frictionFlag;
 extern bool replaceFlag;
+int mixed = 0;
 
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
@@ -64,6 +65,12 @@ public:
 			this->g = 0.05*scaleFactor;
 		// this->NBx = 30;
 		// this->NBy = 10;
+		if (mixed)
+		{
+			this->b = 0.03;
+			// this->g = 0.01;
+			this->g = 0.025;
+		}
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{

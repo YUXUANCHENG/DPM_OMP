@@ -275,13 +275,15 @@ public:
 				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
 				cellpointer->cell(ci).updateCPos();
 				// if still inside hopper
-				int checkEk = cellpointer->cell(ci).totalKineticEnergy() > 1e3;
-				if (checkEk)
-				{
-					cout << "error" << endl;
-					cout << ci << endl;
-				}
-				if (checkEk || (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI)))
+				// int checkEk = cellpointer->cell(ci).totalKineticEnergy() > 1e3;
+				// if (checkEk)
+				// {
+				// 	cout << "Ek error" << endl;
+				// 	cout << ci << endl;
+				// 	cellpointer->printRoutine(0, cellpointer->NPRINT, 0, N_inside, closed);
+				// 	exit(0);
+				// }
+				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 				{
 					cellpointer->cell(ci).inside_hopper = 0;
@@ -305,11 +307,21 @@ public:
 	double getMaxHight(double y)
 	{
 		double maxHight = 10;
+		int maxIndex = 0;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
 				if (cellpointer->cell(ci).cpos(0) < maxHight)
+				{
 					maxHight = cellpointer->cell(ci).cpos(0);
+					maxIndex = ci;
+				}
 			}
+		}
+		for (int vi = 0; vi < cellpointer->cell(maxIndex).NV; vi ++)
+		{
+			double vY = cellpointer->cell(maxIndex).vpos(vi, 0);
+			if ( vY < maxHight)
+				maxHight = vY;
 		}
 		return maxHight;
 	}
@@ -318,7 +330,7 @@ public:
 	{
 		int outside = 0;
 		double meanV = 0;
-		double maxV = 0;
+		double maxV = -10;
 		stack<deformableParticles2D *> stack;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper == 0)
@@ -351,7 +363,7 @@ public:
 						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
 						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
-						currentCell->setCPos(0,maxHight - 1.5);
+						currentCell->setCPos(0,maxHight - 0.9);
 						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
 						currentCell->regularPolygon();
 						// if (frictionFlag)

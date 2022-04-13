@@ -436,12 +436,12 @@ void subspace::calculateForces_betweensub() {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
-				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
-				{
-					int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
-					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
-						continue;
-				}
+				// if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
+				// {
+				// 	int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
+				// 	if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+				// 		continue;
+				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
@@ -568,7 +568,7 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	int inContact = 0;
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
-	if (leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci && onTheRight->ci != onTheLeft->ci)
+	if ((leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci) && (onTheRight->ci != onTheLeft->ci))
 		return 0;
 	// local variables
 	int d, dd;
@@ -830,10 +830,14 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 			// double maxF = absF.maxCoeff();
 			// if (maxF > 1e3)
 			// {
-			// 	forces /= maxF;
-			// 	cout << "error" << endl;
-			// 	cout << onTheRight->ci << ", " << onTheRight->vi << endl;
-			// 	pointer_to_system->printRoutine(0, 10, 0, 0, 0);
+			// 	// forces /= maxF;
+			// 	cout << "force error" << endl;
+			// 	cout << onTheLeft->ci << ", " << onTheLeft->vi << ", " << onTheRight->ci << ", " << onTheRight->vi << endl;
+			// 	#pragma omp critical
+			// 	{
+			// 		pointer_to_system->printRoutine(0, 10, 0, 0, 0);
+			// 	}
+			// 	exit(0);
 			// }
 		#pragma omp critical
 		{
