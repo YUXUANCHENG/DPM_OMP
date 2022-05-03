@@ -153,7 +153,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 
 	// minimum number of vertices
 	const int nvmin = 12;
-
+	diskRadii = radii;
 	// random number generator
 	srand(10*seed);
 
@@ -350,6 +350,10 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 	// reset velocities to 0
 	for (ci=0; ci<NCELLS; ci++){
+		if (!(cell(ci).inside_hopper))
+			continue;
+		if (settleDown && (!(cell(ci).inside_hopper==2)))
+			continue;
 		for (d=0; d<NDIM; d++)
 			cell(ci).setCVel(d,0.0);
 	}
@@ -377,6 +381,10 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		vstarnrm = 0.0;
 		fstarnrm = 0.0;
 		for (ci=0; ci<NCELLS; ci++){
+			if (!(cell(ci).inside_hopper))
+				continue;
+			if (settleDown && (!(cell(ci).inside_hopper==2)))
+				continue;
 			for (d=0; d<NDIM; d++){
 				// get tmp variables
 				ftmp = cell(ci).cforce(d);
@@ -443,12 +451,20 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 			// take half step backwards
 			for (ci=0; ci<NCELLS; ci++){
+				if (!(cell(ci).inside_hopper))
+					continue;
+				if (settleDown && (!(cell(ci).inside_hopper==2)))
+					continue;
 				for (d=0; d<NDIM; d++)
 					cell(ci).setCPos(d,cell(ci).cpos(d) - 0.5*dt*cell(ci).cvel(d));
 			}
 
 			// reset velocities to 0
 			for (ci=0; ci<NCELLS; ci++){
+				if (!(cell(ci).inside_hopper))
+					continue;
+				if (settleDown && (!(cell(ci).inside_hopper==2)))
+					continue;
 				for (d=0; d<NDIM; d++)
 					cell(ci).setCVel(d,0.0);
 			}
@@ -457,6 +473,10 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		// update velocities if forces are acting
 		if (fstarnrm > 0){
 			for (ci=0; ci<NCELLS; ci++){
+				if (!(cell(ci).inside_hopper))
+					continue;
+				if (settleDown && (!(cell(ci).inside_hopper==2)))
+					continue;
 				for (d=0; d<NDIM; d++){
 					vtmp = (1 - alphat)*cell(ci).cvel(d) + alphat*(cell(ci).cforce(d)/fstarnrm)*vstarnrm;
 					cell(ci).setCVel(d,vtmp);
@@ -475,16 +495,24 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 		//hopperForcesSP(radii,w0,w,th,0,closed);
 
 		// verlet velocity update
-		hopperVelVerletSP(radii);
+		hopperVelVerletSP(radii, 0);
 
 		// update t
 		t += dt;
 
 		// update forces
 		Fcheck = 0.0;
+		int counter = 0;
 		for (ci=0; ci<NCELLS; ci++)
+		{
+			if (!(cell(ci).inside_hopper))
+				continue;
+			if (settleDown && (!(cell(ci).inside_hopper==2)))
+				continue;
 			Fcheck += sqrt(cell(ci).cforce(0)*cell(ci).cforce(0) + cell(ci).cforce(1)*cell(ci).cforce(1));
-		Fcheck /= (NDIM*NCELLS);
+			counter ++;
+		}
+		Fcheck /= (NDIM*counter);
 
 		// update if Pvirial under tol
 		if (Fcheck < Ftol)
@@ -797,6 +825,10 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	// get disk-disk forces
 	for (ci=0; ci<NCELLS; ci++){
 		for (cj=ci+1; cj<NCELLS; cj++){
+			if (!(cell(ci).inside_hopper) || !(cell(cj).inside_hopper))
+				continue;
+			if (settleDown && (!(cell(ci).inside_hopper==2) && !(cell(cj).inside_hopper==2)))
+				continue;
 			// contact distance
 			contactDistance = radii.at(ci) + radii.at(cj);
 
@@ -831,14 +863,63 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 				for (vi=0; vi<cell(cj).getNV(); vi++)
 					cell(cj).setUInt(vi,cell(cj).uInt(vi) + utmp/cell(cj).getNV());
 
+
+			std::vector<double> dv(2);
+			std::vector<double> dv_along_norm(2);
+			std::vector<double> dv_along_tang(2);
+			std::vector<double> friction(2);
+			std::vector<double> friction_norm(2);
+			std::vector<double> friction_tang(2);
+			double projection = 0;
+			for (d = 0; d < NDIM; d++) {
+				if (frictionFlag){
+					dv.at(d) = cell(ci).cvel(d) - cell(cj).cvel(d);
+					friction.at(d) = - 0.1 * dv.at(d);
+					projection += dv.at(d) * distanceVec.at(d) / centerDistance;
+				}
+				else
+				{
+					friction.at(d) = 0;
+					friction_norm.at(d) = 0;
+					friction_tang.at(d) = 0;
+				}
+			}
+			if (frictionFlag){
+			// if (0){
+				
+				for (d = 0; d < NDIM; d++) {
+					dv_along_norm.at(d) = projection * distanceVec.at(d) / centerDistance;
+					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
+					friction_norm.at(d) = - subsystem->coefu * dv_along_norm.at(d);
+					friction_tang.at(d) = - subsystem->coefV * dv_along_tang.at(d);
+					// friction_tang.at(d) = 0;
+				}
+			}
+			
+// 			for (d = 0; d < NDIM; d++) {
+// 				// get force value
+// 				ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
+// 				force[d] = ftmp;
+// 				r1[d] = leftCell.vrel(onTheLeft->vi, d) + vertexVec.at(d) / 2;
+// 				r2[d] = rightCell.vrel(onTheRight->vi, d) - vertexVec.at(d) / 2;
+// 				// add to force on i
+// #pragma omp critical
+// 			{
+// 				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp + friction_norm.at(d) + friction_tang.at(d));
+
+// 				// subtract off complement from force on j
+// 				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp - friction_norm.at(d) - friction_tang.at(d));
+// 			}
+
+
 				// add to forces
 				for (d=0; d<NDIM; d++){
 					// unit vector
 					uv = distanceVec.at(d)/centerDistance;
 
 					// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
-					cell(ci).setCForce(d,cell(ci).cforce(d) - ftmp*uv);
-					cell(cj).setCForce(d,cell(cj).cforce(d) + ftmp*uv);
+					cell(ci).setCForce(d,cell(ci).cforce(d) - ftmp*uv + friction_norm.at(d) + friction_tang.at(d));
+					cell(cj).setCForce(d,cell(cj).cforce(d) + ftmp*uv - friction_norm.at(d) - friction_tang.at(d));
 
 					// add to virial stresses
 					if (d == 0){
@@ -993,7 +1074,9 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 		// check hopper walls
 		if (x > -sigma*s){
 			// if particle in hopper bulk
-			if (x < L.at(0) - 0.5*sigma*s){
+			double sib = 0.5 * (sigma + cell(0).getl0());
+			double xedge = L.at(0) - 0.5*cell(0).getl0() - sib*s;
+			if (x < xedge){
 				// check ymin for walls
 				yPlusMin 	= w0 - x*t - 0.5*sigma/c;
 				yMinusMax 	= x*t + 0.5*sigma/c;
@@ -1061,7 +1144,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 			}
 
 			// if particle is near edge; either do wall force or force due to edge
-			else if (x > L.at(0) - 0.5*sigma*s && x < L.at(0)){
+			else if (x > xedge && x < L.at(0)){
 				// check on top wall
 				if (y > 0.5*w0){
 					// define line separating wall force and edge force regime
@@ -2408,7 +2491,7 @@ void cellPacking2D::hopperSPNVE(vector<double>& radii, double w0, double w, doub
 		hopperForcesSP(radii,w0,w,th,0.0,closed);
 
 		// verlet velocity update
-		hopperVelVerletSP(radii);
+		hopperVelVerletSP(radii, 0);
 	}
 }
 
@@ -2846,6 +2929,10 @@ void cellPacking2D::hopperPosVerletSP(){
 	// update com position
 	for (ci=0; ci<NCELLS; ci++){
 		// loop over positions
+		if (!(cell(ci).inside_hopper))
+			continue;
+		if (settleDown && (!(cell(ci).inside_hopper==2)))
+			continue;
 		for (d=0; d<NDIM; d++){
 			// calculate com acceleration
 			acctmp = 0.0;
@@ -2854,6 +2941,9 @@ void cellPacking2D::hopperPosVerletSP(){
 
 			// update new position based on acceleration
 			postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*acctmp;
+			// translate vertices based on cpos change
+			for (vi=0; vi<cell(ci).getNV(); vi++)
+				cell(ci).setVPos(vi,d,cell(ci).vpos(vi,d) + (postmp - cell(ci).cpos(d)));
 
 			// update new positions
 			cell(ci).setCPos(d,postmp);
@@ -2868,15 +2958,22 @@ void cellPacking2D::hopperPosVerletSP(){
 	}
 }
 
-void cellPacking2D::hopperVelVerletSP(vector<double>& radii){
+void cellPacking2D::hopperVelVerletSP(vector<double>& radii, double dampingParam){
 	// local variables
 	int ci, vi, d;
 	double veltmp, aold, anew, diskMass;
 
+	
+
 	// update com velocity
 	for (ci=0; ci<NCELLS; ci++){
+		if (!(cell(ci).inside_hopper))
+			continue;
+		if (settleDown && (!(cell(ci).inside_hopper==2)))
+			continue;
 		// get disk mass
 		//diskMass = PI*pow(radii.at(ci),2);
+		double b = dampingParam*cell(ci).a0*16.0;
 		diskMass = cell(ci).a0 * 16.0;
 
 		// loop over velocities
@@ -2888,9 +2985,14 @@ void cellPacking2D::hopperVelVerletSP(vector<double>& radii){
 			aold = 0.0;
 			for (vi=0; vi<cell(ci).getNV(); vi++)
 				aold += cell(ci).vacc(vi,d);
-
+			
 			// get new accelation
 			anew = cell(ci).cforce(d)/diskMass;
+
+			double dampNum = b*(veltmp - 0.5*aold*dt);
+            // dampDenom = 1.0 + 0.5*b*dt;
+            double dampDenom = 1.0;
+            anew = (anew - dampNum/diskMass)/dampDenom;
 
 			// update velocity
 			veltmp += 0.5*dt*(anew + aold);

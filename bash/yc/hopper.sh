@@ -39,7 +39,7 @@ slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
 # partition=pi_ohern
-# partition=general
+### partition=general
 partition=day
 job_name=hopper
 let total_job=$jobnumber*$jobnumber*$factor1*$factor2

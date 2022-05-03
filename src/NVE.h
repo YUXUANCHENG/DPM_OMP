@@ -8,6 +8,10 @@
 
 extern bool replaceFlag;
 extern bool variableExtFflag;
+extern bool settleDown;
+extern bool frictionFlag;
+
+extern bool softFlag;
 
 class DPMNVEsimulator{
 public:
@@ -187,6 +191,8 @@ public:
 	int flowCount = 0;
 	int placementNumber = 0;
 	bool startPullFlag = false;
+	double w0, w, th, g, b;
+	int t;
 
 	DPMhopperSimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -195,10 +201,11 @@ public:
 	DPMhopperSimulator() = default;
 
 	int hopperFlow(double w0, double w, double th, double g, double b) {
+		this->w0 = w0; this->w = w; this->th = th; this->g = g; this->b = b;
 		std::ofstream flowRobj;
 		flowRobj.open("flowRate.txt");
 		int result;
-		for (int t = 0; t < cellpointer->NT; t++) {
+		for (t = 0; t < cellpointer->NT; t++) {
 			bool startFlag;
 			if (replaceFlag)
 				startFlag = (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside);
@@ -213,7 +220,8 @@ public:
 			if (replaceFlag && closed == 0 && (t+1) % int(1e4) == 0) {
 			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
 				addBack();
-				double rate = (double) flowCount / (double) cellpointer->NPRINT;
+				double rate = (double) flowCount / 1e4;
+				// double rate = (double) flowCount / (double) cellpointer->NPRINT;
 				flowRobj << rate << endl;
 				flowCount = 0;
 			}
@@ -267,13 +275,19 @@ public:
 
 	virtual void hopperRoutine(double w0, double w, double th, double g, double b) {
 		N_inside = 0;
+		if (softFlag){
+			cellpointer->hopperPosVerletSP();
+		}
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper)
 			{
 				N_inside++;
 				// cellpointer->cell(0).inside_hopper = 0;
-				cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
-				cellpointer->cell(ci).updateCPos();
+				if (!softFlag)
+				{
+					cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
+					cellpointer->cell(ci).updateCPos();
+				}
 				// if still inside hopper
 				// int checkEk = cellpointer->cell(ci).totalKineticEnergy() > 1e3;
 				// if (checkEk)
@@ -298,11 +312,21 @@ public:
 		// reset contacts before force calculation
 		cellpointer->resetContacts();
 		// calculate forces
-		cellpointer->hopperForces(w0, w, th, g, closed);
+		if (softFlag)
+			cellpointer->hopperForcesSP(cellpointer->diskRadii,w0,w,th,g,closed);
+		else
+			cellpointer->hopperForces(w0, w, th, g, closed);
 		// update velocities
-		for (int ci = 0; ci < cellpointer->NCELLS; ci++)
-			if (cellpointer->cell(ci).inside_hopper)
-				cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
+		if (softFlag)
+			cellpointer->hopperVelVerletSP(cellpointer->diskRadii, b);
+		else
+		{
+			for (int ci = 0; ci < cellpointer->NCELLS; ci++)
+				if (cellpointer->cell(ci).inside_hopper)
+				{
+					cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, b);
+				}
+		}
 	}
 	double getMaxHight(double y)
 	{
@@ -325,10 +349,25 @@ public:
 		}
 		return maxHight;
 	}
-
+	double getVatMaxHeight(double y)
+	{
+		double maxHight = 10;
+		int maxIndex = 0;
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).inside_hopper == 1 && cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
+				if (cellpointer->cell(ci).cpos(0) < maxHight)
+				{
+					maxHight = cellpointer->cell(ci).cpos(0);
+					maxIndex = ci;
+				}
+			}
+		}
+		return cellpointer->cell(maxIndex).cvel(0);
+	}
 	void addBack()
 	{
 		int outside = 0;
+		int inBetween = 1;
 		double meanV = 0;
 		double maxV = -10;
 		stack<deformableParticles2D *> stack;
@@ -344,12 +383,18 @@ public:
 				if (cellpointer->cell(ci).cvel(0) > maxV)
 					maxV = cellpointer->cell(ci).cvel(0);
 				meanV += cellpointer->cell(ci).cvel(0);
+				// if (cellpointer->cell(ci).cpos(0) > -21 && cellpointer->cell(ci).cpos(0) < -18)
+				// {
+				// 	meanV += cellpointer->cell(ci).cvel(0);
+				// 	inBetween ++;
+				// }
 			}
 		}
 		
 		if (outside > 0)
 		{
 			meanV /= (cellpointer->NCELLS - outside);
+			// meanV /= inBetween;
 			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
 			while (!stack.empty())
 			{
@@ -378,11 +423,74 @@ public:
 								currentCell->setVPos(vi,d,currentCell->cpos(d) + currentCell->vrel(vi,d));
 						}
 
-						currentCell->inside_hopper = 1;
+						currentCell->inside_hopper = 2;
 						stack.pop();
 					}
 				}
 			}
+			settleDown = 1;
+			//settleParticles();
+			settleDown = 0;
+			for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+				if (cellpointer->cell(ci).inside_hopper == 2)
+				{
+					// double v = getVatMaxHeight(cellpointer->cell(ci).cpos(1));
+					cellpointer->cell(ci).setCVel(0,meanV);
+					// cellpointer->cell(ci).setCVel(0,v);
+					cellpointer->cell(ci).inside_hopper = 1;
+				}
+			}
+		}
+	}
+	void settleParticles(){
+		bool result = false;
+		double maxT, Tlim;
+		// if (frictionFlag)
+		// 	maxT = 1e4;
+		// else
+		// 	maxT = 1e3;
+		if (b < 0.01)
+			maxT = 1e4;
+		else
+			maxT = 1e3 * 0.1/b;
+		Tlim = maxT;
+		// if (t>2e5)
+		// 	Tlim = 3 * maxT;
+		for (int time = 0; time < Tlim; time++) {
+			
+			for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+				if (cellpointer->cell(ci).inside_hopper == 2)
+				{
+					cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
+					cellpointer->cell(ci).updateCPos();
+				}
+			}
+			// reset contacts before force calculation
+			cellpointer->resetContacts();
+			// calculate forces
+			cellpointer->hopperForces(w0, w, th, g, closed);
+			// update velocities
+			for (int ci = 0; ci < cellpointer->NCELLS; ci++)
+				if (cellpointer->cell(ci).inside_hopper == 2)
+					cellpointer->cell(ci).verletVelocityUpdate(cellpointer->dt, 0.01);
+			
+			int nSettling = 0;
+			
+			if (time%1000 == 0)
+			{
+				double tailEk = 0;
+				for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+					if (cellpointer->cell(ci).inside_hopper == 2)
+					{
+						nSettling += 1;
+						tailEk += cellpointer->cell(ci).totalKineticEnergy();
+					}
+				}
+				result = tailEk < 1e-5 * nSettling;
+				cout << "settling particles Ek = " << tailEk << endl;
+			}
+			if (result)
+				return;
 		}
 	}
 };

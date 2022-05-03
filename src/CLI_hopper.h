@@ -14,7 +14,7 @@
 extern bool constPressureFlag;
 extern bool frictionFlag;
 extern bool replaceFlag;
-int mixed = 0;
+
 
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
@@ -65,16 +65,18 @@ public:
 			this->g = 0.05*scaleFactor;
 		// this->NBx = 30;
 		// this->NBy = 10;
+		int mixed = 1;
 		if (mixed)
 		{
-			this->b = 0.03;
+			this->b = 0;
 			// this->g = 0.01;
-			this->g = 0.025;
 		}
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{
-			// this->NPRINT = 1e3;	
+			this->NT = 4e5;	
+			this->NPRINT = 1e4;	
+			// this->NPRINT = 1e5;	
 			this->NCELLS = 1600;
 			// this->timeStepMag = 0.002;
 			w0 = 60.0;
@@ -150,7 +152,10 @@ public:
 		cout << "	** Initializing hopper " << endl;
 		if (deformFlag)
 			this->particles->gDire = 1;
+		int fricTmp = frictionFlag;
+		frictionFlag = 0;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
+		frictionFlag = fricTmp;
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);

@@ -10,6 +10,8 @@
 
 // use std name space
 using namespace std;
+extern bool settleDown;
+bool settleDown = 0;
 extern bool wallAttracFlag;
 bool wallAttracFlag = 0;
 extern bool constPressureFlag;
@@ -19,6 +21,8 @@ extern bool replaceFlag;
 bool replaceFlag = 1;
 extern bool frictionFlag;
 bool frictionFlag = 1;
+extern bool softFlag;
+bool softFlag = 0;
 
 extern bool variableExtFflag;
 bool variableExtFflag = 0;

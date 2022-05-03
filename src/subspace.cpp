@@ -926,6 +926,8 @@ void frictionlessSubspace::calculateEdgeForces_insub() {
 				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
+				if (settleDown && (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper==2) && !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper==2)))
+					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
 					cout << "incorrect resident list" << endl;
 					//print_information();
@@ -961,6 +963,8 @@ void frictionlessSubspace::calculateEdgeForces_betweensub() {
 				// 		continue;
 				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
+					continue;
+				if (settleDown && (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper==2) && !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper==2)))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
 					cout << "incorrect cashed list" << endl;

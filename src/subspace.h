@@ -13,6 +13,7 @@
 #include <stack>
 #include <Eigen/Core>
 #include <Eigen/Dense>
+extern bool settleDown;
 
 typedef Eigen::Matrix<double, 2,  2>  MATRIX2;
 typedef Eigen::Matrix<double, 3,  3>  MATRIX3;
@@ -72,7 +73,7 @@ public:
 	double sigmaYX = 0.0;
 	double sigmaYY = 0.0;
 	vector<double> L;
-	double coefu = 1, coefV = 5;
+	double coefu = 1, coefV = 10;
 
 	// resident cells and cashed cells
 	vector<cvpair*> resident_cells;

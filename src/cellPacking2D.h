@@ -42,6 +42,7 @@ class cellPacking2D{
 public:
 
 	frictionlessSubspace* subsystem = nullptr;
+	vector<double> diskRadii;
 	// std::map<cvpair, std::vector<cvpair>> collisionMap;
 	std::vector<int> N_systems;
 	virtual void initialize_subsystems() { ; };
@@ -384,7 +385,7 @@ public:
 	double hopperPackingFraction(std::vector<double>& radii, double w0, double w, double th);
 	void setHopperPackingFraction(std::vector<double>& radii, double phiNew, double w0, double w, double th);
 	void hopperPosVerletSP();
-	void hopperVelVerletSP(std::vector<double>& radii);
+	void hopperVelVerletSP(std::vector<double>& radii, double b);
 	void printHopperSP(std::vector<double>& radii, double w0, double w, double th, double g);
 	void printHopperDP(double w0, double w, double th);
 	double vertexWallForce(int onTheLeftC, int onTheLeftV, std::vector<double> & posX, std::vector<double> & posY);
