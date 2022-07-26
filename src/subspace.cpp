@@ -27,6 +27,7 @@ void DPM_Parallel::split_into_subspace() {
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);
 		subsystem[i].cal_cashed_fraction();
+		subsystem[i].setFriction(this->coefu, this->coefv);
 	}
 
 	// assign vertexes into subsystems
@@ -60,6 +61,7 @@ void DPM_Parallel_frictionless::split_into_subspace() {
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);
 		subsystem[i].cal_cashed_fraction();
+		subsystem[i].setFriction(this->coefu, this->coefv);
 	}
 
 	// assign vertexes into subsystems

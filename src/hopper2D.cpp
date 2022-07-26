@@ -239,6 +239,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
 		if (th < (90.0 - 85.0)/180 * PI)
+		// if (th < PI/4.0 - 0.1)
 			xmax = -radii.at(ci);
 		else
 			xmax = L.at(0) * 0.5;
@@ -256,8 +257,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		else{
 			// ymin = xpos/tan(th) + cell(ci).getl0();
 			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
-			ymin = xpos/tan(th) + radii.at(ci);
-			ymax = w0 - (xpos/tan(th)) - radii.at(ci);
+			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
+			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
 		}
 		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
 
@@ -813,18 +814,26 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	double overlap = 0.0;
 	double uv = 0.0;
 	double ftmp, utmp;
-	double fscale = 10;
+	double fscale = this->spK;
 	vector<double> distanceVec(NDIM,0.0);
-
+	if (!subsystem)
+		fscale = 10;
 	// reset virial stresses to 0
 	sigmaXX = 0.0;
 	sigmaXY = 0.0;
 	sigmaYX = 0.0;
 	sigmaYY = 0.0;
 
+	if (spCalled % 100 == 0)
+	{
+		spCalled = 0;
+		spUpdateNeighbor(radii, w0, w, th, g, closed);
+	}
+	spCalled++;
 	// get disk-disk forces
 	for (ci=0; ci<NCELLS; ci++){
-		for (cj=ci+1; cj<NCELLS; cj++){
+		for (int cj : cell(ci).neighbors){
+		// for (cj=ci+1; cj<NCELLS; cj++){
 			if (!(cell(ci).inside_hopper) || !(cell(cj).inside_hopper))
 				continue;
 			if (settleDown && (!(cell(ci).inside_hopper==2) && !(cell(cj).inside_hopper==2)))
@@ -942,6 +951,54 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 		for (ci=0; ci<NCELLS; ci++)
 			cell(ci).setCForce(gDire,cell(ci).cforce(gDire) - (gDire*2-1) * g*cell(ci).a0);
 			//cell(ci).setCForce(0,cell(ci).cforce(0) + g*pow(radii.at(ci),2));
+	}
+}
+void cellPacking2D::spUpdateNeighbor(vector<double>& radii, double w0, double w, double th, double g, int closed){
+	// local variables
+	int ci, cj, vi, d;
+	double contactDistance = 0.0; 
+	double centerDistance = 0.0; 
+	double overlap = 0.0;
+	double uv = 0.0;
+	double ftmp, utmp;
+	double fscale = this->spK;
+	vector<double> distanceVec(NDIM,0.0);
+	if (!subsystem)
+		fscale = 10;
+	// reset virial stresses to 0
+	sigmaXX = 0.0;
+	sigmaXY = 0.0;
+	sigmaYX = 0.0;
+	sigmaYY = 0.0;
+
+	// get disk-disk forces
+	for (ci=0; ci<NCELLS; ci++){
+		cell(ci).neighbors.clear();
+		for (cj=ci+1; cj<NCELLS; cj++){
+			if (!(cell(ci).inside_hopper) || !(cell(cj).inside_hopper))
+				continue;
+			if (settleDown && (!(cell(ci).inside_hopper==2) && !(cell(cj).inside_hopper==2)))
+				continue;
+			// contact distance
+			contactDistance = radii.at(ci) + radii.at(cj);
+
+			// center-to-center distance
+			centerDistance = 0.0;
+			for (d=0; d<NDIM; d++){
+				// vectorial quantity
+				distanceVec.at(d) = cell(ci).cellDistance(cell(cj),d);
+
+				// add to distance
+				centerDistance += pow(distanceVec.at(d),2);
+			}
+
+			// check for contact
+			if (4 * contactDistance*contactDistance > centerDistance){
+				// add to contact checking
+				// addContact(ci,cj);
+				cell(ci).neighbors.push_back(cj);
+			}
+		}
 	}
 }
 

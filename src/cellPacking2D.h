@@ -80,11 +80,15 @@ public:
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
 	int print_frequency = 1;
+
 	
 	// array of cells
 	deformableParticles2D* cellArray;
-
+	double coefu = 0;
+	double coefv = 0;
+	double spK = 10;
 	
+	int spCalled = 0;
 
 	// contact matrix
 	int* contactMatrix;				// array of contacts between particles (= number of vv contacts between two cells)
@@ -197,6 +201,13 @@ public:
 	double getSigmaXY() { return sigmaXY; };
 	double getSigmaYX() { return sigmaYX; };
 	double getSigmaYY() { return sigmaYY; };
+	void setFriction(double coefu, double coefv){
+		this->coefu = coefu;
+		this->coefv = coefv;
+	};
+	void setSPk(double spK){
+		this->spK = spK;
+	};
 
 	// box len
 	double getL(int d) { return L.at(d); };
@@ -438,6 +449,7 @@ public:
 	double cal_temp(double scaled_v);
 	void rescal_V(double E);
 	void rescal_V_probe(double E);
+	void spUpdateNeighbor(vector<double>& radii, double w0, double w, double th, double g, int closed);
 
 
 

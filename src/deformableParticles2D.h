@@ -37,6 +37,8 @@ public:
 	// periodic boundary conditions
 	std::vector<int> pbc;
 
+	std::vector<int> neighbors;
+
 	// box lengths (Lx and Ly)
 	std::vector<double> L;
 
