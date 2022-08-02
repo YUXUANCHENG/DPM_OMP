@@ -239,6 +239,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
 		if (th < (90.0 - 85.0)/180 * PI)
+		// if (th < PI/4.0 - 0.1)
 			xmax = -radii.at(ci);
 		else
 			xmax = L.at(0) * 0.5;
@@ -256,8 +257,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		else{
 			// ymin = xpos/tan(th) + cell(ci).getl0();
 			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
-			ymin = xpos/tan(th) + radii.at(ci);
-			ymax = w0 - (xpos/tan(th)) - radii.at(ci);
+			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
+			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
 		}
 		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
 
@@ -813,9 +814,10 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 	double overlap = 0.0;
 	double uv = 0.0;
 	double ftmp, utmp;
-	double fscale = 10;
+	double fscale = this->spK;
 	vector<double> distanceVec(NDIM,0.0);
-
+	if (!subsystem)
+		fscale = 10;
 	// reset virial stresses to 0
 	sigmaXX = 0.0;
 	sigmaXY = 0.0;
@@ -1047,7 +1049,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	double overlap;							// overlap of particle with wall
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
-	double factor = 10;
+	double factor = 100;
 	// preliminary calculations
 	th = PI/2 - th;
 	t = tan(th);

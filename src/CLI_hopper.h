@@ -40,6 +40,11 @@ public:
 	double gamafactor1 = 0;
 	double gamafactor2 = 0;
 	bool deformFlag = false;
+	double coefu = 1;
+	double coefv = 0;
+	double spK = 10;
+	double start = 1;
+	double interval = 0.1;
 
 	double scaleFactor = 1;
 
@@ -48,7 +53,7 @@ public:
 		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
-		this->ka = 10*scaleFactor;
+		this->ka = 100*scaleFactor;
 		this->kb = 0.01*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
@@ -69,18 +74,29 @@ public:
 		if (mixed)
 		{
 			this->b = 0;
+			this->coefu = 1;
+			this->coefv = 10;
+			this->spK = 20;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{
-			this->NT = 4e5;	
-			this->NPRINT = 1e4;	
-			// this->NPRINT = 1e5;	
-			this->NCELLS = 1600;
+			// this->NT = 4e5;	
+			this->NT = 6e5;	
+			// this->NT = 1e6;	
+			// this->NPRINT = 1e3;	
+			// this->NPRINT = 1e4;	
+			this->NPRINT = 1e5;	
+			// this->NCELLS = 1600;
+			// this->NCELLS = 800;
+			this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
 			w0 = 60.0;
-			th =  (90.0 - 89.0)/180 * PI;
+			th =  (90.0 - 89.9)/180 * PI;
+			// th = PI/4.0;
+			// th = PI/3.0;
+			// th = PI/6.0;
 			this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
@@ -111,9 +127,9 @@ public:
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
 		// if (this->kb > 9 || this->NV > 16)
-		if (this->kb > 9)
-			// this->timeStepMag = 0.001;		
-			this->timeStepMag = 0.002;		
+		// if (this->kb > 9)
+		// 	// this->timeStepMag = 0.001;		
+		// 	this->timeStepMag = 0.002;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -133,20 +149,49 @@ public:
 	}
 
 	virtual void setKB() {
-		;
+		// ;
+		// this->kl = 0.01 * scaleFactor * pow(this->index_i%10 + 1, 3);
+		// this->kb = 0.001 * scaleFactor * pow(this->index_i/10 + 1, 3);
+
+		// this->kl = 0.1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
+		// this->kb = 0.001 * scaleFactor * pow(10, (this->index_i/10)*4.0/9);
+
+		setFriction();
+
+		// if (this->kb > 9)
+		// 	// this->timeStepMag = 0.001;		
+		// 	this->timeStepMag = 0.002;
+	}
+
+	void setFriction()
+	{
+		int i = this->index_i;
+		vector<double> bVec{1e-6,1e-5,1e-4,1e-3,3e-3,5e-3,8e-3,2e-2,4e-2,6e-2,8e-2,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0};
+		vector<double> vVec{10,10,10,10,10,10,10,10,10,10,10,10,5,1,0.1,1e-2,1e-3,0,10};
+		this->b = bVec.at(i);
+		this->coefv = vVec.at(i);
+		this->coefu = 0;
+		// this->coefv *= 5;
+		// this->coefv /= 10;
+		// this->coefv /= 100;
+		// this->coefu = this->coefv/10;
 	}
 
 	virtual void setSeed() {
-		this->seed = this->index_i;
-		//this->seed = 1;
+		// this->seed = this->index_i;
+		this->seed = 0;
 	}
 
 	virtual void prepareSystem() {
+		start = 3; interval = 0.4;
+		// start = 5; interval = 0.5;
+		// start = 0.5; interval = 0.1;
 		// w_scale = 0.5 + 0.05 * this->index_j;
 		// w_scale = 3 + 0.1 * this->index_j;
-		w_scale = 0.5 + 0.1 * this->index_j;
-		// w_scale = 0.3 + 0.06 * this->index_j;
-		// w_scale = 0.5 + 0.15 * this->index_j;
+		// w_scale = 0.5 + 0.1 * this->index_j;
+		// w_scale = 3 + 1 * this->index_j;
+		w_scale = start + interval * this->index_j;
+		// w_scale = 0.5 + 1 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
@@ -157,6 +202,8 @@ public:
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		frictionFlag = fricTmp;
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
+		this->particles->setFriction(this->coefu, this->coefv);
+		this->particles->setSPk(this->spK);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->changeL0(gamafactor1, gamafactor2);
@@ -311,7 +358,7 @@ public:
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		//this->particles->initialize_subsystems();
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
-		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << "," << this->ka << endl;
+		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << "," << this->ka << start << interval << endl;
 		cout << "	** FINISHED **   " << endl;
 		//clogPrintObject.close();
 		this->v0PrintObject.close();

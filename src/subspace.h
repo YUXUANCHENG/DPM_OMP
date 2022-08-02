@@ -115,6 +115,11 @@ public:
 		this->dt0 = dt0;
 	};
 
+	void setFriction(double coefu, double coefv){
+		this->coefu = coefu;
+		this->coefV = coefv;
+	};
+
 	void cashe_out(int direction);
 	void reset_cashe();
 	void reset();

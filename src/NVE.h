@@ -193,6 +193,8 @@ public:
 	bool startPullFlag = false;
 	double w0, w, th, g, b;
 	int t;
+	int lastFlowTime = 0;
+	std::ofstream intervalRobj;
 
 	DPMhopperSimulator(cellPacking2D* cell) {
 		cellpointer = cell;
@@ -204,8 +206,9 @@ public:
 		this->w0 = w0; this->w = w; this->th = th; this->g = g; this->b = b;
 		std::ofstream flowRobj;
 		flowRobj.open("flowRate.txt");
+		intervalRobj.open("flowInterval.txt");
 		int result;
-		for (t = 0; t < cellpointer->NT; t++) {
+		for (t = 0; t < round(cellpointer->NT * 0.005 / cellpointer->dt); t++) {
 			bool startFlag;
 			if (replaceFlag)
 				startFlag = (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside);
@@ -216,10 +219,11 @@ public:
 			if (closed == 1 && startFlag) 
 				closed = 0;
 
-			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
-			if (replaceFlag && closed == 0 && (t+1) % int(1e4) == 0) {
+			addBack();
+			cellpointer->printRoutine(t, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
+			if (replaceFlag && closed == 0 && (t+1) % int (1e4 * 0.005 / cellpointer->dt) == 0) {
 			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
-				addBack();
+				// addBack();
 				double rate = (double) flowCount / 1e4;
 				// double rate = (double) flowCount / (double) cellpointer->NPRINT;
 				flowRobj << rate << endl;
@@ -349,20 +353,22 @@ public:
 		}
 		return maxHight;
 	}
-	double getVatMaxHeight(double y)
+	double getVatMaxHeight(int cindex)
 	{
-		double maxHight = 10;
-		int maxIndex = 0;
+		double maxHight = 0;
+		int maxIndex = -1;
+		double y = cellpointer->cell(cindex).cpos(1);
+		double x = cellpointer->cell(cindex).cpos(0);
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper == 1 && cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
-				if (cellpointer->cell(ci).cpos(0) < maxHight)
+				if (cellpointer->cell(ci).cpos(0) < maxHight && cellpointer->cell(ci).cpos(0) > x)
 				{
 					maxHight = cellpointer->cell(ci).cpos(0);
 					maxIndex = ci;
 				}
 			}
 		}
-		return cellpointer->cell(maxIndex).cvel(0);
+		return maxIndex >= 0? cellpointer->cell(maxIndex).cvel(0) : 0;
 	}
 	void addBack()
 	{
@@ -393,6 +399,10 @@ public:
 		
 		if (outside > 0)
 		{
+			int interval = t - lastFlowTime;
+			lastFlowTime = t;
+			intervalRobj << interval << endl;
+
 			meanV /= (cellpointer->NCELLS - outside);
 			// meanV /= inBetween;
 			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
@@ -401,14 +411,14 @@ public:
 				for(int i = 0; i < NperLine; i++)
 				{
 					placementNumber = placementNumber%NperLine;
-					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,i);
+					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,placementNumber%2);
 
 					if (!stack.empty())
 					{
 						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
 						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
-						currentCell->setCPos(0,maxHight - 0.9);
+						currentCell->setCPos(0,maxHight - 1);
 						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
 						currentCell->regularPolygon();
 						// if (frictionFlag)
@@ -434,9 +444,17 @@ public:
 			for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 				if (cellpointer->cell(ci).inside_hopper == 2)
 				{
-					// double v = getVatMaxHeight(cellpointer->cell(ci).cpos(1));
-					cellpointer->cell(ci).setCVel(0,meanV);
-					// cellpointer->cell(ci).setCVel(0,v);
+					double v = getVatMaxHeight(ci);
+					double vFactor = 1;
+					double bThreash = 5e-3;
+					if (this->b < bThreash && (v*v-2*g*1.5/16)>0)
+					{
+						vFactor = sqrt(v*v-2*g*1.5/16)/v;
+						// vFactor = meanV/v;
+					}
+
+					cellpointer->cell(ci).setCVel(0,v*vFactor);
+					cellpointer->cell(ci).setCVel(1, 0.1*v*pow(-1,ci));
 					cellpointer->cell(ci).inside_hopper = 1;
 				}
 			}
