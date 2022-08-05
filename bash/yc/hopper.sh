@@ -46,8 +46,9 @@ done
 slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
+# partition=scavenge
 # partition=pi_ohern
-### partition=general
+# partition=general
 partition=day
 job_name=hopper
 let range1t=$factor1-$factor1s+1

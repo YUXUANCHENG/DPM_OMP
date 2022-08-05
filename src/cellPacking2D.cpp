@@ -3595,7 +3595,7 @@ void cellPacking2D::fireMinimizeSP(vector<double>& lenscales){
 		K += 0.5*(PI*pow(lenscales.at(ci),2))*sqrt(pow(cell(ci).cvel(0),2) + pow(cell(ci).cvel(1),2));
 
 	// iterate through MD time until system converged
-	itrMax = 5e5;
+	itrMax = 1e5;
 	for (itr=0; itr<itrMax; itr++){
 
 		// output some information to console
@@ -4798,7 +4798,14 @@ void cellPacking2D::printV() {
 		v_y = cell(ci).cal_mean_v(1);
 		energy = 0.5 * (v_x*v_x + v_y*v_y) * cell(ci).getNV();
 		tot_k_energy = cell(ci).totalKineticEnergy();
-		vPrintObject << v_x << "," << v_y <<  "," << energy/tot_k_energy << "," << tot_k_energy << endl;
+		double aoldx = 0;
+		double aoldy = 0;
+		for (int vi=0; vi<cell(ci).getNV(); vi++)
+		{
+			aoldx += cell(ci).vacc(vi,0);
+			aoldy += cell(ci).vacc(vi,1);
+		}
+		vPrintObject << v_x << "," << v_y <<  "," << energy/tot_k_energy << "," << tot_k_energy << "," << aoldx << "," << aoldy << "," << cell(ci).stressXX << "," << cell(ci).stressYY <<endl;
 	}
 }
 

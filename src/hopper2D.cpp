@@ -360,7 +360,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 	}
 
 	// iterate through MD time until system converged
-	itrMax = 5e5;
+	itrMax = 1e5;
 	for (itr=0; itr<itrMax; itr++){
 
 		// output some information to console
@@ -926,10 +926,18 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 					// add to virial stresses
 					if (d == 0){
 						sigmaXX += ftmp*uv*distanceVec.at(0);
+						// cell(ci).stressXX += 0.5* ftmp*uv*distanceVec.at(0);
+						// cell(cj).stressXX += 0.5* ftmp*uv*distanceVec.at(0);
+						cell(ci).stressXX += dv.at(0);
+						cell(cj).stressXX -= dv.at(0);
 						sigmaXY += ftmp*uv*distanceVec.at(1);
 					}
 					else{
 						sigmaYX += ftmp*uv*distanceVec.at(0);
+						// cell(ci).stressYY += 0.5* ftmp*uv*distanceVec.at(1);
+						// cell(cj).stressYY += 0.5* ftmp*uv*distanceVec.at(1);
+						cell(ci).stressYY += dv.at(1);
+						cell(cj).stressYY -= dv.at(1);
 						sigmaYY += ftmp*uv*distanceVec.at(1);
 					}
 				}
@@ -2952,6 +2960,8 @@ void cellPacking2D::hopperPosVerletSP(){
 
 			// set forces to 0
 			cell(ci).setCForce(d,0.0);
+			cell(ci).stressXX = 0;
+			cell(ci).stressYY = 0;
 		}
 
 		// set interaction energy to 0

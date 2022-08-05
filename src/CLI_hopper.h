@@ -76,7 +76,7 @@ public:
 			this->b = 0;
 			this->coefu = 1;
 			this->coefv = 10;
-			this->spK = 20;
+			this->spK = 2;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
@@ -86,11 +86,11 @@ public:
 			this->NT = 6e5;	
 			// this->NT = 1e6;	
 			// this->NPRINT = 1e3;	
-			// this->NPRINT = 1e4;	
-			this->NPRINT = 1e5;	
-			// this->NCELLS = 1600;
+			this->NPRINT = 1e4;	
+			// this->NPRINT = 1e5;	
+			this->NCELLS = 1600;
 			// this->NCELLS = 800;
-			this->NCELLS = 3200;
+			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
 			w0 = 60.0;
 			th =  (90.0 - 89.9)/180 * PI;
