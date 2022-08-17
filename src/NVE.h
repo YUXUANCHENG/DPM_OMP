@@ -209,10 +209,10 @@ public:
 			if (closed == 1 && startFlag) 
 				closed = 0;
 
+			addBack();
 			cellpointer->printRoutine(t, cellpointer->NPRINT, t, N_inside, closed);
-			if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*10) == 0) {
-				addBack();
-				double rate = (double) flowCount / (double) cellpointer->NPRINT;
+			if (replaceFlag && closed == 0 && (t+1) % int(1e4) == 0) {
+				double rate = (double) flowCount / 1e4;
 				flowRobj << rate << endl;
 				flowCount = 0;
 			}
@@ -289,50 +289,92 @@ public:
 	double getMaxHight(double y)
 	{
 		double maxHight = 10;
+		int maxIndex = 0;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).cpos(1) < y + 2 && cellpointer->cell(ci).cpos(1) > y - 2 ){
+			if (cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
 				if (cellpointer->cell(ci).cpos(0) < maxHight)
+				{
 					maxHight = cellpointer->cell(ci).cpos(0);
+					maxIndex = ci;
+				}
 			}
+		}
+		for (int vi = 0; vi < cellpointer->cell(maxIndex).NV; vi ++)
+		{
+			double vY = cellpointer->cell(maxIndex).vpos(vi, 0);
+			if ( vY < maxHight)
+				maxHight = vY;
 		}
 		return maxHight;
 	}
-
+	double getVatMaxHeight(int cindex)
+	{
+		double maxHight = 0;
+		int maxIndex = -1;
+		double y = cellpointer->cell(cindex).cpos(1);
+		double x = cellpointer->cell(cindex).cpos(0);
+		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+			if (cellpointer->cell(ci).inside_hopper == 1 && cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
+				if (cellpointer->cell(ci).cpos(0) < maxHight && cellpointer->cell(ci).cpos(0) > x)
+				{
+					maxHight = cellpointer->cell(ci).cpos(0);
+					maxIndex = ci;
+				}
+			}
+		}
+		return maxIndex >= 0? cellpointer->cell(maxIndex).cvel(0) : 0;
+	}
 	void addBack()
 	{
 		int outside = 0;
+		int inBetween = 1;
 		double meanV = 0;
+		double maxV = -10;
 		stack<deformableParticles2D *> stack;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper == 0)
 			{
 				outside ++;
 				flowCount ++;
-				meanV += cellpointer->cell(ci).cvel(0);
 				stack.push(&(cellpointer->cell(ci)));
+			}
+			else
+			{
+				if (cellpointer->cell(ci).cvel(0) > maxV)
+					maxV = cellpointer->cell(ci).cvel(0);
+				meanV += cellpointer->cell(ci).cvel(0);
+				// if (cellpointer->cell(ci).cpos(0) > -21 && cellpointer->cell(ci).cpos(0) < -18)
+				// {
+				// 	meanV += cellpointer->cell(ci).cvel(0);
+				// 	inBetween ++;
+				// }
 			}
 		}
 		
 		if (outside > 0)
 		{
-			meanV /= outside;
+			meanV /= (cellpointer->NCELLS - outside);
+			// meanV /= inBetween;
 			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
 			while (!stack.empty())
 			{
 				for(int i = 0; i < NperLine; i++)
 				{
 					placementNumber = placementNumber%NperLine;
-					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,i);
+					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,placementNumber%2);
 
 					if (!stack.empty())
 					{
 						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
 						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
-						currentCell->setCPos(0,maxHight - 2);
+						currentCell->setCPos(0,maxHight - 0.9);
 						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
 						currentCell->regularPolygon();
-						currentCell->setCVel(0,meanV);
+						// if (frictionFlag)
+							currentCell->setCVel(0,meanV);
+						// else
+							// currentCell->setCVel(0,maxV);
 						currentCell->setCVel(1,0);
 
 						// update real-space positions
@@ -341,9 +383,18 @@ public:
 								currentCell->setVPos(vi,d,currentCell->cpos(d) + currentCell->vrel(vi,d));
 						}
 
-						currentCell->inside_hopper = 1;
+						currentCell->inside_hopper = 2;
 						stack.pop();
 					}
+				}
+			}
+			for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
+				if (cellpointer->cell(ci).inside_hopper == 2)
+				{
+					double v = getVatMaxHeight(ci);
+					cellpointer->cell(ci).setCVel(0,v);
+					// cellpointer->cell(ci).setCVel(0,meanV);
+					cellpointer->cell(ci).inside_hopper = 1;
 				}
 			}
 		}

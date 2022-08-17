@@ -39,6 +39,8 @@ public:
 	double gamafactor1 = 0;
 	double gamafactor2 = 0;
 	bool deformFlag = false;
+	double coefu = 1;
+	double coefv = 0;
 
 	double scaleFactor = 1;
 
@@ -48,10 +50,11 @@ public:
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 1*scaleFactor;
+		this->kb = 0.01*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
+		int factorNx = 5;
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
 		//this->g = 0.05;
@@ -66,11 +69,13 @@ public:
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{
-			this->NPRINT = 1e3;	
+			this->NT = 4e5;	
+			this->NPRINT = 1e5;	
 			this->NCELLS = 1600;
 			w0 = 60.0;
-			th =  (90.0 - 89.0)/180 * PI;
+			th =  (90.0 - 89.9)/180 * PI;
 			this->kint = 10*scaleFactor;
+			factorNx = 1;
 		}
 		else
 		{
@@ -85,12 +90,11 @@ public:
 			}
 		}
 		
-		this->NV = 64;
-		// this->NV = 16;
+		this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 10 * round(w0/10) * this->NV/16;
-		this->NBx = 2 * (this->NCELLS/64) * pow(this->NV/16, 1) * (this->NBy/30);
+		this->NBx = factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
@@ -118,7 +122,21 @@ public:
 	}
 
 	virtual void setKB() {
-		;
+		setFriction();
+	}
+
+	void setFriction()
+	{
+		int i = this->index_i;
+		vector<double> bVec{1e-6,1e-5,1e-4,1e-3,3e-3,5e-3,8e-3,2e-2,4e-2,6e-2,8e-2,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0};
+		vector<double> vVec{10,10,10,10,10,10,10,10,10,10,10,10,5,1,0.1,1e-2,1e-3,0,10};
+		this->b = bVec.at(i);
+		this->coefv = vVec.at(i);
+		this->coefu = 0;
+		// this->coefv *= 5;
+		// this->coefv /= 10;
+		// this->coefv /= 100;
+		// this->coefu = this->coefv/10;
 	}
 
 	virtual void setSeed() {
@@ -128,8 +146,8 @@ public:
 
 	virtual void prepareSystem() {
 		// w_scale = 0.5 + 0.05 * this->index_j;
-		// w_scale = 3 + 0.1 * this->index_j;
-		w_scale = 0.5 + 0.1 * this->index_j;
+		w_scale = 3 + 0.4 * this->index_j;
+		// w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 0.3 + 0.06 * this->index_j;
 		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
@@ -139,6 +157,7 @@ public:
 			this->particles->gDire = 1;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);
+		this->particles->setFriction(this->coefu, this->coefv);
 		this->particles->initialize_subsystems(this->NBx, this->NBy);
 		this->particles->vertexDPMTimeScale(this->timeStepMag);
 		this->particles->changeL0(gamafactor1, gamafactor2);

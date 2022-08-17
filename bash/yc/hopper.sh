@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # directories with code
-cellsdir=~/DPM_OMP_Hopper/DPM_OMP
+cellsdir=~/DPM_OMP_Hopper_B/DPM_OMP
 srcdir=$cellsdir/src
 # maindir=$cellsdir/main
 
@@ -9,11 +9,11 @@ srcdir=$cellsdir/src
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
 jobnumber=1
-factor1=10
-factor2=40
+# factor1=10
+# factor2=40
 
-# factor1=1
-# factor2=100
+factor1=19
+factor2=20
 # mainf=$maindir/jamming/cellJamming.cpp
 
 # run compiler
@@ -38,8 +38,9 @@ done
 slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
-partition=pi_ohern
-# partition=general
+# partition=pi_ohern
+partition=day
+### partition=general
 job_name=DPM
 let total_job=$jobnumber*$jobnumber*$factor1*$factor2
 
@@ -57,4 +58,4 @@ echo sed -n \"\$\{SLURM_ARRAY_TASK_ID\}p\" "$taskf" \| /bin/bash >> $slurmf
 cat $slurmf
 
 # sbatch -t 10:00:00 $slurmf
-sbatch -t 4-00:00:00 $slurmf
+sbatch -t 1-00:00:00 $slurmf

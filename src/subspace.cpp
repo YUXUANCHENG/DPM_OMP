@@ -27,6 +27,7 @@ void DPM_Parallel::split_into_subspace() {
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		subsystem[i].initialize(this, temp, N_systems, i, dt0);
 		subsystem[i].cal_cashed_fraction();
+		subsystem[i].setFriction(this->coefu, this->coefv);
 	}
 
 	// assign vertexes into subsystems
@@ -620,8 +621,8 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 				for (d = 0; d < NDIM; d++) {
 					dv_along_norm.at(d) = dv.at(d) * vertexVec.at(d) / vertexDist;
 					dv_along_tang.at(d) = dv.at(d) - dv_along_norm.at(d);
-					friction_norm.at(d) = - 0.1 * dv_along_norm.at(d);
-					friction_tang.at(d) = - 0.1 * dv_along_tang.at(d);
+					friction_norm.at(d) = - coefu * dv_along_norm.at(d);
+					friction_tang.at(d) = - coefV * dv_along_tang.at(d);
 				}
 			}
 			// cout << "friction force" << endl;

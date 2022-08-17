@@ -76,7 +76,8 @@ public:
 	
 	// array of cells
 	deformableParticles2D* cellArray;
-
+	double coefu = 0;
+	double coefv = 0;
 	
 
 	// contact matrix
@@ -151,6 +152,11 @@ public:
 			exit(1);
 		}
 	}
+
+	void setFriction(double coefu, double coefv){
+		this->coefu = coefu;
+		this->coefv = coefv;
+	};
 
 	void openStatObject(std::string& str){
 		statPrintObject.open(str.c_str());

@@ -31,6 +31,7 @@ class subspace {
 	
 public:
 	double Ncc = 0, Nvv = 0;
+	double coefu = 1, coefV = 10;
 
 	// stress
 	double sigmaXX = 0.0;
@@ -79,6 +80,11 @@ public:
 		this->box_id = box_id;
 		this->N_systems = N_systems;
 		this->dt0 = dt0;
+	};
+
+	void setFriction(double coefu, double coefv){
+		this->coefu = coefu;
+		this->coefV = coefv;
 	};
 
 	void cashe_out(int direction);
