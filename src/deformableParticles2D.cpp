@@ -33,7 +33,7 @@ const double PI = 4*atan(1);
 // default constructor
 deformableParticles2D::deformableParticles2D(){
 	// dimensionality ALWAYS set to 2
-	NDIM 	= 2;
+	NDIM 	= 3;
 
 	// scalar variables set to 0
 	NV 		= 0;
@@ -168,7 +168,7 @@ void deformableParticles2D::operator=(deformableParticles2D& onTheRight){
 	int i,d;
 
 	// dimensionality ALWAYS set to 2
-	NDIM 	= 2;
+	NDIM 	= 3;
 
 	// check that array pointers do not point to null
 	if (!vertexPositions){
@@ -248,7 +248,7 @@ void deformableParticles2D::operator=(deformableParticles2D& onTheRight){
 void deformableParticles2D::initializeVertices(){
 	// local variables
 	int i,d;
-
+	NDIM = 3;
 	// check if NV has been set > 0
 	if (NV <= 0){
 		cout << "	ERROR: in initializeVertices(), NV = " << NV << ", so not set properly. Ending." << endl;

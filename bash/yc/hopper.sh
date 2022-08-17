@@ -13,13 +13,13 @@ jobnumber=1
 # factor2=40
 
 
-# factor1=19
-# factor1s=1
-# factor2=20
-
 factor1=19
-factor1s=18
+factor1s=1
 factor2=20
+
+# factor1=19
+# factor1s=18
+# factor2=20
 
 # mainf=$maindir/jamming/cellJamming.cpp
 
@@ -57,7 +57,7 @@ echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf
 # echo \#SBATCH --cpus-per-task=4 >> $slurmf
 # echo \#SBATCH --cpus-per-task=6 >> $slurmf
-echo \#SBATCH --mem-per-cpu=512 >> $slurmf
+echo \#SBATCH --mem-per-cpu=2048 >> $slurmf
 echo \#SBATCH --array=1-$total_job >> $slurmf
 echo \#SBATCH -n 1 >> $slurmf
 echo \#SBATCH -p $partition >> $slurmf

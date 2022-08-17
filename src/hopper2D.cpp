@@ -219,7 +219,8 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	// initialize L based on smallest vertex radius
 	// vrmin = 0.5*cell(0).getl0()*cutoff;
 	vrmin = 0.5*cell(0).getl0();
-	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
+	// Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
+	Ltmp = 0;
 	L.at(0) = Ltmp;
 	//L.at(1) = Ltmp;
 	L.at(1) = w0;
@@ -238,33 +239,24 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	for (ci=0; ci<NCELLS; ci++){
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
-		if (th < (90.0 - 85.0)/180 * PI)
-		// if (th < PI/4.0 - 0.1)
-			xmax = -radii.at(ci);
-		else
-			xmax = L.at(0) * 0.5;
+		xmax = -radii.at(ci);
 		
-
 		// get random x location in hopper
 		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
 		//xpos *= 0.9;
 
 		// assign random y components
-		if (xpos < 0){
-			ymin = radii.at(ci);
-			ymax = w0 - radii.at(ci);
-		}
-		else{
-			// ymin = xpos/tan(th) + cell(ci).getl0();
-			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
-			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
-			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
-		}
-		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+		ymin = 0;
+		ymax = w0/2 - radii.at(ci);
+		double randAngle = ((double)rand() / (RAND_MAX + 1.0)) * PI * 2;
+		double randR = (ymax-ymin)* sqrt((double)rand() / (RAND_MAX + 1.0));
+		ypos = randR * cos(randAngle) ;
+		double zpos = randR * sin(randAngle) ; 
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
 		cell(ci).setCPos(1,ypos);
+		cell(ci).setCPos(2,zpos);
 	}
 
 	// initialize phi
@@ -360,7 +352,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 	}
 
 	// iterate through MD time until system converged
-	itrMax = 5e5;
+	itrMax = 2e4;
+	// itrMax = 5e5;
 	for (itr=0; itr<itrMax; itr++){
 
 		// output some information to console
@@ -873,12 +866,12 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 					cell(cj).setUInt(vi,cell(cj).uInt(vi) + utmp/cell(cj).getNV());
 
 
-			std::vector<double> dv(2);
-			std::vector<double> dv_along_norm(2);
-			std::vector<double> dv_along_tang(2);
-			std::vector<double> friction(2);
-			std::vector<double> friction_norm(2);
-			std::vector<double> friction_tang(2);
+			std::vector<double> dv(3);
+			std::vector<double> dv_along_norm(3);
+			std::vector<double> dv_along_tang(3);
+			std::vector<double> friction(3);
+			std::vector<double> friction_norm(3);
+			std::vector<double> friction_tang(3);
 			double projection = 0;
 			for (d = 0; d < NDIM; d++) {
 				if (frictionFlag){
@@ -904,21 +897,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 					// friction_tang.at(d) = 0;
 				}
 			}
-			
-// 			for (d = 0; d < NDIM; d++) {
-// 				// get force value
-// 				ftmp = -forceScale * (1 - distScale) * vertexVec.at(d) / vertexDist;
-// 				force[d] = ftmp;
-// 				r1[d] = leftCell.vrel(onTheLeft->vi, d) + vertexVec.at(d) / 2;
-// 				r2[d] = rightCell.vrel(onTheRight->vi, d) - vertexVec.at(d) / 2;
-// 				// add to force on i
-// #pragma omp critical
-// 			{
-// 				leftCell.setVForce(onTheLeft->vi, d, leftCell.vforce(onTheLeft->vi, d) + ftmp + friction_norm.at(d) + friction_tang.at(d));
 
-// 				// subtract off complement from force on j
-// 				rightCell.setVForce(onTheRight->vi, d, rightCell.vforce(onTheRight->vi, d) - ftmp - friction_norm.at(d) - friction_tang.at(d));
-// 			}
 
 
 				// add to forces
@@ -1094,7 +1073,7 @@ void cellPacking2D::hopperForces(double w0, double w, double th, double g, int c
 void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double w, double th, int closed){
 	// local variables
 	int ci, vi; 							// indices
-	double x, y;							// particle positions (IN UNITS OF SIGMA)
+	double x, y, z;							// particle positions (IN UNITS OF SIGMA)
 	double sigma; 							// particle diameter
 	double t, c, s;							// tangent, cosine, sine
 	double hPlus, hMinus;					// height of angled wall
@@ -1127,262 +1106,263 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 		// get particle positions
 		x = cell(ci).cpos(0);
 		y = cell(ci).cpos(1);
+		z = cell(ci).cpos(2);
 
-		// check hopper walls
-		if (x > -sigma*s){
-			// if particle in hopper bulk
-			double sib = 0.5 * (sigma + cell(0).getl0());
-			double xedge = L.at(0) - 0.5*cell(0).getl0() - sib*s;
-			if (x < xedge){
-				// check ymin for walls
-				yPlusMin 	= w0 - x*t - 0.5*sigma/c;
-				yMinusMax 	= x*t + 0.5*sigma/c;
+		// // check hopper walls
+		// if (x > -sigma*s){
+		// 	// if particle in hopper bulk
+		// 	double sib = 0.5 * (sigma + cell(0).getl0());
+		// 	double xedge = L.at(0) - 0.5*cell(0).getl0() - sib*s;
+		// 	if (x < xedge){
+		// 		// check ymin for walls
+		// 		yPlusMin 	= w0 - x*t - 0.5*sigma/c;
+		// 		yMinusMax 	= x*t + 0.5*sigma/c;
 
-				// if true, interacting with bottom wall
-				if (y < yMinusMax){
-					// vector to wall
-					lwx = s*(x*s - y*c);
-					lwy = c*(y*c - x*s);
+		// 		// if true, interacting with bottom wall
+		// 		if (y < yMinusMax){
+		// 			// vector to wall
+		// 			lwx = s*(x*s - y*c);
+		// 			lwy = c*(y*c - x*s);
 
-					// distance
-					lw = sqrt(lwx*lwx + lwy*lwy);
+		// 			// distance
+		// 			lw = sqrt(lwx*lwx + lwy*lwy);
 
-					if (lw < 0.5*sigma){
-						// overlap with wall
-						overlap = 2.0*lw/sigma;
+		// 			if (lw < 0.5*sigma){
+		// 				// overlap with wall
+		// 				overlap = 2.0*lw/sigma;
 
-						// force
-						ftmp = 1 - overlap;
-						ftmp *= factor;
-						cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-						cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 				// force
+		// 				ftmp = 1 - overlap;
+		// 				ftmp *= factor;
+		// 				cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 				cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-						// add to energies
-						utmp = 0.25*sigma*pow(1 - overlap,2);
-						for (vi=0; vi<cell(ci).getNV(); vi++)
-							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 				// add to energies
+		// 				utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 				for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-						// add to net force on wall
-						sigmaYX -= ftmp*(lwx/lw);
-						sigmaYY -= ftmp*(lwy/lw);
-					}
-				}
+		// 				// add to net force on wall
+		// 				sigmaYX -= ftmp*(lwx/lw);
+		// 				sigmaYY -= ftmp*(lwy/lw);
+		// 			}
+		// 		}
 
 
-				// if true, interacting with top wall
-				if (y > yPlusMin){
-					// vector to wall
-					lwx = s*(x*s + (y - w0)*c);
-					lwy = c*((y - w0)*c + x*s);
+		// 		// if true, interacting with top wall
+		// 		if (y > yPlusMin){
+		// 			// vector to wall
+		// 			lwx = s*(x*s + (y - w0)*c);
+		// 			lwy = c*((y - w0)*c + x*s);
 
-					// distance
-					lw = sqrt(lwx*lwx + lwy*lwy);
+		// 			// distance
+		// 			lw = sqrt(lwx*lwx + lwy*lwy);
 
-					if (lw < 0.5*sigma){
-						// overlap with wall
-						overlap = 2.0*lw/sigma;
+		// 			if (lw < 0.5*sigma){
+		// 				// overlap with wall
+		// 				overlap = 2.0*lw/sigma;
 
-						// force
-						ftmp = 1 - overlap;
-						ftmp *= factor;
-						cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-						cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 				// force
+		// 				ftmp = 1 - overlap;
+		// 				ftmp *= factor;
+		// 				cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 				cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-						// add to energies
-						utmp = 0.25*sigma*pow(1 - overlap,2);
-						for (vi=0; vi<cell(ci).getNV(); vi++)
-							cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 				// add to energies
+		// 				utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 				for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-						// add to net force on wall
-						sigmaXX -= ftmp*(lwx/lw);
-						sigmaXY -= ftmp*(lwy/lw);
-					}
-				}
-			}
+		// 				// add to net force on wall
+		// 				sigmaXX -= ftmp*(lwx/lw);
+		// 				sigmaXY -= ftmp*(lwy/lw);
+		// 			}
+		// 		}
+		// 	}
 
-			// if particle is near edge; either do wall force or force due to edge
-			else if (x > xedge && x < L.at(0)){
-				// check on top wall
-				if (y > 0.5*w0){
-					// define line separating wall force and edge force regime
-					yline = 0.5*(w0 + w) - ((L.at(0) - x)/t);
+		// 	// if particle is near edge; either do wall force or force due to edge
+		// 	else if (x > xedge && x < L.at(0)){
+		// 		// check on top wall
+		// 		if (y > 0.5*w0){
+		// 			// define line separating wall force and edge force regime
+		// 			yline = 0.5*(w0 + w) - ((L.at(0) - x)/t);
 
-					// if above yline, use wall force
-					if (y > yline){
-						// vector to wall
-						lwx = s*(x*s + (y - w0)*c);
-						lwy = c*((y - w0)*c + x*s);
+		// 			// if above yline, use wall force
+		// 			if (y > yline){
+		// 				// vector to wall
+		// 				lwx = s*(x*s + (y - w0)*c);
+		// 				lwy = c*((y - w0)*c + x*s);
 
-						// distance
-						lw = sqrt(lwx*lwx + lwy*lwy);
+		// 				// distance
+		// 				lw = sqrt(lwx*lwx + lwy*lwy);
 
-						if (lw < 0.5*sigma){
-							// overlap with wall
-							overlap = 2.0*lw/sigma;
+		// 				if (lw < 0.5*sigma){
+		// 					// overlap with wall
+		// 					overlap = 2.0*lw/sigma;
 
-							// force
-							ftmp = 1 - overlap;
-							ftmp *= factor;
-							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 					// force
+		// 					ftmp = 1 - overlap;
+		// 					ftmp *= factor;
+		// 					cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 					cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-							// add to energies
-							utmp = 0.25*sigma*pow(1 - overlap,2);
-							for (vi=0; vi<cell(ci).getNV(); vi++)
-								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 					// add to energies
+		// 					utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 					for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-							// add to net force on wall
-							sigmaXX -= ftmp*(lwx/lw)*lwx;
-							sigmaXY -= ftmp*(lwy/lw)*lwy;
-						}
-					}
-					// else if below yline but above radius cutoff, use edge force
-					else if (y < yline && y > 0.5*(w0 + w - sigma)){
-						// vector to edge point on top lip
-						lwx = x - L.at(0);
-						lwy = y - 0.5*(w0 + w);
+		// 					// add to net force on wall
+		// 					sigmaXX -= ftmp*(lwx/lw)*lwx;
+		// 					sigmaXY -= ftmp*(lwy/lw)*lwy;
+		// 				}
+		// 			}
+		// 			// else if below yline but above radius cutoff, use edge force
+		// 			else if (y < yline && y > 0.5*(w0 + w - sigma)){
+		// 				// vector to edge point on top lip
+		// 				lwx = x - L.at(0);
+		// 				lwy = y - 0.5*(w0 + w);
 
-						// distance
-						lw = sqrt(lwx*lwx + lwy*lwy);
+		// 				// distance
+		// 				lw = sqrt(lwx*lwx + lwy*lwy);
 
-						if (lw < 0.5*sigma){
-							// overlap with wall
-							overlap = 2.0*lw/sigma;
+		// 				if (lw < 0.5*sigma){
+		// 					// overlap with wall
+		// 					overlap = 2.0*lw/sigma;
 
-							// force
-							ftmp = 1 - overlap;
-							ftmp *= factor;
-							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 					// force
+		// 					ftmp = 1 - overlap;
+		// 					ftmp *= factor;
+		// 					cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 					cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-							// add to energies
-							utmp = 0.25*sigma*pow(1 - overlap,2);
-							for (vi=0; vi<cell(ci).getNV(); vi++)
-								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 					// add to energies
+		// 					utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 					for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-							// add to net force on wall
-							sigmaXX -= ftmp*(lwx/lw)*lwx;
-							sigmaXY -= ftmp*(lwy/lw)*lwy;
-						}
-					}
-				}
-				// check on bottom wall
-				else{
-					// define line separating wall force and edge force regime
-					yline = 0.5*(w0 - w) + ((L.at(0) - x)/t);
+		// 					// add to net force on wall
+		// 					sigmaXX -= ftmp*(lwx/lw)*lwx;
+		// 					sigmaXY -= ftmp*(lwy/lw)*lwy;
+		// 				}
+		// 			}
+		// 		}
+		// 		// check on bottom wall
+		// 		else{
+		// 			// define line separating wall force and edge force regime
+		// 			yline = 0.5*(w0 - w) + ((L.at(0) - x)/t);
 
-					// if below yline, use wall force
-					if (y < yline){
-						// vector to wall
-						lwx = s*(x*s - y*c);
-						lwy = c*(y*c - x*s);
+		// 			// if below yline, use wall force
+		// 			if (y < yline){
+		// 				// vector to wall
+		// 				lwx = s*(x*s - y*c);
+		// 				lwy = c*(y*c - x*s);
 
-						// distance
-						lw = sqrt(lwx*lwx + lwy*lwy);
+		// 				// distance
+		// 				lw = sqrt(lwx*lwx + lwy*lwy);
 
-						if (lw < 0.5*sigma){
-							// overlap with wall
-							overlap = 2.0*lw/sigma;
+		// 				if (lw < 0.5*sigma){
+		// 					// overlap with wall
+		// 					overlap = 2.0*lw/sigma;
 
-							// force
-							ftmp = 1 - overlap;
-							ftmp *= factor;
-							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 					// force
+		// 					ftmp = 1 - overlap;
+		// 					ftmp *= factor;
+		// 					cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 					cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-							// add to energies
-							utmp = 0.25*sigma*pow(1 - overlap,2);
-							for (vi=0; vi<cell(ci).getNV(); vi++)
-								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 					// add to energies
+		// 					utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 					for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-							// add to net force on wall
-							sigmaYX -= ftmp*(lwx/lw);
-							sigmaYY -= ftmp*(lwy/lw);
-						}
-					}
-					// else if above yline but below radius cutoff, use edge force
-					else if (y > yline && y < 0.5*(w0 - w + sigma)){
-						// vector to edge point on bottom lip
-						lwx = x - L.at(0);
-						lwy = y - 0.5*(w0 - w);
+		// 					// add to net force on wall
+		// 					sigmaYX -= ftmp*(lwx/lw);
+		// 					sigmaYY -= ftmp*(lwy/lw);
+		// 				}
+		// 			}
+		// 			// else if above yline but below radius cutoff, use edge force
+		// 			else if (y > yline && y < 0.5*(w0 - w + sigma)){
+		// 				// vector to edge point on bottom lip
+		// 				lwx = x - L.at(0);
+		// 				lwy = y - 0.5*(w0 - w);
 
-						// distance
-						lw = sqrt(lwx*lwx + lwy*lwy);
+		// 				// distance
+		// 				lw = sqrt(lwx*lwx + lwy*lwy);
 
-						if (lw < 0.5*sigma){
-							// overlap with wall
-							overlap = 2.0*lw/sigma;
+		// 				if (lw < 0.5*sigma){
+		// 					// overlap with wall
+		// 					overlap = 2.0*lw/sigma;
 
-							// force
-							ftmp = 1 - overlap;
-							ftmp *= factor;
-							cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
-							cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
+		// 					// force
+		// 					ftmp = 1 - overlap;
+		// 					ftmp *= factor;
+		// 					cell(ci).setCForce(0,cell(ci).cforce(0) + ftmp*(lwx/lw));
+		// 					cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp*(lwy/lw));
 
-							// add to energies
-							utmp = 0.25*sigma*pow(1 - overlap,2);
-							for (vi=0; vi<cell(ci).getNV(); vi++)
-								cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 					// add to energies
+		// 					utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 					for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 						cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-							// add to net force on wall
-							sigmaYX -= ftmp*(lwx/lw);
-							sigmaYY -= ftmp*(lwy/lw);
-						}
-					}
-				}
-			}
-		}
+		// 					// add to net force on wall
+		// 					sigmaYX -= ftmp*(lwx/lw);
+		// 					sigmaYY -= ftmp*(lwy/lw);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 
-		// check reservoir walls
-		if (x < 0){
-			// check ymin for walls
-			yPlusMin 	= w0 - 0.5*sigma;
-			yMinusMax 	= 0.5*sigma;
+		// // check reservoir walls
+		// if (x < 0){
+		// 	// check ymin for walls
+		// 	yPlusMin 	= w0 - 0.5*sigma;
+		// 	yMinusMax 	= 0.5*sigma;
 
-			// if true, interacting with bottom wall
-			if (y < yMinusMax){
-				// vector from wall to particle
-				lwy = y;
+		// 	// if true, interacting with bottom wall
+		// 	if (y < yMinusMax){
+		// 		// vector from wall to particle
+		// 		lwy = y;
 
-				// overlap with wall
-				overlap = 2.0*lwy/sigma;
+		// 		// overlap with wall
+		// 		overlap = 2.0*lwy/sigma;
 
-				// add to y force ONLY (points in positive y direction)
-				ftmp = 1 - overlap;
-				ftmp *= factor;
-				cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp);
+		// 		// add to y force ONLY (points in positive y direction)
+		// 		ftmp = 1 - overlap;
+		// 		ftmp *= factor;
+		// 		cell(ci).setCForce(1,cell(ci).cforce(1) + ftmp);
 
-				// add to energies
-				utmp = 0.25*sigma*pow(1 - overlap,2);
-				for (vi=0; vi<cell(ci).getNV(); vi++)
-					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 		// add to energies
+		// 		utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 		for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 			cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-				// add to net force on wall in y direction
-				sigmaYY -= ftmp;
-			}
+		// 		// add to net force on wall in y direction
+		// 		sigmaYY -= ftmp;
+		// 	}
 
-			// if true, interacting with top wall
-			if (y > yPlusMin){
-				// vector from particle to wall
-				lwy = w0 - y;
+		// 	// if true, interacting with top wall
+		// 	if (y > yPlusMin){
+		// 		// vector from particle to wall
+		// 		lwy = w0 - y;
 
-				// overlap with wall
-				overlap = 2.0*lwy/sigma;
+		// 		// overlap with wall
+		// 		overlap = 2.0*lwy/sigma;
 
-				// add to y force ONLY (points in negative y direction)
-				ftmp = 1 - overlap;
-				ftmp *= factor;
-				cell(ci).setCForce(1,cell(ci).cforce(1) - ftmp);
+		// 		// add to y force ONLY (points in negative y direction)
+		// 		ftmp = 1 - overlap;
+		// 		ftmp *= factor;
+		// 		cell(ci).setCForce(1,cell(ci).cforce(1) - ftmp);
 
-				// add to energies
-				utmp = 0.25*sigma*pow(1 - overlap,2);
-				for (vi=0; vi<cell(ci).getNV(); vi++)
-					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		// 		// add to energies
+		// 		utmp = 0.25*sigma*pow(1 - overlap,2);
+		// 		for (vi=0; vi<cell(ci).getNV(); vi++)
+		// 			cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 
-				// add to net force on wall in y direction
-				sigmaXY += ftmp;
-			}
-		}
+		// 		// add to net force on wall in y direction
+		// 		sigmaXY += ftmp;
+		// 	}
+		// }
 
 		// if orifice closed, check orifice wall
 		if (closed == 1){
@@ -1404,6 +1384,47 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 				for (vi=0; vi<cell(ci).getNV(); vi++)
 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 			}
+		}
+		double r = sqrt(y*y+z*z);
+		if (x > L.at(0) - radii.at(ci) && x < L.at(0) && r > w/2 && closed == 0){
+
+				// vector from particle to wall
+				lwx = L.at(0) - x;
+
+				// overlap with wall
+				overlap = 2.0*lwx/sigma;
+
+				// add to x force ONLY (points in negative x direction)
+				ftmp = 1 - overlap;
+				ftmp *= factor;
+				cell(ci).setCForce(0,cell(ci).cforce(0) - ftmp);
+
+				// add to energies
+				utmp = 0.25*sigma*pow(1 - overlap,2);
+				for (vi=0; vi<cell(ci).getNV(); vi++)
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
+		}
+		
+		if (r > (w0/2- radii.at(ci) )){
+
+				// vector from particle to wall
+				lwx =  w0/2 - r;
+
+				// overlap with wall
+				overlap = 2.0*lwx/sigma;
+
+				// add to x force ONLY (points in negative x direction)
+				ftmp = 1 - overlap;
+				ftmp *= factor;
+				double ydir = y/r;
+				double zdir = z/r;
+				cell(ci).setCForce(1,cell(ci).cforce(0) - ftmp*ydir);
+				cell(ci).setCForce(2,cell(ci).cforce(0) - ftmp*zdir);
+
+				// add to energies
+				utmp = 0.25*sigma*pow(1 - overlap,2);
+				for (vi=0; vi<cell(ci).getNV(); vi++)
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp/cell(ci).getNV());
 		}
 		
 	}

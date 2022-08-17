@@ -28,7 +28,7 @@ using namespace std;
 // set up variables
 void cellPacking2D::defaultvars(){
 	// dimensionality ALWAYS set to 2
-	NDIM 			= 2;
+	NDIM 			= 3;
 
 	// scalar variables set to 0
 	NCELLS 			= 0;
@@ -46,6 +46,7 @@ void cellPacking2D::defaultvars(){
 
 	// set box lengths to 1.0
 	L.resize(NDIM);
+	// pcb.resize(NDIM);
 	BoundaryCoor.resize(NDIM);
 	for (int d=0; d<NDIM; d++)
 	{	

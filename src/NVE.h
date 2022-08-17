@@ -332,18 +332,27 @@ public:
 				}
 		}
 	}
-	double getMaxHight(double y)
+	double getMaxHight(double y, double z)
 	{
 		double maxHight = 10;
+		std::vector<double> xPos;
 		int maxIndex = 0;
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
+			if (cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 && \
+				cellpointer->cell(ci).cpos(2) < z + 1.5 && cellpointer->cell(ci).cpos(2) > z - 1.5  ){
+				xPos.push_back(cellpointer->cell(ci).cpos(0));
 				if (cellpointer->cell(ci).cpos(0) < maxHight)
 				{
 					maxHight = cellpointer->cell(ci).cpos(0);
 					maxIndex = ci;
 				}
 			}
+		}
+		sort(xPos.begin(),xPos.end(),greater<double>());
+		for (int i = 0; i < xPos.size() - 2; i++)
+		{
+			if (xPos.at(i)-xPos.at(i+1) > 3)
+				return xPos.at(i) + 0.8;
 		}
 		for (int vi = 0; vi < cellpointer->cell(maxIndex).NV; vi ++)
 		{
@@ -359,8 +368,10 @@ public:
 		int maxIndex = -1;
 		double y = cellpointer->cell(cindex).cpos(1);
 		double x = cellpointer->cell(cindex).cpos(0);
+		double z = cellpointer->cell(cindex).cpos(2);
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
-			if (cellpointer->cell(ci).inside_hopper == 1 && cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 ){
+			if (cellpointer->cell(ci).inside_hopper == 1 && cellpointer->cell(ci).cpos(1) < y + 1.5 && cellpointer->cell(ci).cpos(1) > y - 1.5 && \
+				 cellpointer->cell(ci).cpos(2) < z + 1.5 && cellpointer->cell(ci).cpos(2) > z - 1.5){
 				if (cellpointer->cell(ci).cpos(0) < maxHight && cellpointer->cell(ci).cpos(0) > x)
 				{
 					maxHight = cellpointer->cell(ci).cpos(0);
@@ -412,14 +423,23 @@ public:
 				{
 					placementNumber = placementNumber%NperLine;
 					double displace = round((placementNumber+1e-4)/2.0) * 2 * pow(-1,placementNumber%2);
+					double ymin = 0;
+					double ymax = w0/2 - 1;
+					double randAngle = ((double)rand() / (RAND_MAX + 1.0)) * PI * 2;
+					double randR = (ymax-ymin)* sqrt((double)rand() / (RAND_MAX + 1.0));
+					double ypos = randR * cos(randAngle) ;
+					double zpos = randR * sin(randAngle) ;
 
+					// double ypos = ((ymax-ymin)* (double)rand() / (RAND_MAX + 1.0)) * cos((double)rand()) ;
+					// double zpos = ((ymax-ymin)* (double)rand() / (RAND_MAX + 1.0)) * sin((double)rand()) ;
 					if (!stack.empty())
 					{
 						placementNumber ++;
 						deformableParticles2D * currentCell = stack.top();
-						double maxHight = getMaxHight(displace + cellpointer->L.at(1)/2);
+						double maxHight = getMaxHight(ypos,zpos);
 						currentCell->setCPos(0,maxHight - 1);
-						currentCell->setCPos(1,displace + cellpointer->L.at(1)/2);
+						currentCell->setCPos(1,ypos);
+						currentCell->setCPos(2,zpos);
 						currentCell->regularPolygon();
 						// if (frictionFlag)
 							currentCell->setCVel(0,meanV);
@@ -455,6 +475,7 @@ public:
 
 					cellpointer->cell(ci).setCVel(0,v*vFactor);
 					cellpointer->cell(ci).setCVel(1, 0.1*v*pow(-1,ci));
+					cellpointer->cell(ci).setCVel(2, 0.1*v*pow(-1,ci));
 					cellpointer->cell(ci).inside_hopper = 1;
 				}
 			}

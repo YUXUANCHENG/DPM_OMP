@@ -76,7 +76,7 @@ public:
 			this->b = 0;
 			this->coefu = 1;
 			this->coefv = 10;
-			this->spK = 10;
+			this->spK = 100;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
@@ -85,16 +85,16 @@ public:
 			// this->NT = 4e5;	
 			this->NT = 6e5;	
 			// this->NT = 1e6;	
-			// this->NPRINT = 1e3;	
-			// this->NPRINT = 1e4;	
 			this->NPRINT = 1e5;	
-			this->NCELLS = 1600;
+			// this->NPRINT = 1e4;	
+			// this->NPRINT = 1e3;	
+			this->NCELLS = 1600 * 3;
 			// this->NCELLS = 800;
 			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
-			w0 = 60.0;
-			// th =  (90.0 - 89.9)/180 * PI;
-			th = PI/4.0;
+			w0 = 20.0;
+			th =  (90.0 - 89.9)/180 * PI;
+			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
 			this->kint = 10*scaleFactor;
@@ -124,7 +124,7 @@ public:
 		this->NBx = factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 
-		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
+		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 3);
 		cout << "Lini = " << this->Lini << endl;
 		// if (this->kb > 9 || this->NV > 16)
 		// if (this->kb > 9)
@@ -183,7 +183,7 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		start = 3; interval = 0.4;
+		start = 2; interval = 0.4;
 		// start = 5; interval = 0.5;
 		// start = 0.5; interval = 0.1;
 		// w_scale = 0.5 + 0.05 * this->index_j;
