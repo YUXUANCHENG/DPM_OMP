@@ -17,6 +17,14 @@ factor1=19
 factor1s=1
 factor2=20
 
+# factor1=10
+# factor1s=1
+# factor2=20
+
+# factor1=100
+# factor1s=1
+# factor2=10
+
 # factor1=19
 # factor1s=18
 # factor2=100

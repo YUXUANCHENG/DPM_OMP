@@ -1058,6 +1058,8 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	double ftmp, utmp;						// force/energy of particle overlap with walls
 	double yline;							// line separating edge force from wall force
 	double factor = 100;
+	if (!subsystem)
+		factor = 10;
 	// preliminary calculations
 	th = PI/2 - th;
 	t = tan(th);

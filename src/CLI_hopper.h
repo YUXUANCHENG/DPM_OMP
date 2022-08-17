@@ -15,7 +15,7 @@ extern bool constPressureFlag;
 extern bool frictionFlag;
 extern bool replaceFlag;
 
-
+// check list: kb ksp interval angle, mu factor, script, softflag, cpu, partition
 template <class Ptype = cellPacking2D>
 class DPM_Hopper_CLI : public DPM_CLI<Ptype> {
 public:
@@ -74,9 +74,10 @@ public:
 		if (mixed)
 		{
 			this->b = 0;
-			this->coefu = 1;
-			this->coefv = 10;
-			this->spK = 2;
+			this->coefu = 0;
+			this->coefv = 5;
+			// this->coefv = 0;
+			this->spK = 10;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
@@ -97,6 +98,8 @@ public:
 			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
+			// th =  (20)/180 * PI;
+			// th =  (25)/180 * PI;
 			this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
@@ -155,9 +158,10 @@ public:
 
 		// this->kl = 0.1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
 		// this->kb = 0.001 * scaleFactor * pow(10, (this->index_i/10)*4.0/9);
-
+		// this->spK = 1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
+		// this->coefv = 0.1 * (this->index_i + 1);
 		setFriction();
-
+		// uglyNdepend();
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
 		// 	this->timeStepMag = 0.002;
@@ -177,12 +181,28 @@ public:
 		// this->coefu = this->coefv/10;
 	}
 
+	void uglyNdepend()
+	{
+		this->NCELLS = 800 + this->index_i * 320;
+		this->NBx = 1 * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
+		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
+		cout << "Lini = " << this->Lini << endl;
+		this->radii = vector<double>(this->NCELLS, 0.0);
+		for (int ci = 0; ci < this->NCELLS; ci++) {
+			if (ci % 2 == 0)
+				radii.at(ci) = smallRadius;
+			else
+				radii.at(ci) = smallRadius * sizeRatio;
+		}	
+	}
+
 	virtual void setSeed() {
 		// this->seed = this->index_i;
 		this->seed = 0;
 	}
 
 	virtual void prepareSystem() {
+		// start = 1; interval = 0.6;
 		start = 3; interval = 0.4;
 		// start = 5; interval = 0.5;
 		// start = 0.5; interval = 0.1;
@@ -358,7 +378,9 @@ public:
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		//this->particles->initialize_subsystems();
 		int result = this->particles->hopperSimulation(w0, w, th, g, b);
-		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," << result << "," << this->kb << "," << this->ka << start << interval << endl;
+		this->v0PrintObject << this->kl << "," << this->gam << "," << g << "," << w_scale << "," \
+			<< result << "," << this->kb << "," << this->ka << "," << this->spK << "," << start << \
+			"," << interval << "," << this->coefv << "," << this->coefu << endl;
 		cout << "	** FINISHED **   " << endl;
 		//clogPrintObject.close();
 		this->v0PrintObject.close();

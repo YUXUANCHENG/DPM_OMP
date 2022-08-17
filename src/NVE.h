@@ -405,7 +405,9 @@ public:
 
 			meanV /= (cellpointer->NCELLS - outside);
 			// meanV /= inBetween;
-			int NperLine = floor(cellpointer->L.at(1)/2) - 2;
+			int safeZone = 2;
+			// int safeZone = 15;
+			int NperLine = floor(cellpointer->L.at(1)/2) - safeZone;
 			while (!stack.empty())
 			{
 				for(int i = 0; i < NperLine; i++)
