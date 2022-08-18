@@ -3052,7 +3052,7 @@ void cellPacking2D::hopperVelVerletSP(vector<double>& radii, double dampingParam
 		// get disk mass
 		//diskMass = PI*pow(radii.at(ci),2);
 		double b = dampingParam*cell(ci).a0*16.0;
-		diskMass = cell(ci).a0 * 16.0;
+		diskMass = cell(ci).a0 ;
 
 		// loop over velocities
 		for (d=0; d<NDIM; d++){

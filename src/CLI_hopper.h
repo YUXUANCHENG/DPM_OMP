@@ -88,7 +88,7 @@ public:
 			this->NPRINT = 1e5;	
 			// this->NPRINT = 1e4;	
 			// this->NPRINT = 1e3;	
-			this->NCELLS = 1600 * 3;
+			this->NCELLS = 1600 * 4;
 			// this->NCELLS = 800;
 			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
