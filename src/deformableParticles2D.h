@@ -58,6 +58,8 @@ public:
 	// interaction potential energy
 	double* interactionPotential;
 
+	double* dynamicL0;
+
 	// wall contact indicator
 	double* wallContactFlag;
 	int* vertexEdgeContact;
@@ -145,7 +147,11 @@ public:
 	void setgam(double val) { gam = val; };
 	void setkb(double val) { kb = val; };
 	void setkint(double val) { kint = val; };
-	void setl0(double val) { l0 = val; };
+	void setl0(double val) { 
+		l0 = val; 
+		for(int i = 0; i < NV; i ++)
+			dynamicL0[i] = l0;
+	};
 	void seta0(double val) { a0 = val; };
 	void setc0(double val) { c0 = val; };
 	void setc0Angle(double val) { c0 = cos(val); };

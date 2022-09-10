@@ -14,6 +14,7 @@
 extern bool constPressureFlag;
 extern bool frictionFlag;
 extern bool replaceFlag;
+extern bool pinFlag;
 
 // check list: kb ksp interval angle, mu factor, script, softflag, cpu, partition
 template <class Ptype = cellPacking2D>
@@ -34,11 +35,12 @@ public:
 	double b = 0.1;
 	// double b = 0;
 	double g = 0.05;
+	// double g = 0.02;
 	vector<double> radii;
 	double w_scale = 2;
 	double w;
 	double gamafactor1 = 0;
-	double gamafactor2 = 0;
+	double gamafactor2 = -1;
 	bool deformFlag = false;
 	double coefu = 1;
 	double coefv = 0;
@@ -54,7 +56,7 @@ public:
 		this->NPRINT = 1e4;			// number of steps between printing
 		this->kl = 1*scaleFactor;
 		this->ka = 100*scaleFactor;
-		this->kb = 0.01*scaleFactor;
+		this->kb = 0*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -73,11 +75,11 @@ public:
 		int mixed = 1;
 		if (mixed)
 		{
-			this->b = 0;
+			this->b = 0.2;
 			this->coefu = 0;
-			this->coefv = 5;
+			this->coefv = 1;
 			// this->coefv = 0;
-			this->spK = 10;
+			this->spK = 0.1;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
@@ -98,8 +100,8 @@ public:
 			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
-			// th =  (20)/180 * PI;
-			// th =  (25)/180 * PI;
+			// th =  (20.0)/180 * PI;
+			// th =  (25.0)/180 * PI;
 			this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
@@ -109,7 +111,12 @@ public:
 			// this->NPRINT = 1e2;
 			// this->NCELLS = 800;
 			// this->NCELLS = 100;
-			this->NCELLS = 200;
+			// this->NCELLS = 200;
+			this->NCELLS = 1;
+			this->NT = 1e5;	
+			this->NPRINT = 1e2;	
+			th = PI/4.0;
+			w0 = 10.0;
 			if (this->NCELLS > 100)
 			{
 				this->NT = 1e8;			// number of time steps for flow simulation
@@ -119,13 +126,13 @@ public:
 			}
 		}
 		
-		// this->NV = 64;
-		this->NV = 16;
+		
+		this->NV = 64;
+		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
-		this->NBy = 10 * round(w0/10) * this->NV/16;
-		this->NBx = factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
-		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
+		this->NBy = 3;
+		this->NBx = 3;
 
 		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		cout << "Lini = " << this->Lini << endl;
@@ -160,11 +167,17 @@ public:
 		// this->kb = 0.001 * scaleFactor * pow(10, (this->index_i/10)*4.0/9);
 		// this->spK = 1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
 		// this->coefv = 0.1 * (this->index_i + 1);
-		setFriction();
+		// setFriction();
 		// uglyNdepend();
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
 		// 	this->timeStepMag = 0.002;
+
+		// this->spK = 0.01*(this->index_i+1);
+		// this->kl = 0.001*(this->index_i+1);
+		// this->b = 0.02*(this->index_i+1+2);
+		this->b = 0.5;
+
 	}
 
 	void setFriction()
@@ -202,8 +215,8 @@ public:
 	}
 
 	virtual void prepareSystem() {
-		// start = 1; interval = 0.6;
-		start = 3; interval = 0.4;
+		start = 0.1; interval = 0.05;
+		// start = 3; interval = 0.4;
 		// start = 5; interval = 0.5;
 		// start = 0.5; interval = 0.1;
 		// w_scale = 0.5 + 0.05 * this->index_j;
@@ -215,8 +228,8 @@ public:
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
-		if (deformFlag)
-			this->particles->gDire = 1;
+		// if (deformFlag || pinFlag)
+		// 	this->particles->gDire = 1;
 		int fricTmp = frictionFlag;
 		frictionFlag = 0;
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);

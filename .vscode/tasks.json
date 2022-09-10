@@ -24,12 +24,13 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "preLaunchTask": "ml"
         },
         {
             "type": "shell",
             "label": "C/C++: g++ build production",
-            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
+            "command": "g++",
             "args": [
                 "-O3",
                 "--std=c++17",
@@ -50,6 +51,11 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "ml",
+            "command": "ml GCC/10",
         },
         {
             "type": "shell",

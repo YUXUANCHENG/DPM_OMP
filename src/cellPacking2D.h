@@ -388,6 +388,7 @@ public:
 	virtual void hopperForces(double w0, double w, double th, double g, int closed);
 	void hopperWallForcesSP(std::vector<double>& radii, double w0, double w, double th, int closed);
 	void hopperWallForcesDP(double w0, double w, double th, int closed);
+	void hopperWallForcesPining(double w0, double w, double th, int closed);
 	void hopperSPNVE(std::vector<double>& radii, double w0, double w, double th, double T0);
 	void hopperDPNVE(double w0, double w, double th, double g, double T0);
 	void flowHopperSP(std::vector<double>& radii, double w0, double w, double th, double g);

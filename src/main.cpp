@@ -13,17 +13,17 @@ using namespace std;
 extern bool settleDown;
 bool settleDown = 0;
 extern bool wallAttracFlag;
-bool wallAttracFlag = 0;
+bool wallAttracFlag = 1;
 extern bool constPressureFlag;
 bool constPressureFlag = 0;
 
 extern bool replaceFlag;
-bool replaceFlag = 1;
+bool replaceFlag = 0;
 extern bool frictionFlag;
 bool frictionFlag = 1;
 extern bool softFlag;
-bool softFlag = 1;
-// bool softFlag = 0;
+// bool softFlag = 1;
+bool softFlag = 0;
 
 extern bool variableExtFflag;
 bool variableExtFflag = 0;
@@ -31,6 +31,8 @@ extern bool horrizontalPistonFlag;
 bool horrizontalPistonFlag = 0;
 extern bool frictionalWallFlag;
 bool frictionalWallFlag = 0;
+extern bool pinFlag;
+bool pinFlag = 1;
 
 int main(int argc, char const *argv[]){
 

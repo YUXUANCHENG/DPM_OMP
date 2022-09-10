@@ -4,6 +4,7 @@
 #include "cellPacking2D.h"
 #include "NVE.h"
 extern bool constPressureFlag;
+extern bool pinFlag;
 class DPM_Parallel : public virtual cellPacking2D {
 public:
 	using cellPacking2D::cellPacking2D;
@@ -99,7 +100,10 @@ public:
 				if (cell(ci).inside_hopper)
 					cell(ci).gravityForces(g, gDire);
 		}
-		hopperWallForcesDP(w0,w,th,closed);
+		if (!pinFlag)
+			hopperWallForcesDP(w0,w,th,closed);
+		else
+			hopperWallForcesPining(w0,w,th,closed);
 		if (constPressureFlag)
 			pistonForce(w0, w, th, g);
 	}
@@ -168,12 +172,12 @@ public:
 		resetContacts();
 
 		subspaceManager();
-#pragma omp parallel for schedule (dynamic, 4)
-		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
-			subsystem[i].calculateEdgeForces_insub();
-#pragma omp parallel for schedule (dynamic, 4)
-		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
-			subsystem[i].calculateEdgeForces_betweensub();
+// #pragma omp parallel for schedule (dynamic, 4)
+// 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+// 			subsystem[i].calculateEdgeForces_insub();
+// #pragma omp parallel for schedule (dynamic, 4)
+// 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+// 			subsystem[i].calculateEdgeForces_betweensub();
 
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)

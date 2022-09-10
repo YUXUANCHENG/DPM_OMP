@@ -58,6 +58,7 @@ deformableParticles2D::deformableParticles2D(){
 	interactionPotential 	= nullptr;
 	wallContactFlag         = nullptr;
 	vertexEdgeContact       = nullptr;
+	dynamicL0               = nullptr;
 
 	// periodic boundary conditions set to on
 	pbc.resize(NDIM);
@@ -146,6 +147,10 @@ deformableParticles2D::~deformableParticles2D(){
 		delete [] wallContactFlag;
 		wallContactFlag = nullptr;
 	}
+	if (dynamicL0){
+		delete [] dynamicL0;
+		dynamicL0 = nullptr;
+	}
 	if (vertexEdgeContact){
 		delete [] vertexEdgeContact;
 		vertexEdgeContact = nullptr;
@@ -227,6 +232,7 @@ void deformableParticles2D::operator=(deformableParticles2D& onTheRight){
 		}		
 		setUInt(i,onTheRight.uInt(i));
 		wallContactFlag[i] = onTheRight.wallContactFlag[i];
+		dynamicL0[i] = onTheRight.dynamicL0[i];
 		vertexEdgeContact[i] = onTheRight.vertexEdgeContact[i];
 	}
 
@@ -285,6 +291,7 @@ void deformableParticles2D::initializeVertices(){
 	vertexAcceleration = new double[NDIM*NV];
 	interactionPotential = new double[NV];
 	wallContactFlag = new double[NV];
+	dynamicL0 = new double[NV];
 	vertexEdgeContact = new int[NV];
 
 	// set equal to 0
@@ -298,6 +305,7 @@ void deformableParticles2D::initializeVertices(){
 		}
 		wallContactFlag[i] = 0;
 		vertexEdgeContact[i] = -1;
+		dynamicL0[i] = 0;
 	}
 }
 
@@ -1166,16 +1174,26 @@ void deformableParticles2D::shapeForces(){
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
 			double sigma = getl0()*getdel();
-			double a = 0.01* sqrt(geta0()/PI)/ sigma;
-			//double factor = 0.5, factor1 = 0.1;
+			double a = 0.1* sqrt(geta0()/PI)/ sigma;
+			// double a = 0.2;
+			
 			if (wallContactFlag[i]>(1+a))
 				wallContactFlag[i] = (1+a);
 			if (wallContactFlag[im1]>(1+a))
 				wallContactFlag[im1] = (1+a);	
-			double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
-			double l0li = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - (wallContactFlag[i]/(1+a))*factor1 - (1 - wallContactFlag[i]/(1+a))*factor) * l0: (1 - factor) * l0;
-			double l0lim1 = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - (wallContactFlag[im1]/(1+a))*factor1 - (1 - wallContactFlag[im1]/(1+a))*factor) * l0: (1 - factor) * l0;
+			// double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
+			double factor = 0;
+			double factor1 = - 0.5;
+			double l0liTarget = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - factor1) * l0: (1 - factor) * l0;
+			double l0lim1Target = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - factor1) * l0: (1 - factor) * l0;
+			
+			double lDt = 0.001;
+			dynamicL0[i] += (l0liTarget - dynamicL0[i]) * lDt;
+			// dynamicL0[im1] += (l0lim1Target - dynamicL0[im1]) * lDt;
 
+			double l0li = dynamicL0[i];
+			double l0lim1 = dynamicL0[im1];
+			// (1+1/a-(wallContactFlag[im1])/a)*
 			// double factor = 0.5;
 			// double l0li = (1 - factor) * l0, l0lim1 = (1 - factor) * l0;
 			// double threshold = 5;
@@ -1334,6 +1352,18 @@ void deformableParticles2D::gravityForces(double g, int dir){
 		}
 		fxtmp *= (a0*g)/(6.0*apoly);
 		fytmp *= (a0*g)/(6.0*apoly);
+
+		// if (dir == 0){
+		// 	fxtmp = (a0*g)/NV;
+		// 	fytmp = 0;
+		// }
+		// else
+		{
+			// fxtmp = 0;
+			// fytmp = 0;
+			fxtmp = 2 * (a0*g)/NV;
+			fytmp = -1 * (a0*g)/NV;
+		}
 
 		// add to total force (factor of NV is to take mass into account)
 		setVForce(i,0,vforce(i,0) + fxtmp);

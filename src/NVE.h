@@ -216,10 +216,10 @@ public:
 				startFlag = (t > 1e4 && Ke() < 1e-4 * N_inside);
 				// startFlag = (t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside);
 
-			if (closed == 1 && startFlag) 
+			// if (closed == 1 && startFlag) 
 				closed = 0;
-
-			addBack();
+			if (replaceFlag)
+				addBack();
 			cellpointer->printRoutine(t, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
 			if (replaceFlag && closed == 0 && (t+1) % int (1e4 * 0.005 / cellpointer->dt) == 0) {
 			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
@@ -301,7 +301,7 @@ public:
 				// 	cellpointer->printRoutine(0, cellpointer->NPRINT, 0, N_inside, closed);
 				// 	exit(0);
 				// }
-				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
+				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 5 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 				{
 					cellpointer->cell(ci).inside_hopper = 0;
