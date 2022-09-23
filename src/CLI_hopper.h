@@ -94,12 +94,12 @@ public:
 			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
 			w0 = 60.0;
-			th =  (90.0 - 89.9)/180 * PI;
+			// th =  (90.0 - 89.9)/180 * PI;
 			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
-			// th =  (20)/180 * PI;
-			// th =  (25)/180 * PI;
+			// th =  (20.0)/180 * PI;
+			th =  (15.0)/180 * PI;
 			this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
