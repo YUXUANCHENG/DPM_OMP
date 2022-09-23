@@ -13,9 +13,9 @@ jobnumber=1
 # factor2=40
 
 
-factor1=1
+factor1=10
 factor1s=1
-factor2=1
+factor2=20
 
 # factor1=10
 # factor1s=1

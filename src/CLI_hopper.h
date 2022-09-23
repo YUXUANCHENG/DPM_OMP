@@ -54,7 +54,7 @@ public:
 		this->NT = 5e6;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e4;			// number of steps between printing
-		this->kl = 1*scaleFactor;
+		this->kl = 0.01*scaleFactor;
 		this->ka = 100*scaleFactor;
 		this->kb = 0*scaleFactor;
 		if (frictionFlag)
@@ -96,8 +96,8 @@ public:
 			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
 			w0 = 60.0;
-			th =  (90.0 - 89.9)/180 * PI;
-			// th = PI/4.0;
+			// th =  (90.0 - 89.9)/180 * PI;
+			th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
 			// th =  (20.0)/180 * PI;
@@ -127,8 +127,8 @@ public:
 		}
 		
 		
-		this->NV = 64;
-		// this->NV = 16;
+		// this->NV = 64;
+		this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 3;
@@ -175,8 +175,8 @@ public:
 
 		// this->spK = 0.01*(this->index_i+1);
 		// this->kl = 0.001*(this->index_i+1);
-		// this->b = 0.02*(this->index_i+1+2);
-		this->b = 0.5;
+		this->b = 0.02*(this->index_i+1+2);
+		// this->b = 0.5;
 
 	}
 

@@ -1183,7 +1183,8 @@ void deformableParticles2D::shapeForces(){
 				wallContactFlag[im1] = (1+a);	
 			// double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
 			double factor = 0;
-			double factor1 = - 0.5;
+			// double factor1 = - 0.5;
+			double factor1 = 0;
 			double l0liTarget = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - factor1) * l0: (1 - factor) * l0;
 			double l0lim1Target = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - factor1) * l0: (1 - factor) * l0;
 			
@@ -1353,11 +1354,11 @@ void deformableParticles2D::gravityForces(double g, int dir){
 		fxtmp *= (a0*g)/(6.0*apoly);
 		fytmp *= (a0*g)/(6.0*apoly);
 
-		// if (dir == 0){
-		// 	fxtmp = (a0*g)/NV;
-		// 	fytmp = 0;
-		// }
-		// else
+		if (dir == 0){
+			fxtmp = (a0*g)/NV;
+			fytmp = 0;
+		}
+		else
 		{
 			// fxtmp = 0;
 			// fytmp = 0;

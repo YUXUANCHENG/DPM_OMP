@@ -32,7 +32,7 @@ bool horrizontalPistonFlag = 0;
 extern bool frictionalWallFlag;
 bool frictionalWallFlag = 0;
 extern bool pinFlag;
-bool pinFlag = 1;
+bool pinFlag = 0;
 
 int main(int argc, char const *argv[]){
 
