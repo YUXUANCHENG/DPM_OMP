@@ -2480,7 +2480,7 @@ void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double Kb
 void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam){
     // local variables                                                                                                                                                                                                                 
     int i,d;
-    double veltmp,anew,b;
+    double veltmp,velCtmp,anew,b;
     double ftmp, dampNum, dampDenom, dampUpdate;
 
     // scale damping                                                                                                                                                                                                                   
@@ -2491,10 +2491,11 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
 		for (d=0; d<NDIM; d++){
             // get current velocities                                                                                                                                                                                          
             veltmp = vvel(i,d);
-
+			velCtmp = cvel(d);
             // calculate force damping update                                                                                                                                                                                  
             ftmp = vforce(i,d);
-            dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
+            // dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
+			dampNum = b * velCtmp + 10 * b * (veltmp - velCtmp);
             // dampDenom = 1.0 + 0.5*b*dt;
             dampDenom = 1.0;
             dampUpdate = (ftmp - dampNum)/dampDenom;

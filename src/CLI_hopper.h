@@ -128,7 +128,7 @@ public:
 		
 		
 		// this->NV = 64;
-		this->NV = 16;
+		this->NV = 128;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 3;
@@ -174,8 +174,8 @@ public:
 		// 	this->timeStepMag = 0.002;
 
 		// this->spK = 0.01*(this->index_i+1);
-		// this->kl = 0.001*(this->index_i+1);
-		this->b = 0.02*(this->index_i+1+2);
+		this->kl = 0.001*(this->index_i+1);
+		// this->b = 0.02*(this->index_i+1+2);
 		// this->b = 0.5;
 
 	}

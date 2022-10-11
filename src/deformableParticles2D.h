@@ -246,7 +246,9 @@ public:
 
 				vertexPrintObject << ",";
 			}
-			vertexPrintObject << l0 << std::endl;
+			vertexPrintObject << l0 << "," ;
+			vertexPrintObject << vvel(i,0) << "," ;
+			vertexPrintObject << vvel(i,1)  << std::endl;
 
 
 		}
