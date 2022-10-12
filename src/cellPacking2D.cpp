@@ -789,7 +789,8 @@ double cellPacking2D::packingFraction(){
 
 	// loop over full area of cells (not just polygon area)
 	for (ci=0; ci<NCELLS; ci++)
-		atot += cell(ci).area();
+		// atot += cell(ci).area();
+		atot += cell(ci).polygonArea();
 
 	// divide by box area
 	val = atot/(L.at(0)*L.at(1));

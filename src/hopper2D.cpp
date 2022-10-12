@@ -153,7 +153,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 
 	// minimum number of vertices
 	const int nvmin = 12;
-	diskRadii = radii;
+	// diskRadii = radii;
 	// random number generator
 	srand(10*seed);
 
@@ -199,14 +199,61 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		// array information
 		cell(ci).initializeVertices();
 		cell(ci).initializeCell();
+	}
 
+	fstream inputFileObject;
+	inputFileObject.open("./debug.txt");
+	std::vector<double> row;
+	std::vector<std::vector<double>> content;
+    string line, word, temp;
+	if (!inputFileObject.is_open()) {
+		cout << "	ERROR: inputFileObject could not open " << "..." << endl;
+		exit(1);
+	}
+	while (getline(inputFileObject, line)) {
+  
+        row.clear();
+  
+        // read an entire row and
+        // store it in a string variable 'line'
+        
+  
+        // used for breaking words
+        stringstream s(line);
+  
+        // read every column data of a row and
+        // store it in a string variable, 'word'
+        while (getline(s, word, ',')) {
+  
+            // add all the column data
+            // of a row to a vector
+            row.push_back(stod(word));
+        }
+		// int length = row.size();
+		content.push_back(row);	
+	}
+	// int length = content.size();
+	int counter = 0;
+	for (ci=0; ci<NCELLS; ci++){
+		// for (vi = 0; vi < cell(ci).NV; vi ++)
+		for (vi = cell(ci).NV - 1; vi >= 0; vi --)
+		{
+			cell(ci).setVPos(vi,0,-1 * content[counter][0] - 4);
+			cell(ci).setVPos(vi,1,content[counter][1] + 1);
+			counter ++;
+		}
+		cell(ci).updateCPos();
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVRel(vi,d, cell(ci).vpos(vi,d) - cell(ci).cpos(d));
+		}
 		// initialize cells as regular polygons
-		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
+		calA0tmp = 1;
 
 		// preferred area is regular polygon with slightly smaller radius
 		//a0tmp = 0.5*nvtmp*pow(radii.at(ci),2.0)*sin(2.0*PI/nvtmp);
-		a0tmp = PI * pow(radii.at(ci),2.0);
-
+		a0tmp = cell(ci).polygonArea();
+		radii.at(ci) = sqrt(a0tmp/PI);
 		// initial length of polygon side
 		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/nvtmp;
 
@@ -214,6 +261,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		cell(ci).seta0(a0tmp);
 		cell(ci).setl0(l0tmp);
 		cell(ci).setdel(1.0);
+		counter ++;
 	}
 
 	// initialize L based on smallest vertex radius
@@ -228,44 +276,6 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	pistonX = BoundaryCoor.at(0) * 1.1;
 	pistonY = w0;
 
-	for (ci=0; ci<NCELLS; ci++){
-		for (d=0; d<NDIM; d++)
-			cell(ci).setL(d,Ltmp);
-	}
-
-	// initialize particle positions
-	cout << "		-- Ininitializing cell positions" << endl;
-	for (ci=0; ci<NCELLS; ci++){
-		// set min and max values of positions
-		xmin = -Lmin*L.at(1) + radii.at(ci);
-		if (th < (90.0 - 85.0)/180 * PI)
-		// if (th < PI/4.0 - 0.1)
-			xmax = -radii.at(ci);
-		else
-			xmax = L.at(0) * 0.5;
-		
-
-		// get random x location in hopper
-		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
-		//xpos *= 0.9;
-
-		// assign random y components
-		if (xpos < 0){
-			ymin = radii.at(ci);
-			ymax = w0 - radii.at(ci);
-		}
-		else{
-			// ymin = xpos/tan(th) + cell(ci).getl0();
-			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
-			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
-			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
-		}
-		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
-
-		// set as initial position of com
-		cell(ci).setCPos(0,xpos);
-		cell(ci).setCPos(1,ypos);
-	}
 
 	// initialize phi
 	cout << "		-- Ininitializing packing fraction...";
@@ -282,9 +292,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	for (ci=0; ci<NCELLS; ci++)
 		radii.at(ci) *= rscaleForDP;
 
-	// use FIRE in hopper geometry to relax overlaps
-	cout << "		-- Using FIRE to relax initial overlaps..." << endl;
-	fireMinimizeHopperSP(radii,w0,w,th);
+	// // use FIRE in hopper geometry to relax overlaps
+	// cout << "		-- Using FIRE to relax initial overlaps..." << endl;
+	// fireMinimizeHopperSP(radii,w0,w,th);
 
 	// shrink radii back down for SP runs
 	for (ci=0; ci<NCELLS; ci++)
@@ -294,13 +304,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	for (ci=0; ci<NCELLS; ci++){		
 
 		// initialize vertices as a regular polygon
-		cell(ci).regularPolygon();
+		// cell(ci).regularPolygon();
 
 		// update real-space positions
-		for (vi=0; vi<cell(ci).getNV(); vi++){
-			for (d=0; d<NDIM; d++)
-				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
-		}
+		
 		cell(ci).printlengthscale(lengthscalePrintObject);
 	}
 	lengthscalePrintObject << L.at(0) << endl << w0 << endl;

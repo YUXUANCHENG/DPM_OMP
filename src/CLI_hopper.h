@@ -49,12 +49,12 @@ public:
 	double scaleFactor = 1;
 
 	DPM_Hopper_CLI() {
-		this->NT = 5e6;			// number of time steps for flow simulation
+		this->NT = 1e6;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e4;			// number of steps between printing
-		this->kl = 1*scaleFactor;
-		this->ka = 100*scaleFactor;
-		this->kb = 0.01*scaleFactor;
+		this->kl = 0.1*scaleFactor;
+		this->ka = 10*scaleFactor;
+		this->kb = 0.1*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -73,9 +73,9 @@ public:
 		int mixed = 1;
 		if (mixed)
 		{
-			this->b = 0;
+			this->b = 0.1;
 			this->coefu = 0;
-			this->coefv = 5;
+			this->coefv = 0;
 			// this->coefv = 0;
 			this->spK = 10;
 			// this->g = 0.01;
@@ -84,23 +84,23 @@ public:
 		if (replaceFlag)
 		{
 			// this->NT = 4e5;	
-			this->NT = 6e5;	
+			this->NT = 1e4;	
 			// this->NT = 1e6;	
 			// this->NPRINT = 1e3;	
-			this->NPRINT = 1e4;	
+			this->NPRINT = 1e2;	
 			// this->NPRINT = 1e5;	
-			this->NCELLS = 1600;
+			this->NCELLS = 10;
 			// this->NCELLS = 800;
 			// this->NCELLS = 3200;
 			// this->timeStepMag = 0.002;
-			w0 = 60.0;
+			w0 = 40.0;
 			// th =  (90.0 - 89.9)/180 * PI;
 			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
 			// th =  (20.0)/180 * PI;
-			th =  (15.0)/180 * PI;
-			this->kint = 10*scaleFactor;
+			th =  (37.0)/180 * PI;
+			this->kint = 1*scaleFactor;
 			factorNx = 1;
 		}
 		else
@@ -119,8 +119,8 @@ public:
 			}
 		}
 		
-		// this->NV = 64;
-		this->NV = 16;
+		this->NV = 63;
+		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 10 * round(w0/10) * this->NV/16;
@@ -160,7 +160,7 @@ public:
 		// this->kb = 0.001 * scaleFactor * pow(10, (this->index_i/10)*4.0/9);
 		// this->spK = 1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
 		// this->coefv = 0.1 * (this->index_i + 1);
-		setFriction();
+		// setFriction();
 		// uglyNdepend();
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
