@@ -804,9 +804,13 @@ void deformableParticles2D::updateCPos(){
 	double cposy = 0.0;
 
 	// loop over vertices
+	// for (i=0; i<NV; i++){
+	// 	cposx += vrel(i,0) + cpos(0);
+	// 	cposy += vrel(i,1) + cpos(1);
+	// }
 	for (i=0; i<NV; i++){
-		cposx += vrel(i,0) + cpos(0);
-		cposy += vrel(i,1) + cpos(1);
+		cposx += vpos(i,0);
+		cposy += vpos(i,1);
 	}
 
 	// divide by NV
@@ -1236,9 +1240,11 @@ void deformableParticles2D::shapeForces(){
 			// right
 			// Kb = (kb*NV/calA0)/(4.0*PI*PI*a0*l0*l0);
 			// wrong
-			Kb = (kb*NV*calA0)/(4.0*PI*PI*a0*l0*l0);
+			// Kb = (kb*NV*calA0)/(4.0*PI*PI*a0*l0*l0);
 			//Kb = kb / (2 * NV * pow(l0, 4));
-			//Kb = kb;
+			Kb = kb;
+			if(a0 < PI * 0.25 * 0.25)
+				Kb = kb * pow((PI * 0.7 * 0.7)/a0,3);
 
 			for(d=0; d<NDIM; d++){
 				// compute force vector in d direction

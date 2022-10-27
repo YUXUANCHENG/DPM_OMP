@@ -153,7 +153,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 
 	// minimum number of vertices
 	const int nvmin = 12;
-
+	// diskRadii = radii;
 	// random number generator
 	srand(10*seed);
 
@@ -174,17 +174,14 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		cout << "	** ERROR: in initializing hopper, input th = " << th << ", which is < 0. ending." << endl;
 		exit(1);
 	}
-
 	// output to console
 	cout << "		-- In hopper initialization, initializing cells and relaxing initial overlaps as SP particles" << endl;
-
 	// initialize cell information
 	cout << "		-- Ininitializing cell objects" << endl;
 	for (ci=0; ci<NCELLS; ci++){
 		// boundary information ( SET PBCS TO 0 )
 		for (d=0; d<NDIM; d++)
 			cell(ci).setpbc(d,0);
-
 		// number of vertices ( SIGMA SETS # OF VERTS )
 		// nvtmp = round(2.0*radii.at(ci)*NV);
 		nvtmp = NV;
@@ -195,17 +192,81 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			cell(ci).setNV(nvmin);
 			nvtmp = nvmin;
 		}
-
 		// array information
 		cell(ci).initializeVertices();
 		cell(ci).initializeCell();
+	}
 
+	fstream inputFileObject;
+	inputFileObject.open("./debug.txt");
+	std::vector<double> row;
+	std::vector<std::vector<double>> content;
+    string line, word, temp;
+	if (!inputFileObject.is_open()) {
+		cout << "	ERROR: inputFileObject could not open " << "..." << endl;
+		exit(1);
+	}
+	while (getline(inputFileObject, line)) {
+
+        row.clear();
+
+        // read an entire row and
+        // store it in a string variable 'line'
+
+
+        // used for breaking words
+        stringstream s(line);
+
+        // read every column data of a row and
+        // store it in a string variable, 'word'
+        while (getline(s, word, ',')) {
+
+            // add all the column data
+            // of a row to a vector
+            row.push_back(stod(word));
+        }
+		// int length = row.size();
+		content.push_back(row);	
+	}
+	// int length = content.size();
+	int counter = 0;
+	int nRandom = 1;
+	for (ci=0; ci<NCELLS-nRandom; ci++){
+		// for (vi = 0; vi < cell(ci).NV; vi ++)
+		for (vi = cell(ci).NV - 1; vi >= 0; vi --)
+		{
+			cell(ci).setVPos(vi,0,-1 * content[counter][0] + 2.5);
+			cell(ci).setVPos(vi,1,content[counter].at(1) + 3 - 0.3);
+			counter ++;
+		}
+		cell(ci).updateCPos();
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVRel(vi,d, cell(ci).vpos(vi,d) - cell(ci).cpos(d));
+		}
 		// initialize cells as regular polygons
-		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
+		calA0tmp = 1;
 
 		// preferred area is regular polygon with slightly smaller radius
 		//a0tmp = 0.5*nvtmp*pow(radii.at(ci),2.0)*sin(2.0*PI/nvtmp);
-		a0tmp = PI * pow(radii.at(ci),2.0);
+		a0tmp = cell(ci).polygonArea();
+		radii.at(ci) = sqrt(a0tmp/PI);
+		// initial length of polygon side
+		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/nvtmp;
+
+		// set preferred area and length 
+		cell(ci).seta0(a0tmp);
+		cell(ci).setl0(l0tmp);
+		cell(ci).setdel(1.0);
+		counter ++;
+	}
+	
+	for(;ci<NCELLS;ci++)
+	{
+		calA0tmp = nvtmp*tan(PI/nvtmp)/PI;
+
+		// preferred area is regular polygon with slightly smaller radius
+		a0tmp = 0.5*nvtmp*pow(0.5,2.0)*sin(2.0*PI/nvtmp);
 
 		// initial length of polygon side
 		l0tmp = sqrt(4.0*PI*a0tmp*calA0tmp)/nvtmp;
@@ -214,9 +275,20 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		cell(ci).seta0(a0tmp);
 		cell(ci).setl0(l0tmp);
 		cell(ci).setdel(1.0);
+		
+		cell(ci).setCPos(0,2.0);
+		cell(ci).setCPos(1,5.0);
+		cell(ci).regularPolygon();
+
+		// update real-space positions
+		for (vi=0; vi<cell(ci).getNV(); vi++){
+			for (d=0; d<NDIM; d++)
+				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
+		}
 	}
 
 	// initialize L based on smallest vertex radius
+	// vrmin = 0.5*cell(0).getl0()*cutoff;
 	vrmin = 0.5*cell(0).getl0();
 	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	L.at(0) = Ltmp;
@@ -226,79 +298,45 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	BoundaryCoor.at(1) = 0;
 	pistonX = BoundaryCoor.at(0) * 1.1;
 	pistonY = w0;
-
-	for (ci=0; ci<NCELLS; ci++){
-		for (d=0; d<NDIM; d++)
-			cell(ci).setL(d,Ltmp);
-	}
-
-	// initialize particle positions
-	cout << "		-- Ininitializing cell positions" << endl;
-	for (ci=0; ci<NCELLS; ci++){
-		// set min and max values of positions
-		xmin = -Lmin*L.at(1) + radii.at(ci);
-		if (th < (90.0 - 85.0)/180 * PI)
-			xmax = -radii.at(ci);
-		else
-			xmax = L.at(0) * 0.5;
-		
-
-		// get random x location in hopper
-		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
-		//xpos *= 0.9;
-
-		// assign random y components
-		if (xpos < 0){
-			ymin = radii.at(ci);
-			ymax = w0 - radii.at(ci);
-		}
-		else{
-			// ymin = xpos/tan(th) + cell(ci).getl0();
-			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
-			ymin = xpos/tan(th) + radii.at(ci);
-			ymax = w0 - (xpos/tan(th)) - radii.at(ci);
-		}
-		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
-
-		// set as initial position of com
-		cell(ci).setCPos(0,xpos);
-		cell(ci).setCPos(1,ypos);
-	}
-
-	// initialize phi
+		// initialize L based on smallest vertex radius
+	// vrmin = 0.5*cell(0).getl0()*cutoff;
+	vrmin = 0.5*cell(0).getl0();
+	Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
+	L.at(0) = Ltmp;
+	//L.at(1) = Ltmp;
+	L.at(1) = w0;
+	BoundaryCoor.at(0) = -Lmin*L.at(1);
+	BoundaryCoor.at(1) = 0;
+	pistonX = BoundaryCoor.at(0) * 1.1;
+	pistonY = w0;
+		// initialize phi
 	cout << "		-- Ininitializing packing fraction...";
 	phi = hopperPackingFraction(radii,w0,w,th);
 	cout << "which is phi = " << phi << endl;
-
 	// initial time scales
 	cout << "		-- Ininitializing time scale" << endl;
 	dt = 0.05;
 	dt0 = dt;
-
 	// slightly increase radii to give more space for dp
 	double rscaleForDP = 1.2;
 	for (ci=0; ci<NCELLS; ci++)
 		radii.at(ci) *= rscaleForDP;
 
-	// use FIRE in hopper geometry to relax overlaps
-	cout << "		-- Using FIRE to relax initial overlaps..." << endl;
-	fireMinimizeHopperSP(radii,w0,w,th);
+	// // use FIRE in hopper geometry to relax overlaps
+	// cout << "		-- Using FIRE to relax initial overlaps..." << endl;
+	// fireMinimizeHopperSP(radii,w0,w,th);
 
 	// shrink radii back down for SP runs
 	for (ci=0; ci<NCELLS; ci++)
 		radii.at(ci) /= rscaleForDP;
-
 	// update vertex positions based on cell positions
 	for (ci=0; ci<NCELLS; ci++){		
 
 		// initialize vertices as a regular polygon
-		cell(ci).regularPolygon();
+		// cell(ci).regularPolygon();
 
 		// update real-space positions
-		for (vi=0; vi<cell(ci).getNV(); vi++){
-			for (d=0; d<NDIM; d++)
-				cell(ci).setVPos(vi,d,cell(ci).cpos(d) + cell(ci).vrel(vi,d));
-		}
+
 		cell(ci).printlengthscale(lengthscalePrintObject);
 	}
 	lengthscalePrintObject << L.at(0) << endl << w0 << endl;
@@ -1540,7 +1578,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	sigmaYY = 0.0;
 
 	bool cFlag = false;
-
+	double wallIntFact = 0.1;
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
 		//double factor = 10 * cell(ci).NV/16.0;
@@ -1562,6 +1600,30 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 			// get particle positions
 			x = cell(ci).vpos(vi,0);
 			y = cell(ci).vpos(vi,1);
+				// if true, interacting with top wall
+				double topWall = 5.9;
+				yPlusMin 	=  topWall - 0.5*sigma;
+				if (y > yPlusMin){
+					// vector from particle to wall
+					lwy = topWall - y;
+
+					// overlap with wall
+					overlap = 2.0*lwy/sigma;
+
+					// add to y force ONLY (points in negative y direction)
+					ftmp = wallIntFact * (2.0/sigma)*(1 - overlap);
+					cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) - ftmp);
+					// temperary fix for wall torque
+					cell(ci).torque += cell(ci).vrel(vi, 0) * (-1) * ftmp;
+
+					// add to energies
+					utmp = 0.5*pow(1 - overlap,2);
+					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
+
+					// add to net force on top wall
+					sigmaXY += ftmp;
+					cFlag = true;
+				}
 
 			// check hopper walls
 			if (x > -sigma*s){
@@ -1581,7 +1643,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 							overlap = 2.0*lw/sigma;
 
 							// force
-							ftmp = (2.0/sigma)*(1 - overlap);
+							ftmp = wallIntFact *(2.0/sigma)*(1 - overlap);
 							cell(ci).setVForce(vi,0,cell(ci).vforce(vi,0) - ftmp*c);
 							cell(ci).setVForce(vi,1,cell(ci).vforce(vi,1) + ftmp*s);
 							// temperary fix for wall torque

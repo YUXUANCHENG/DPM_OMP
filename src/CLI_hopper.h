@@ -30,7 +30,7 @@ public:
 	double th = PI / 4.0;		// hopper angle (pi - th = deflection angle from horizontal)
 	// double th =  (90.0 - 89.0)/180 * PI;		// hopper angle (pi - th = deflection angle from horizontal)
 	double phi0 = 0.4;			// initial packing fraction
-	double b = 0.1;
+	double b = 0.2;
 	// double b = 0;
 	double g = 0.05;
 	vector<double> radii;
@@ -43,12 +43,12 @@ public:
 	double scaleFactor = 1;
 
 	DPM_Hopper_CLI() {
-		this->NT = 5e6;			// number of time steps for flow simulation
+		this->NT = 8e4;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
-		this->NPRINT = 1e4;			// number of steps between printing
-		this->kl = 1*scaleFactor;
+		this->NPRINT = 1e2;			// number of steps between printing
+		this->kl = 0.1*scaleFactor;
 		this->ka = 10*scaleFactor;
-		this->kb = 1*scaleFactor;
+		this->kb = 0.01*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -67,10 +67,11 @@ public:
 		if (replaceFlag)
 		{
 			this->NPRINT = 1e3;	
-			this->NCELLS = 1600;
-			w0 = 60.0;
-			th =  (90.0 - 89.0)/180 * PI;
-			this->kint = 10*scaleFactor;
+			this->NCELLS = 12;
+			w0 = 20.0;
+			th =  (90 - 37.0)/180 * PI;
+			this->kint = 0.1*scaleFactor;
+			this->timeStepMag = 0.001;
 		}
 		else
 		{
@@ -85,7 +86,7 @@ public:
 			}
 		}
 		
-		this->NV = 64;
+		this->NV = 63;
 		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
@@ -129,7 +130,8 @@ public:
 	virtual void prepareSystem() {
 		// w_scale = 0.5 + 0.05 * this->index_j;
 		// w_scale = 3 + 0.1 * this->index_j;
-		w_scale = 0.5 + 0.1 * this->index_j;
+		// w_scale = 0.5 + 0.1 * this->index_j;
+		w_scale = 8.2;
 		// w_scale = 0.3 + 0.06 * this->index_j;
 		// w_scale = 0.5 + 0.15 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
