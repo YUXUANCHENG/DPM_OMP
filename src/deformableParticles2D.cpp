@@ -1153,43 +1153,25 @@ void deformableParticles2D::shapeForces(){
 		ip1 = (i+1) % NV;
 
 		// calculate perimeter force
-		if (kl > 0){
+		bool pFlag = false;
+		if (kl > 0 and pFlag){
 			// calculate segment lengths
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
 			double sigma = getl0()*getdel();
 			double a = 0.01* sqrt(geta0()/PI)/ sigma;
-			//double factor = 0.5, factor1 = 0.1;
-			if (wallContactFlag[i]>(1+a))
-				wallContactFlag[i] = (1+a);
-			if (wallContactFlag[im1]>(1+a))
-				wallContactFlag[im1] = (1+a);	
-			double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
-			double l0li = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - (wallContactFlag[i]/(1+a))*factor1 - (1 - wallContactFlag[i]/(1+a))*factor) * l0: (1 - factor) * l0;
-			double l0lim1 = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - (wallContactFlag[im1]/(1+a))*factor1 - (1 - wallContactFlag[im1]/(1+a))*factor) * l0: (1 - factor) * l0;
+			// //double factor = 0.5, factor1 = 0.1;
+			// if (wallContactFlag[i]>(1+a))
+			// 	wallContactFlag[i] = (1+a);
+			// if (wallContactFlag[im1]>(1+a))
+			// 	wallContactFlag[im1] = (1+a);	
+			// double factor = gamafactor1 / kl / pow((l0/0.05), 2), factor1 = gamafactor2 / kl / pow((l0/0.05), 2);
+			// double l0li = (wallContactFlag[i] > 0 && wallContactFlag[ip1] > 0) ? (1 - (wallContactFlag[i]/(1+a))*factor1 - (1 - wallContactFlag[i]/(1+a))*factor) * l0: (1 - factor) * l0;
+			// double l0lim1 = (wallContactFlag[im1] > 0 && wallContactFlag[i] > 0) ? (1 - (wallContactFlag[im1]/(1+a))*factor1 - (1 - wallContactFlag[im1]/(1+a))*factor) * l0: (1 - factor) * l0;
 
-			// double factor = 0.5;
-			// double l0li = (1 - factor) * l0, l0lim1 = (1 - factor) * l0;
-			// double threshold = 5;
-			// double factor1 = 0.1;
-			// if (wallContactFlag[i] || wallContactFlag[ip1])
-			// {	
-			// 	double angle = abs(atan(segment(i,1)/segment(i,0))) * 180 / PI;
-			// 	if (angle < threshold)
-			// 	{
-			// 		double prefactor = factor1 * (threshold - angle)/threshold;
-			// 		l0li = (1 - prefactor) * l0;
-			// 	}
-			// }
-			// if (wallContactFlag[im1] || wallContactFlag[i])
-			// {	
-			// 	double angle = atan(abs(segment(im1,1)/segment(im1,0))) * 180 / PI;
-			// 	if (angle < threshold)
-			// 	{
-			// 		double prefactor = factor1 * (threshold - angle)/threshold;
-			// 		l0lim1 =(1 - prefactor) * l0;
-			// 	}
-			// }
+			double factor = 0;
+			double l0li = (1 - factor) * l0, l0lim1 = (1 - factor) * l0;
+		
 
 	        // get segment strains
 	        lStrainI = (li/l0li) - 1.0;
@@ -1205,6 +1187,24 @@ void deformableParticles2D::shapeForces(){
 	            ftmp = lStrainI*uli - lStrainIm1*ulim1;
 	            ftmp *= kl * pow((l0/0.05), 2)* NV/16.0;
 				//ftmp *= kl;
+	            setVForce(i,d,vforce(i,d)+ftmp);
+	        }
+		}
+
+		double gama = kl;
+		if (gama > 0){
+			// calculate segment lengths
+			lim1 = segmentLength(im1);
+			li = segmentLength(i);
+	        // loop over dimensions, add to force                                                                                                                                                                                      
+	        for (d=0; d<NDIM; d++){
+	        	// get segment unit vectors
+	        	uli = segment(i,d)/li;
+	        	ulim1 = segment(im1,d)/lim1;
+
+	        	// add to force
+	            ftmp = uli - ulim1;
+	            ftmp *= gama * pow((l0/0.05), 2)* NV/16.0;
 	            setVForce(i,d,vforce(i,d)+ftmp);
 	        }
 		}
