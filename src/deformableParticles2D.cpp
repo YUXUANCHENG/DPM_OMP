@@ -1192,7 +1192,7 @@ void deformableParticles2D::shapeForces(){
 		}
 
 		double gama = kl;
-		if (gama > 0){
+		if (gama > 0 and !pFlag){
 			// calculate segment lengths
 			lim1 = segmentLength(im1);
 			li = segmentLength(i);
