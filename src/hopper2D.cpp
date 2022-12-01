@@ -269,6 +269,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			ypos = radii.at(ci) * 1.2;
 			xpos = - radii.at(ci) * 3.5;
 		}
+
+		// hard set y for now
+		// ypos = radii.at(ci) * 1.2;
+
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
 		cell(ci).setCPos(1,ypos);
@@ -551,7 +555,7 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 
 void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g){
 	// HARD CODE IN FIRE PARAMETERS
-	double Ftol = 1e-10; double Fcheck = 0; double Kcheck = 0;
+	double Ftol = 1e-8; double Fcheck = 0; double Kcheck = 0;
 	const double alpha0 	= 0.1;
 	const double finc 		= 1.1;
 	const double fdec 		= 0.5;
@@ -602,7 +606,7 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 	rescaleVelocities(Trescale);
 
 	// iterate until system converged
-	kmax = 1e7;
+	kmax = 1e5;
 	for (k=0; k<kmax; k++){
 		// Step 1. calculate P and norms
 		P = 0.0;
@@ -758,10 +762,10 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 			cout << "	** k = " << k << ", t = " << t << endl;
 
 			// print minimized config, energy and contact network
-			if (packingPrintObject.is_open()){
+			//if (packingPrintObject.is_open()){
 				cout << "	* Printing vetex positions to file" << endl;
-				printSystemPositions();
-			}
+				printRoutine(1, 1, 0, 0, 0);
+			//}
 			
 			if (energyPrintObject.is_open()){
 				cout << "	* Printing cell energy to file" << endl;
@@ -803,7 +807,15 @@ void cellPacking2D::fireMinimizeHopperF(double w0, double w, double th, double g
 	// if no convergence, just stop
 	if (k == kmax){
 		cout << "	** ERROR: FIRE not converged in kmax = " << kmax << " force evaluations, ending code" << endl;
-		exit(1);
+		// exit(1);
+		cout << "	failed" << endl;
+				printRoutine(1, 1, 0, 0, 0);
+			//}
+
+			if (energyPrintObject.is_open()){
+				cout << "	* Printing cell energy to file" << endl;
+				printSystemEnergy(k);
+			}
 	}
 }
 

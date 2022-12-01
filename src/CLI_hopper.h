@@ -75,7 +75,7 @@ public:
 		int mixed = 1;
 		if (mixed)
 		{
-			this->b = 0.2;
+			this->b = 0.1;
 			this->coefu = 0;
 			this->coefv = 1;
 			// this->coefv = 0;
@@ -127,8 +127,8 @@ public:
 		}
 		
 		
-		// this->NV = 64;
-		this->NV = 128;
+		this->NV = 64;
+		// this->NV = 128;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 3;
@@ -174,10 +174,11 @@ public:
 		// 	this->timeStepMag = 0.002;
 
 		// this->spK = 0.01*(this->index_i+1);
-		this->kl = 0.001*(this->index_i+1);
+		// this->kl = 0.001*(this->index_i+1);
 		// this->b = 0.02*(this->index_i+1+2);
 		// this->b = 0.5;
-
+		this->kb = 0; this->kl = 0.0106; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
+		// this->kb = 0; this->kl = 0.114; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
 	}
 
 	void setFriction()
@@ -224,6 +225,10 @@ public:
 		// w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 3 + 1 * this->index_j;
 		w_scale = start + interval * this->index_j;
+
+		// hard set for now
+		w_scale = 0.35;
+
 		// w_scale = 0.5 + 1 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
 		// Initialze the system as disks
@@ -259,14 +264,14 @@ public:
 
 		this->NT = 1e6;
 		this->NPRINT = 1e3;	
-		// this->timeStepMag = 0.00005;	
-		this->timeStepMag =  0.0005;	
+		this->timeStepMag = 0.0005;	
+		// this->timeStepMag =  0.0005;	
 		this->ka = 10*scaleFactor;
-		this->kb = 10*scaleFactor;
+		this->kb = 0*scaleFactor;
 		this->kl = this->kl*scaleFactor;
 		this->g = this->g*scaleFactor;
 		this->NCELLS = 1;
-		this->NV = 16;
+		this->NV = 64;
 		this->w0 = 10;
 		this->Lini = 5;
 		// this->calA0 = 1.15;
@@ -281,7 +286,7 @@ public:
 		this->particles->openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF, ISF);
 		double originalHeight;
 		// if (this->calA0 < 1 + 1e-7)
-		if (false)
+		if (true)
 		{
 			this->particles->gOn = 0;
 			this->particles->fireMinimizeHopperF(w0, w, th, g);

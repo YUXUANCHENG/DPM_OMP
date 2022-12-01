@@ -13,7 +13,7 @@ using namespace std;
 extern bool settleDown;
 bool settleDown = 0;
 extern bool wallAttracFlag;
-bool wallAttracFlag = 1;
+bool wallAttracFlag = 0;
 extern bool constPressureFlag;
 bool constPressureFlag = 0;
 

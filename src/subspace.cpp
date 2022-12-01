@@ -405,8 +405,9 @@ void subspace::calculateForces_insub() {
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
 				{
-					int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
-					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+					// block self repulsion for now
+					// int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
+					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
 						continue;
 				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
@@ -438,12 +439,13 @@ void subspace::calculateForces_betweensub() {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			// forces between resident cell and cashed cell
 			for (int ck = 0; ck < cashed_cells.size(); ck++) {
-				// if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
-				// {
-				// 	int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
-				// 	if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
-				// 		continue;
-				// }
+				// // block self repulsion for now // comment all of them
+				if (resident_cells[ci]->ci == cashed_cells[ck]->ci)
+				{
+					// int distance = abs(resident_cells[ci]->vi - cashed_cells[ck]->vi);
+					// if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+						continue;
+				}
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(cashed_cells[ck]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid == cashed_cells[ck]->boxid) {
@@ -572,6 +574,10 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
 	if ((leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci) && (onTheRight->ci != onTheLeft->ci))
 		return 0;
+
+	// // block self repulsion for now
+	// if (onTheRight->ci == onTheLeft->ci)
+	// 	return 0;
 	// local variables
 	int d, dd;
 
@@ -716,8 +722,9 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 	int inContact = 0;
 	if (onTheLeft->ci == onTheRight->ci)
 	{
-		int distance = onTheLeft->vi - onTheRight->vi;
-		if (distance == 1 || distance == (-1 * pointer_to_system->cell(onTheRight->ci).getNV() + 1))
+		// // temperarely disable self repulsion
+		// int distance = onTheLeft->vi - onTheRight->vi;
+		// if (distance == 1 || distance == (-1 * pointer_to_system->cell(onTheRight->ci).getNV() + 1))
 			return 0;
 	}
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
