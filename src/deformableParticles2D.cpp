@@ -1242,8 +1242,8 @@ void deformableParticles2D::shapeForces(){
 		// }
 
 		// calculate perimeter force
-		bool pFlag = false;
-		// bool pFlag = true;
+		// bool pFlag = false;
+		bool pFlag = true;
 		// if (kl > 0 and pFlag){
 		if (kl > 0){
 			// calculate segment lengths
@@ -1408,17 +1408,17 @@ void deformableParticles2D::gravityForces(double g, int dir){
 		fxtmp *= (a0*g)/(6.0*apoly);
 		fytmp *= (a0*g)/(6.0*apoly);
 
-		// if (dir == 0){
-		// 	fxtmp = (a0*g)/NV;
-		// 	fytmp = 0;
-		// }
-		// else
-		// {
-		// 	fxtmp = 0;
-		// 	// fytmp = 0;
-		// 	// fxtmp = 2 * (a0*g)/NV;
-		// 	fytmp = -1 * (a0*g)/NV;
-		// }
+		if (dir == 0){
+			fxtmp = (a0*g)/NV;
+			fytmp = 0;
+		}
+		else
+		{
+			fxtmp = 0;
+			// fytmp = 0;
+			// fxtmp = 2 * (a0*g)/NV;
+			fytmp = -1 * (a0*g)/NV;
+		}
 
 		// add to total force (factor of NV is to take mass into account)
 		setVForce(i,0,vforce(i,0) + fxtmp);
@@ -2550,6 +2550,8 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
             ftmp = vforce(i,d);
             // dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
 			dampNum = b * velCtmp + 10 * b * (veltmp - velCtmp);
+			// dampNum = b * velCtmp + 10000* b * (veltmp - velCtmp) * abs(pow(veltmp - velCtmp,1));
+			// dampNum = b * velCtmp + 5000*300 * b * (veltmp - velCtmp) * abs(pow(veltmp - velCtmp,2));
             // dampDenom = 1.0 + 0.5*b*dt;
             dampDenom = 1.0;
             dampUpdate = (ftmp - dampNum)/dampDenom;

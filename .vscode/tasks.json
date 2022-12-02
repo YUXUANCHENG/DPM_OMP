@@ -30,7 +30,7 @@
         {
             "type": "shell",
             "label": "C/C++: g++ build production",
-            "command": "g++",
+            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
             "args": [
                 "-O3",
                 "--std=c++17",

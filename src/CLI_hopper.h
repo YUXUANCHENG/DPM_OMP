@@ -177,8 +177,8 @@ public:
 		// this->kl = 0.001*(this->index_i+1);
 		// this->b = 0.02*(this->index_i+1+2);
 		// this->b = 0.5;
-		this->kb = 0; this->kl = 0.0106; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
-		// this->kb = 0; this->kl = 0.114; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
+		// this->kb = 0; this->kl = 0.0106; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
+		this->kb = 0; this->kl = 0.114; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
 	}
 
 	void setFriction()
