@@ -2120,7 +2120,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	//double a = -0.3;
 
 	// hopper nozzle length
-	Lx = L.at(0);
+	// Lx = L.at(0);
 
 	// trig factors
 	t = tan(th);
@@ -2128,7 +2128,10 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	s = sin(th);
 
 	// edge bead information
-	sb 		= cell(0).getl0()*cell(0).getdel();
+	// sb 		= cell(0).getl0()*cell(0).getdel();
+	sb 		= cell(0).getl0()*cell(0).getdel() * 5;
+	Lx = 0.5*(w0 - w + sb * (s - 1)) * t + 0.5 * sb * (1 + c);
+	// Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	// sb 		= cell(0).getl0()*cell(0).getdel() * cutoff;
 	xtb 	= Lx - 0.5*sb;
 	ytb 	= 0.5*(w0 + w + sb);
@@ -2176,6 +2179,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 			if (x > -sigma*s){
 				
 				int edgeForceFlag = 0;
+				// int edgeForceFlag = 1;
 				int inContactWithEdge = 0;
 				if (edgeForceFlag)
 				// if (replaceFlag)
@@ -2305,7 +2309,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 				}
 
 				// if particle is near edge; either do wall force or force due to edge
-				else if (x > xedge && x < Lx){
+				// else if (x > xedge && x < Lx){
+				else if (x > xedge && x < xtb + sib){
 					// check on top wall
 					if (y > 0.5*w0){
 						// define line separating wall force and edge force regime
@@ -2554,7 +2559,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
 				}
 			}
-
+			/***
 			// add vertical edge wall
 			if (x > Lx && x < Lx + 0.5*sigma){
 				// check if overlap with edge bead or wall
@@ -2659,6 +2664,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					}
 				}
 			}
+			***/
 
 			cell(ci).wallContactFlag[vi] = cFlag? (1 + a - overlap) : 0;
 		}

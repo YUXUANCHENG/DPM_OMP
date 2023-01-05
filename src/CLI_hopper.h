@@ -113,7 +113,7 @@ public:
 			// this->NCELLS = 100;
 			// this->NCELLS = 200;
 			this->NCELLS = 1;
-			this->NT = 1e5;	
+			this->NT = 2e5;	
 			this->NPRINT = 1e2;	
 			th = PI/4.0;
 			w0 = 10.0;
@@ -178,6 +178,7 @@ public:
 		// this->b = 0.02*(this->index_i+1+2);
 		// this->b = 0.5;
 		// this->kb = 0; this->kl = 0.0106; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
+		// this->kb = 0; this->kl = 0.04; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
 		this->kb = 0; this->kl = 0.114; this->g = 0.3; this->b = 1; this->timeStepMag = 0.005;
 	}
 
