@@ -208,6 +208,7 @@ public:
 		flowRobj.open("flowRate.txt");
 		intervalRobj.open("flowInterval.txt");
 		int result;
+		int flowFlag = 0;
 		for (t = 0; t < round(cellpointer->NT * 0.005 / cellpointer->dt); t++) {
 			bool startFlag;
 			if (replaceFlag)
@@ -224,6 +225,10 @@ public:
 			if (replaceFlag && closed == 0 && (t+1) % int (1e4 * 0.005 / cellpointer->dt) == 0) {
 			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
 				// addBack();
+				if (flowCount)
+					flowFlag = 0;
+				else 
+					flowFlag++;
 				double rate = (double) flowCount / 1e4;
 				// double rate = (double) flowCount / (double) cellpointer->NPRINT;
 				flowRobj << rate << endl;
@@ -247,10 +252,20 @@ public:
 
 			hopperRoutine(w0, w, th, g, b);
 			result = checkTermination();
-			if (result < 2)
+			// if (result < 2 || flowFlag > 6)
+			if (result < 2 )
+			{	
+				cellpointer->printRoutine(0, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
 				return result;
+			}
+			// if (flowFlag > 6)
+			// {	
+			// 	cellpointer->printRoutine(0, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
+			// 	return 0;
+			// }
 		}
 		cout << "time out" << endl;
+		cellpointer->printRoutine(0, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
 		return 1;
 	}
 
@@ -262,7 +277,8 @@ public:
 		if (cellpointer->NCELLS == 1 && Ke() > 0.1 && startPullFlag)
 			return 0;
 
-		if (cellpointer->NCELLS > 1 && Ke() < 1e-12 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
+		// if (cellpointer->NCELLS > 1 && Ke() < 1e-12 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
+		if (Ke() < 1e-12 * N_inside * pow(cellpointer->cell(0).NV / 16.0, 2) && closed == 0)
 		{
 			clog_count++;
 			if (clog_count > 100)
@@ -291,6 +307,16 @@ public:
 				{
 					cellpointer->cell(ci).verletPositionUpdate(cellpointer->dt);
 					cellpointer->cell(ci).updateCPos();
+					if (ci < Nobs)
+					{
+						// reset
+						deformableParticles2D * currentCell = &(cellpointer->cell(ci));
+						for (int vi=0; vi<currentCell->getNV(); vi++){
+							for (int d=0; d<cellpointer->NDIM; d++)
+								currentCell->setVPos(vi,d,obstacleArray.at(ci).at(d) + currentCell->vrel(vi,d));
+						}
+						cellpointer->cell(ci).updateCPos();
+					}
 				}
 				// if still inside hopper
 				// int checkEk = cellpointer->cell(ci).totalKineticEnergy() > 1e3;

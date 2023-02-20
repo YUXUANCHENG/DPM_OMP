@@ -24,7 +24,7 @@ public:
 	//double smallRadius = 0.3;			// radius fo smaller particles (diameter is length unit)
 	double sizeRatio = 1.4;			// ratio of small diameter to large diameter
 	//double sizeRatio = 4;			// ratio of small diameter to large diameter
-	//const double sizeRatio = 1;
+	// const double sizeRatio = 1.01;
 	double w0 = 20.0;			// width of hopper reservoir (in units of small diameter)
 	// double w0 = 60.0;			// width of hopper reservoir (in units of small diameter)
 
@@ -52,9 +52,9 @@ public:
 		this->NT = 5e6;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e4;			// number of steps between printing
-		this->kl = 1*scaleFactor;
+		this->kl = 0.01*scaleFactor;
 		this->ka = 100*scaleFactor;
-		this->kb = 0.01*scaleFactor;
+		this->kb = 0.001*scaleFactor;
 		if (frictionFlag)
 			this->b = 0;
 		this->b *= scaleFactor;
@@ -67,39 +67,40 @@ public:
 			this->g = 0.5*scaleFactor;
 		}
 		else
-			this->g = 0.05*scaleFactor;
+			// this->g = 0.05*scaleFactor;
+			this->g = 0.3*scaleFactor;
 		// this->NBx = 30;
 		// this->NBy = 10;
 		int mixed = 1;
 		if (mixed)
 		{
-			this->b = 0;
+			this->b = 1;
 			this->coefu = 0;
-			this->coefv = 5;
-			// this->coefv = 0;
-			this->spK = 10;
+			this->coefv = 0;
+			// this->coefv = 10;
+			this->spK = 1000;
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
 		if (replaceFlag)
 		{
-			// this->NT = 4e5;	
-			this->NT = 6e5;	
-			// this->NT = 1e6;	
-			// this->NPRINT = 1e3;	
-			this->NPRINT = 1e4;	
+			// this->NT = 1e8;	
+			// this->NPRINT = 1e7;	
+			this->NT = 1e6;	
+			this->NPRINT = 1e3;	
 			// this->NPRINT = 1e5;	
-			this->NCELLS = 1600;
-			// this->NCELLS = 800;
-			// this->NCELLS = 3200;
+			// this->NCELLS = 1600;
+			// this->NCELLS = 400;
+			this->NCELLS = 1;
 			// this->timeStepMag = 0.002;
-			w0 = 60.0;
-			// th =  (90.0 - 89.9)/180 * PI;
+			// w0 = 60.0;
+			w0 = 25.0;
+			th =  (90.0 - 89.9)/180 * PI;
 			// th = PI/4.0;
 			// th = PI/3.0;
 			// th = PI/6.0;
 			// th =  (20.0)/180 * PI;
-			th =  (15.0)/180 * PI;
+			// th =  (15.0)/180 * PI;
 			this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
@@ -123,11 +124,13 @@ public:
 		this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
-		this->NBy = 10 * round(w0/10) * this->NV/16;
-		this->NBx = factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
+		this->NBy = 4 * round(w0/10) * this->NV/16;
+		this->NBx = 2 * factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
-
-		this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
+		if (this->NCELLS > 300)
+			this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
+		else
+			this->Lini = 1;
 		cout << "Lini = " << this->Lini << endl;
 		// if (this->kb > 9 || this->NV > 16)
 		// if (this->kb > 9)
@@ -160,7 +163,7 @@ public:
 		// this->kb = 0.001 * scaleFactor * pow(10, (this->index_i/10)*4.0/9);
 		// this->spK = 1 * scaleFactor * pow(10, (this->index_i%10)*3.0/9);
 		// this->coefv = 0.1 * (this->index_i + 1);
-		setFriction();
+		// setFriction();
 		// uglyNdepend();
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
@@ -197,8 +200,8 @@ public:
 	}
 
 	virtual void setSeed() {
-		// this->seed = this->index_i;
-		this->seed = 0;
+		this->seed = this->index_i;
+		// this->seed = 0;
 	}
 
 	virtual void prepareSystem() {
@@ -210,15 +213,29 @@ public:
 		// w_scale = 3 + 0.1 * this->index_j;
 		// w_scale = 0.5 + 0.1 * this->index_j;
 		// w_scale = 3 + 1 * this->index_j;
-		w_scale = start + interval * this->index_j;
+		// w_scale = start + interval * this->index_j;
+		// w_scale = 2.2;
+		// w_scale = 0.9;
+		w_scale = 10;
+		// w_scale = 2.5;
 		// w_scale = 0.5 + 1 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;
+		double ObX;
+		// int cutoff = 15; double spacing = 0.2;
+		// if (this->index_j <= cutoff)
+		// 	ObX = (1 + spacing * this->index_j) * (1 + sizeRatio) / 2;
+		// else
+		// 	ObX = (1 + spacing * cutoff + 1 * (this->index_j-cutoff) ) * (1 + sizeRatio) / 2;
+		// double ObR = 6 * (1 + sizeRatio) / 2;
+		double ObR = 10;
+		ObX = 0;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;
 		if (deformFlag)
 			this->particles->gDire = 1;
 		int fricTmp = frictionFlag;
 		frictionFlag = 0;
+		this->particles->setObstacle(ObX,0,ObR);
 		this->particles->initializeHopperDP(radii, w0, w, th, this->Lini, this->NV);
 		frictionFlag = fricTmp;
 		this->particles->forceVals(this->calA0, this->kl, this->ka, this->gam, this->kb, this->kint, this->del, this->aInitial);

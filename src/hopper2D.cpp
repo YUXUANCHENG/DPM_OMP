@@ -142,6 +142,12 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 // 	** NCELLS, NPRINT, L.at(0) (using w,w0,th)
 // 	** SET PBCS TO 0
 
+vector<vector<double>> obstacleArray;
+int Nobs;
+double obL = 0.4;
+double obS = 0.2;
+// double obL = 0.7;
+// double obS = 0.5;
 
 void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double w, double th, double Lmin, int NV){
 	// local variables
@@ -232,10 +238,68 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		for (d=0; d<NDIM; d++)
 			cell(ci).setL(d,Ltmp);
 	}
+	ymin = 0.7;
+	ymax = w0 - 0.7;
+	xmin = L.at(0) - ObX -ObR - 1;
+	xmax = L.at(0) - ObX - 1;
+	for (int obIndex = 0; obIndex < 300; obIndex++)
+	{
+		if (obstacleArray.empty())
+		{
+			// xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+			// ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+			vector<double> obPos{xmax,ymax/2};
+			obstacleArray.push_back(obPos);
+			// obPos = vector<double>{xmax,ymax};
+			// obstacleArray.push_back(obPos);
+			// obPos = vector<double>{xmax,ymin};
+			// obstacleArray.push_back(obPos);
+		}
+		else
+		{
+			double dist = 100;
+			int randcount = 0;
+			int limit = 1e6;
+			while((dist > 0.6 || dist < 0.4) && randcount < limit)
+			{	
+				dist = 100;
+				double obr = obIndex%2 ? obS : obL;
+				xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+				ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+				int count = 0;
+				for (vector<double> it: obstacleArray){
+    				double obrj = count%2 ? obS : obL;
+					double sep = sqrt((xpos- it.at(0))*(xpos- it.at(0)) + (ypos- it.at(1))*(ypos- it.at(1)));
+					sep -= (obrj + obr);
+					count ++;
+					if (sep < dist)
+						dist = sep;
+				}
+				randcount ++;
+			}
+			if (randcount == limit)
+				break;
+			vector<double> obPos{xpos,ypos};
+			obstacleArray.push_back(obPos);
+		}
+	}
 
+	double obTop = 100;
+	Nobs = 0;
+	
+	for (vector<double> it: obstacleArray){
+		contactPrintObject << it.at(0) << "," << it.at(1) << endl;
+		if (it.at(0) < obTop)
+			obTop = it.at(0);
+		if (deformObs){
+			cell(Nobs).setCPos(0,it.at(0));
+			cell(Nobs).setCPos(1,it.at(1));
+			Nobs ++;
+		}
+	}
 	// initialize particle positions
 	cout << "		-- Ininitializing cell positions" << endl;
-	for (ci=0; ci<NCELLS; ci++){
+	for (ci=Nobs; ci<NCELLS; ci++){
 		// set min and max values of positions
 		xmin = -Lmin*L.at(1) + radii.at(ci);
 		if (th < (90.0 - 85.0)/180 * PI)
@@ -244,6 +308,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		else
 			xmax = L.at(0) * 0.5;
 		
+		// double obTop = L.at(0) - ObX -ObR;
+		if (xmax > obTop - 1)
+			xmax = obTop - 1;
 
 		// get random x location in hopper
 		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
@@ -260,7 +327,10 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
 			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
 		}
-		ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+		if (NCELLS == 1)
+			ypos = ymax/2;
+		else
+			ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
 
 		// set as initial position of com
 		cell(ci).setCPos(0,xpos);
@@ -296,6 +366,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		// initialize vertices as a regular polygon
 		cell(ci).regularPolygon();
 
+		for (d=0; d<NDIM; d++)
+			cell(ci).setCVel(d,0.0);
+			
 		// update real-space positions
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			for (d=0; d<NDIM; d++)
@@ -306,7 +379,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	lengthscalePrintObject << L.at(0) << endl << w0 << endl;
 	printJammedConfig_yc();
 	printCalA();
-	printContact();
+	// printContact();
 }
 
 
@@ -386,6 +459,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 				continue;
 			if (settleDown && (!(cell(ci).inside_hopper==2)))
 				continue;
+			if (ci < Nobs)
+					continue;
 			for (d=0; d<NDIM; d++){
 				// get tmp variables
 				ftmp = cell(ci).cforce(d);
@@ -456,6 +531,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 					continue;
 				if (settleDown && (!(cell(ci).inside_hopper==2)))
 					continue;
+				if (ci < Nobs)
+					continue;
 				for (d=0; d<NDIM; d++)
 					cell(ci).setCPos(d,cell(ci).cpos(d) - 0.5*dt*cell(ci).cvel(d));
 			}
@@ -465,6 +542,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 				if (!(cell(ci).inside_hopper))
 					continue;
 				if (settleDown && (!(cell(ci).inside_hopper==2)))
+					continue;
+				if (ci < Nobs)
 					continue;
 				for (d=0; d<NDIM; d++)
 					cell(ci).setCVel(d,0.0);
@@ -477,6 +556,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 				if (!(cell(ci).inside_hopper))
 					continue;
 				if (settleDown && (!(cell(ci).inside_hopper==2)))
+					continue;
+				if (ci < Nobs)
 					continue;
 				for (d=0; d<NDIM; d++){
 					vtmp = (1 - alphat)*cell(ci).cvel(d) + alphat*(cell(ci).cforce(d)/fstarnrm)*vstarnrm;
@@ -510,6 +591,8 @@ void cellPacking2D::fireMinimizeHopperSP(vector<double>& radii, double w0, doubl
 				continue;
 			if (settleDown && (!(cell(ci).inside_hopper==2)))
 				continue;
+			if (ci < Nobs)
+					continue;
 			Fcheck += sqrt(cell(ci).cforce(0)*cell(ci).cforce(0) + cell(ci).cforce(1)*cell(ci).cforce(1));
 			counter ++;
 		}
@@ -858,6 +941,7 @@ void cellPacking2D::hopperForcesSP(vector<double>& radii, double w0, double w, d
 				// force scale
 				ftmp = fscale * (1 - overlap);
 
+
 				// add to potential energy (energy should increase because particles are growing)
 				utmp = 0.5*contactDistance*pow(1 - overlap,2);
 				for (vi=0; vi<cell(ci).getNV(); vi++)
@@ -1074,6 +1158,8 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 	sigmaYX = 0.0;
 	sigmaYY = 0.0;
 
+	double obx = L.at(0) - ObX - ObR;
+	double oby = w0/2 + ObY;
 	// loop over cells
 	for (ci=0; ci<NCELLS; ci++){
 		// get sigma (2*radius)
@@ -1082,6 +1168,59 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 		// get particle positions
 		x = cell(ci).cpos(0);
 		y = cell(ci).cpos(1);
+
+		if (!deformObs){
+		// double dist2Ob = (x - obx)*(x - obx) + (y - oby)*(y - oby);
+		// double robi = sigma/2 + ObR;
+		// if (dist2Ob < robi*robi){
+		// 		dist2Ob = sqrt(dist2Ob);
+
+		// 		// overlap scale
+		// 		double overlap = dist2Ob/robi;
+
+		// 		// force scale
+		// 		ftmp = factor * (1 - overlap);
+		// 		for (int d=0; d<NDIM; d++){
+		// 			// unit vector
+		// 			double uv;
+		// 			if (d==0)
+		// 				uv = (x - obx)/dist2Ob;
+		// 			else
+		// 				uv = (y - oby)/dist2Ob;
+		// 			// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+		// 			cell(ci).setCForce(d,cell(ci).cforce(d) + ftmp*uv);
+		// 		}
+		// }
+
+		int count = 0;
+		for (vector<double> it: obstacleArray){
+			double obx = it.at(0);
+			double oby = it.at(1);
+			double ObR = count%2 ? obS : obL;
+			count ++;
+			double dist2Ob = (x - obx)*(x - obx) + (y - oby)*(y - oby);
+			double robi = sigma/2 + ObR;
+			if (dist2Ob < robi*robi){
+					dist2Ob = sqrt(dist2Ob);
+
+					// overlap scale
+					double overlap = dist2Ob/robi;
+
+					// force scale
+					ftmp = factor * (1 - overlap);
+					for (int d=0; d<NDIM; d++){
+						// unit vector
+						double uv;
+						if (d==0)
+							uv = (x - obx)/dist2Ob;
+						else
+							uv = (y - oby)/dist2Ob;
+						// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+						cell(ci).setCForce(d,cell(ci).cforce(d) + ftmp*uv);
+					}
+			}
+		}
+		}
 
 		// check hopper walls
 		if (x > -sigma*s){
@@ -1671,7 +1810,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	//double a = -0.3;
 
 	// hopper nozzle length
-	Lx = L.at(0);
+	// Lx = L.at(0);
 
 	// trig factors
 	t = tan(th);
@@ -1679,8 +1818,11 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	s = sin(th);
 
 	// edge bead information
-	sb 		= cell(0).getl0()*cell(0).getdel();
+	// sb 		= cell(0).getl0()*cell(0).getdel();
 	// sb 		= cell(0).getl0()*cell(0).getdel() * cutoff;
+	sb 		= cell(0).getl0()*cell(0).getdel() * 5;
+	Lx = 0.5*(w0 - w + sb * (s - 1)) * t + 0.5 * sb * (1 + c);
+	// Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	xtb 	= Lx - 0.5*sb;
 	ytb 	= 0.5*(w0 + w + sb);
 	xbb 	= xtb;
@@ -1695,7 +1837,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	sigmaYY = 0.0;
 
 	bool cFlag = false;
-
+	double obx = Lx - ObX - ObR;
+	double oby = w0/2 + ObY;
 	// loop over cells and vertices
 	for (ci=0; ci<NCELLS; ci++){
 		if (!cell(ci).inside_hopper)
@@ -1721,6 +1864,64 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 			// get particle positions
 			x = cell(ci).vpos(vi,0);
 			y = cell(ci).vpos(vi,1);
+			if (!deformObs){
+			// double dist2Ob = (x - obx)*(x - obx) + (y - oby)*(y - oby);
+			// double robi = sigma/2 + ObR;
+			// if (dist2Ob < robi*robi){
+			// 		dist2Ob = sqrt(dist2Ob);
+
+			// 		// overlap scale
+			// 		double overlap = dist2Ob/robi;
+
+			// 		// force scale
+			// 		ftmp = 10 * (1 - overlap);
+			// 		for (int d=0; d<NDIM; d++){
+			// 			// unit vector
+			// 			double uv;
+			// 			if (d==0)
+			// 				uv = (x - obx)/dist2Ob;
+			// 			else
+			// 				uv = (y - oby)/dist2Ob;
+			// 			// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+			// 			// cell(ci).setCForce(d,cell(ci).cforce(d) + ftmp*uv);
+			// 			cell(ci).setVForce(vi,d,cell(ci).vforce(vi,d) + ftmp*uv);
+
+			// 		}
+			// }
+
+
+			int count = 0;
+			for (vector<double> it: obstacleArray){
+				double obx = it.at(0);
+				double oby = it.at(1);
+				double ObR = count%2 ? obS : obL;
+				count ++;
+				double dist2Ob = (x - obx)*(x - obx) + (y - oby)*(y - oby);
+				double robi = sigma/2 + ObR;
+				if (dist2Ob < robi*robi){
+						dist2Ob = sqrt(dist2Ob);
+
+						// overlap scale
+						double overlap = dist2Ob/robi;
+
+						// force scale
+						ftmp = 10 * (1 - overlap);
+						for (int d=0; d<NDIM; d++){
+							// unit vector
+							double uv;
+							if (d==0)
+								uv = (x - obx)/dist2Ob;
+							else
+								uv = (y - oby)/dist2Ob;
+							// add to forces (MIND FORCE DIRECTION; rij points from i -> j, so need extra minus sign)
+							// cell(ci).setCForce(d,cell(ci).cforce(d) + ftmp*uv);
+							cell(ci).setVForce(vi,d,cell(ci).vforce(vi,d) + ftmp*uv);
+
+						}
+				}
+			}
+			}
+
 
 			// check hopper walls
 			if (x > -sigma*s){
@@ -1856,7 +2057,8 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 				}
 
 				// if particle is near edge; either do wall force or force due to edge
-				else if (x > xedge && x < Lx){
+				// else if (x > xedge && x < Lx){
+				else if (x > xedge && x < xtb + sib){
 					// check on top wall
 					if (y > 0.5*w0){
 						// define line separating wall force and edge force regime
@@ -2105,7 +2307,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					cell(ci).setUInt(vi,cell(ci).uInt(vi) + utmp);	
 				}
 			}
-
+/***
 			// add vertical edge wall
 			if (x > Lx && x < Lx + 0.5*sigma){
 				// check if overlap with edge bead or wall
@@ -2210,7 +2412,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 					}
 				}
 			}
-
+***/
 			cell(ci).wallContactFlag[vi] = cFlag? (1 + a - overlap) : 0;
 		}
 	}
@@ -2944,6 +3146,8 @@ void cellPacking2D::hopperPosVerletSP(){
 		if (!(cell(ci).inside_hopper))
 			continue;
 		if (settleDown && (!(cell(ci).inside_hopper==2)))
+			continue;
+		if (ci < Nobs)
 			continue;
 		for (d=0; d<NDIM; d++){
 			// calculate com acceleration

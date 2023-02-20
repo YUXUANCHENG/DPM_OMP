@@ -31,10 +31,12 @@
 #include <random>
 #include <map>
 
+extern bool deformObs;
 
 // constants
 const double PI = 4 * atan(1);
-
+extern vector<vector<double>> obstacleArray;
+extern int Nobs;
 //class subspace;
 //class cvpair;
 
@@ -76,6 +78,7 @@ public:
 	std::vector<double> L;
 	std::vector<double> BoundaryCoor;
 	double pistonX, pistonY;
+	double ObX, ObY, ObR;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
@@ -206,6 +209,12 @@ public:
 	};
 	void setSPk(double spK){
 		this->spK = spK;
+	};
+
+	void setObstacle(double x, double y, double r){
+		this->ObX = x;
+		this->ObY = y;
+		this->ObR = r;
 	};
 
 	// box len

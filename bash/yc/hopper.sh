@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # directories with code
-cellsdir=~/DPM_OMP_Hopper/DPM_OMP
+cellsdir=~/DPM_Obstacle/DPM_OMP
 srcdir=$cellsdir/src
 # maindir=$cellsdir/main
 
@@ -13,7 +13,7 @@ jobnumber=1
 # factor2=40
 
 
-factor1=19
+factor1=1
 factor1s=1
 factor2=20
 
@@ -64,9 +64,10 @@ let total_job=$jobnumber*$jobnumber*$range1t*$factor2
 
 echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf
-# echo \#SBATCH --cpus-per-task=4 >> $slurmf
+echo \#SBATCH --cpus-per-task=4 >> $slurmf
 # echo \#SBATCH --cpus-per-task=6 >> $slurmf
 echo \#SBATCH --mem-per-cpu=512 >> $slurmf
+# echo \#SBATCH --array=1-$total_job%100 >> $slurmf
 echo \#SBATCH --array=1-$total_job >> $slurmf
 echo \#SBATCH -n 1 >> $slurmf
 echo \#SBATCH -p $partition >> $slurmf

@@ -347,7 +347,7 @@ void deformableParticles2D::regularPolygon(){
 		setVRel(i,1,polyRad*sin(angleArg));
 	}
 	// output
-	cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(),2.0)/(4.0*PI*polygonArea()) << ", compare to " << NV*tan(PI/NV)/PI << endl;
+	// cout << " 	-- creating regular polygon with a0 = " << a0 << ", area = " << polygonArea() << " and perimeter = " << perimeter() << ", so init calA0 = " << pow(perimeter(),2.0)/(4.0*PI*polygonArea()) << ", compare to " << NV*tan(PI/NV)/PI << endl;
 }
 
 // perturb vertex positions
@@ -1334,6 +1334,18 @@ void deformableParticles2D::gravityForces(double g, int dir){
 		}
 		fxtmp *= (a0*g)/(6.0*apoly);
 		fytmp *= (a0*g)/(6.0*apoly);
+
+		if (dir == 0){
+			fxtmp = (a0*g)/NV;
+			fytmp = 0;
+		}
+		else
+		{
+			fxtmp = 0;
+			// fytmp = 0;
+			// fxtmp = 2 * (a0*g)/NV;
+			fytmp = -1 * (a0*g)/NV;
+		}
 
 		// add to total force (factor of NV is to take mass into account)
 		setVForce(i,0,vforce(i,0) + fxtmp);
