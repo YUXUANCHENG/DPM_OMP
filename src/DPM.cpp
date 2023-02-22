@@ -33,8 +33,10 @@ void cellPacking2D::printSubRoutine(int count, int print_frequency)
 {
 	if (count % print_frequency == 0) {
 		printJammedConfig_yc();
-		phi = packingFraction();
-		phiPrintObject << phi << endl;
+		// phi = packingFraction();
+		// phiPrintObject << phi << endl;
+		for (int c = 0; c < NCELLS; c++)
+			phiPrintObject << c << "," << cell(c).NV << endl;
 		printCalA();
 		printContact();
 		printV();

@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/jamming.o",
-            "args": ["0","7", "1", "0", "0", "0.05"],
+            "args": ["0","6", "1", "0", "0", "0.05"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -26,11 +26,32 @@
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
+            "name": "lunch only",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/jamming.o",
+            "args": ["0","7", "0.02", "0", "0", "0.3"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            // "preLaunchTask": "C/C++: g++ build active file",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
             "name": "g++ - Build Production",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/jamming.o",
-            "args": ["0","7", "1", "0", "0", "0.05"],
+            "args": ["0","6", "1", "0", "0", "0.05"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

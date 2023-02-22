@@ -4,6 +4,7 @@
 #include "cellPacking2D.h"
 #include "NVE.h"
 extern bool constPressureFlag;
+extern bool resetSubFlag;
 class DPM_Parallel : public virtual cellPacking2D {
 public:
 	using cellPacking2D::cellPacking2D;
@@ -37,6 +38,7 @@ public:
 
 
 	void subspaceManager() {
+
 		for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
 			subsystem[i].migrate_out();
 		for (int i = 0; i < N_systems[0] * N_systems[1]; i++)
@@ -166,7 +168,12 @@ public:
 		}
 
 		resetContacts();
-
+		if (resetSubFlag)
+		{
+			reset_subsystems();
+			split_into_subspace();
+			resetSubFlag = 0;
+		}
 		subspaceManager();
 #pragma omp parallel for schedule (dynamic, 4)
 		for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)

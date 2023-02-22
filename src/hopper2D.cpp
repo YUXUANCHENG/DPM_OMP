@@ -243,6 +243,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	xmin = L.at(0) - ObX -ObR - 1;
 	xmax = L.at(0) - ObX - 1;
 	for (int obIndex = 0; obIndex < 300; obIndex++)
+	// for (int obIndex = 0; obIndex < 0; obIndex++)
 	{
 		if (obstacleArray.empty())
 		{

@@ -16,7 +16,7 @@ using namespace Eigen;
 using namespace std;
 
 
-
+bool resetSubFlag = 0;
 
 /************************
 
@@ -53,7 +53,7 @@ void cellPacking2D::defaultvars(){
 		BoundaryCoor.at(d) 	= 0.0;
 	}
 	// pointer variables point to nullptr
-	cellArray 				= nullptr;
+	cellArray 				= std::vector<deformableParticles2D>();
 	contactMatrix	 		= nullptr;
 
 	// seed random numbers randomly
@@ -119,7 +119,10 @@ cellPacking2D::cellPacking2D(int ncells, int nt, int nprint, double l, double s)
 	}
 
 	// initialize cell array
-	cellArray = new deformableParticles2D[NCELLS];
+	// cellArray = new deformableParticles2D[NCELLS];
+	cellArray.reserve(100);
+	for (i=0; i<NCELLS; i++)
+		cellArray.push_back(deformableParticles2D());
 
 	// initialize contact matrix
 	NC = NCELLS*(NCELLS-1)/2;
@@ -171,7 +174,9 @@ cellPacking2D::cellPacking2D(int ncells, int ntumor, int tumorNV, int adiposeNV,
 	}
 
 	// initialize cell array
-	cellArray = new deformableParticles2D[NCELLS];
+	// cellArray = new deformableParticles2D[NCELLS];
+	for (i=0; i<NCELLS; i++)
+		cellArray.push_back(deformableParticles2D());
 
 	// initialize contact matrix
 	NC = NCELLS*(NCELLS-1)/2;
@@ -287,7 +292,9 @@ cellPacking2D::cellPacking2D(string& inputFile, double T0, double s){
 	}
 
 	// initialize cell array
-	cellArray = new deformableParticles2D[NCELLS];
+	// cellArray = new deformableParticles2D[NCELLS];
+	for (int i=0; i<NCELLS; i++)
+		cellArray.push_back(deformableParticles2D());
 
 	// loop over cells
 	for (ci=0; ci<NCELLS; ci++){
@@ -379,10 +386,10 @@ cellPacking2D::cellPacking2D(string& inputFile, double T0, double s){
 
 // destructor
 cellPacking2D::~cellPacking2D(){
-	if (cellArray){
-		delete [] cellArray;
-		cellArray = nullptr;
-	}
+	// if (cellArray){
+	// 	delete [] cellArray;
+	// 	cellArray = nullptr;
+	// }
 	if (contactMatrix){
 		delete [] contactMatrix;
 		contactMatrix = nullptr;
@@ -436,7 +443,7 @@ void cellPacking2D::operator=(cellPacking2D& onTheRight){
 	shearStrain = onTheRight.shearStrain;
 
 	// test that memory has not yet been initialized
-	if (cellArray){
+	if (cellArray.empty()){
 		cout << "	ERROR: in overloaded operator, cellArray ptr already initialized, ending code here." << endl;
 		exit(1);
 	}
@@ -446,7 +453,8 @@ void cellPacking2D::operator=(cellPacking2D& onTheRight){
 	}
 
 	// initialize cell array
-	cellArray = new deformableParticles2D[NCELLS];
+	// cellArray = new deformableParticles2D[NCELLS];
+	cellArray = std::vector<deformableParticles2D>(NCELLS);
 	contactMatrix = new int[NCELLS*(NCELLS-1)/2];
 
 	// deep copy cell objects and contact matrix
@@ -6179,3 +6187,91 @@ void cellPacking2D::calInertia(){
 	for (int ci = 0; ci < NCELLS; ci++)
 		cell(ci).cal_inertia();
 }
+
+
+double* breakupArray(double*& before,breakupPair pair, int NV, int padding, int padding1)
+{
+	double* temp = before;
+	int length = pair.j - pair.i + 1;
+	before = new double[length*2 + padding*2];
+	double startx = temp[pair.j*2];
+	double endx = temp[pair.i*2];
+	double starty = temp[pair.j*2 + 1];
+	double endy = temp[pair.i*2 + 1];
+
+	for (int c=0; c<length*2; c++)
+		before[c] = temp[pair.i*2 + c];
+	for (int c = 0; c< padding; c++)
+	{
+		before[length*2 + c*2 + 1] = starty + (c+1.0)*(endy - starty)/(padding+1.0);
+		before[length*2 + c*2] = startx + (c+1.0)*(endx - startx)/(padding+1.0);
+	}
+
+	double* after = new double[(NV-length)*2 + padding1*2];
+	startx = temp[((NV + pair.i-1)%NV)*2];
+	endx = temp[((NV+pair.j+1)%NV)*2];
+	starty = temp[((NV + pair.i-1)%NV)*2 + 1];
+	endy = temp[((NV+pair.j+1)%NV)*2 + 1];
+
+	for (int c=0; c<(NV-length)*2; c++)
+		after[c] = temp[((pair.j+1)*2 + c)%(NV*2)];
+
+	for (int c = 0; c< padding1; c++)
+	{
+		after[(NV-length)*2 + c*2 + 1] = starty + (c+1.0)*(endy - starty)/(padding1+1.0);
+		after[(NV-length)*2 + c*2] = startx + (c+1.0)*(endx - startx)/(padding1+1.0);
+	}
+	
+	return after;
+}
+
+void cellPacking2D::breakup(){
+	int increase = 0;
+	for (int ci = 0; ci < NCELLS; ci++)
+	{
+		breakupPair pair = cell(ci).breakup();
+		if (pair.i >= 0)
+		{
+			increase ++;
+			resetSubFlag = 1;
+			cout << "droplet breakup" << endl;
+			// indicate NV for new cell
+			double segx = cell(ci).distance(cell(ci),pair.i,pair.j,0);
+			double segy = cell(ci).distance(cell(ci),pair.i,pair.j,1);
+			double dist = sqrt(segx*segx + segy * segy);
+			int padding = floor(dist/cell(ci).l0) - 1;
+
+			double segx1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,0);
+			double segy1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,1);
+			double dist1 = sqrt(segx1*segx1 + segy1 * segy1);
+			int padding1 = floor(dist1/cell(ci).l0) - 1;
+
+			// breakupArray(cell(ci).vertexPositions,pair,cell(ci).NV, padding, padding1);
+			int newNV = (pair.j - pair.i + 1);
+			int daughtorNV = cell(ci).NV - newNV;
+			// push new cell
+			cellArray.emplace_back(deformableParticles2D());
+			cellArray.back().NV = daughtorNV + padding1;
+			cellArray.back().initializeVertices();
+			cellArray.back().initializeCell();
+			// split position array
+			double * p = cellArray.back().vertexPositions;
+			delete [] p;
+			cellArray.back().vertexPositions = breakupArray(cell(ci).vertexPositions,pair,cell(ci).NV, padding, padding1);
+			cellArray.back().setkl(cell(ci).kl);
+			cellArray.back().l0 = cell(ci).l0;
+			cellArray.back().a = cell(ci).a;
+			cellArray.back().setka(cell(ci).ka);
+			cellArray.back().setgam(cell(ci).gam);
+			cellArray.back().setkb(cell(ci).kb);
+			cellArray.back().setkint(cell(ci).kint);
+			cellArray.back().setdel(cell(ci).del);
+			cellArray.back().seta0(cellArray.back().polygonArea());
+			// update original cell
+			cell(ci).NV = newNV + padding;
+			cell(ci).seta0(cell(ci).polygonArea());
+		}
+	}
+	// NCELLS += increase;
+}
+

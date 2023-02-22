@@ -222,6 +222,8 @@ void subspace::reset() {
 
 	reset_cashe();
 	if (!resident_cells.empty()) {
+		for (auto c : resident_cells)
+			delete c;
 		resident_cells.clear();
 	}
 }

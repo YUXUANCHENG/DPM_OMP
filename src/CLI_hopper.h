@@ -94,7 +94,8 @@ public:
 			this->NCELLS = 1;
 			// this->timeStepMag = 0.002;
 			// w0 = 60.0;
-			w0 = 25.0;
+			// w0 = 25.0;
+			w0 = 10.0;
 			th =  (90.0 - 89.9)/180 * PI;
 			// th = PI/4.0;
 			// th = PI/3.0;
@@ -120,8 +121,8 @@ public:
 			}
 		}
 		
-		// this->NV = 64;
-		this->NV = 16;
+		this->NV = 64;
+		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
 		this->NBy = 4 * round(w0/10) * this->NV/16;
@@ -215,8 +216,8 @@ public:
 		// w_scale = 3 + 1 * this->index_j;
 		// w_scale = start + interval * this->index_j;
 		// w_scale = 2.2;
-		// w_scale = 0.9;
-		w_scale = 10;
+		w_scale = 0.3;
+		// w_scale = 10;
 		// w_scale = 2.5;
 		// w_scale = 0.5 + 1 * this->index_j;
 		w = w_scale * (1 + sizeRatio) / 2;

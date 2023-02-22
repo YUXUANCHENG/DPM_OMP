@@ -32,7 +32,7 @@
 #include <map>
 
 extern bool deformObs;
-
+extern bool resetSubFlag;
 // constants
 const double PI = 4 * atan(1);
 extern vector<vector<double>> obstacleArray;
@@ -86,7 +86,8 @@ public:
 
 	
 	// array of cells
-	deformableParticles2D* cellArray;
+	// deformableParticles2D* cellArray;
+	std::vector<deformableParticles2D> cellArray;
 	double coefu = 0;
 	double coefv = 0;
 	double spK = 10;
@@ -493,6 +494,8 @@ public:
 		for (int ci = 0; ci < NCELLS; ci++)
 			cell(ci).printVertexPositions_yc(jamPrintObject, ci);
 	};
+
+	void breakup();
 };
 
 #endif

@@ -298,6 +298,7 @@ public:
 		if (softFlag){
 			cellpointer->hopperPosVerletSP();
 		}
+		cellpointer->breakup();
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper)
 			{

@@ -26,6 +26,18 @@
 
 using namespace std;
 
+class breakupPair
+{
+public:
+	int i;
+	int j;
+	breakupPair(int i, int j)
+	{
+		this->i = i;
+		this->j = j;
+	}
+};
+
 class deformableParticles2D{
 public:
 	// spatial dimension
@@ -98,6 +110,8 @@ public:
 
 	// operators
 	void operator=(deformableParticles2D& onTheRight);
+
+	breakupPair breakup();
 
 	// initialization
 	void initializeVertices();

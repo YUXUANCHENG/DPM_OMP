@@ -75,7 +75,10 @@
         "optional": "cpp",
         "condition_variable": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "__split_buffer": "cpp",
+        "queue": "cpp",
+        "string_view": "cpp"
     },
     "cmake.configureOnOpen": false
 }
