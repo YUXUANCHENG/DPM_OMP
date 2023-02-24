@@ -2728,7 +2728,7 @@ breakupPair deformableParticles2D::breakup()
 		for (int j = i + 1; j < NV; j++)
 		{
 			double divLimit = 1.0/3;
-			if ( j - i < NV * divLimit || NV - (j - i) < NV * divLimit || NV < 24)
+			if ( j - i < NV * divLimit || NV - (j - i) < NV * divLimit || NV < 36)
 				continue;
 			double segx = distance(*this,i,j,0);
 			double segy = distance(*this,i,j,1);

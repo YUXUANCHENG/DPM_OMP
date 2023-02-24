@@ -120,7 +120,7 @@ cellPacking2D::cellPacking2D(int ncells, int nt, int nprint, double l, double s)
 
 	// initialize cell array
 	// cellArray = new deformableParticles2D[NCELLS];
-	cellArray.reserve(100);
+	cellArray.reserve(NCELLS*5);
 	for (i=0; i<NCELLS; i++)
 		cellArray.push_back(deformableParticles2D());
 
@@ -6207,6 +6207,7 @@ double* breakupArray(double*& before,breakupPair pair, int NV, int padding, int 
 		before[length*2 + c*2] = startx + (c+1.0)*(endx - startx)/(padding+1.0);
 	}
 
+	// length += 2;
 	double* after = new double[(NV-length)*2 + padding1*2];
 	startx = temp[((NV + pair.i-1)%NV)*2];
 	endx = temp[((NV+pair.j+1)%NV)*2];
@@ -6225,6 +6226,16 @@ double* breakupArray(double*& before,breakupPair pair, int NV, int padding, int 
 	return after;
 }
 
+void rescaleL0(deformableParticles2D& cell){
+	double calA0tmp = cell.NV*tan(PI/cell.NV)/PI;
+	double calA0 = pow(cell.NV*cell.l0,2.0)/(4.0*PI*cell.a0);
+	if (calA0 > calA0tmp)
+	{
+		double l0tmp = sqrt(4.0*PI*cell.a0*calA0tmp)/cell.NV;
+		cell.l0 = l0tmp;
+	}
+}
+
 void cellPacking2D::breakup(){
 	int increase = 0;
 	for (int ci = 0; ci < NCELLS; ci++)
@@ -6232,6 +6243,7 @@ void cellPacking2D::breakup(){
 		breakupPair pair = cell(ci).breakup();
 		if (pair.i >= 0)
 		{
+			// printRoutine(0, round(NPRINT * 0.005 /dt), 0, 0, 0);
 			increase ++;
 			resetSubFlag = 1;
 			cout << "droplet breakup" << endl;
@@ -6240,11 +6252,13 @@ void cellPacking2D::breakup(){
 			double segy = cell(ci).distance(cell(ci),pair.i,pair.j,1);
 			double dist = sqrt(segx*segx + segy * segy);
 			int padding = floor(dist/cell(ci).l0) - 1;
+			padding = padding<0? 0 : padding;
 
 			double segx1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,0);
 			double segy1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,1);
 			double dist1 = sqrt(segx1*segx1 + segy1 * segy1);
 			int padding1 = floor(dist1/cell(ci).l0) - 1;
+			padding1 = padding1<0? 0 : padding1;
 
 			// breakupArray(cell(ci).vertexPositions,pair,cell(ci).NV, padding, padding1);
 			int newNV = (pair.j - pair.i + 1);
@@ -6266,12 +6280,120 @@ void cellPacking2D::breakup(){
 			cellArray.back().setkb(cell(ci).kb);
 			cellArray.back().setkint(cell(ci).kint);
 			cellArray.back().setdel(cell(ci).del);
-			cellArray.back().seta0(cellArray.back().polygonArea());
+
+			cellArray.back().pbc = cell(ci).pbc;
+			cellArray.back().L = cell(ci).L;
+
+			cellArray.back().updateCPos();
+			double newArea = cellArray.back().polygonArea();
+			cellArray.back().seta0(newArea);
+			cellArray.back().inside_hopper = 1;
+			// for (int d = 0; d<2; d++)
+			// 	cellArray.back().pbc.at(d) = 0;
+
 			// update original cell
 			cell(ci).NV = newNV + padding;
+			cell(ci).updateCPos();
 			cell(ci).seta0(cell(ci).polygonArea());
+
+			// May need to rescale l0
+			rescaleL0(cell(ci));
+			rescaleL0(cellArray.back());
 		}
 	}
-	// NCELLS += increase;
+	NCELLS += increase;
+	int NC = NCELLS*(NCELLS-1)/2;
+	delete [] contactMatrix;
+	contactMatrix = new int[NC];
+	for (int i=0; i<NC; i++)
+		contactMatrix[i] = 0;
+	if (increase || resetSubFlag)
+		printRoutine(0, round(NPRINT * 0.005 /dt), 0, 0, 0);
+
 }
 
+// double* breakupArray(double*& before,breakupPair pair, int NV, int padding, int padding1)
+// {
+// 	double* temp = before;
+// 	int length = pair.j - pair.i - 1;
+// 	before = new double[length*2 + padding*2];
+// 	double startx = temp[((NV + pair.j-1)%NV)*2];
+// 	double endx = temp[((NV + pair.i+1)%NV)*2];
+// 	double starty = temp[((NV + pair.j-1)%NV)*2+ 1];
+// 	double endy = temp[((NV + pair.i+1)%NV)*2];
+
+// 	for (int c=0; c<length*2; c++)
+// 		before[c] = temp[((pair.i+1)*2 + c)%(NV*2)];
+// 	for (int c = 0; c< padding; c++)
+// 	{
+// 		before[length*2 + c*2 + 1] = starty + (c+1.0)*(endy - starty)/(padding+1.0);
+// 		before[length*2 + c*2] = startx + (c+1.0)*(endx - startx)/(padding+1.0);
+// 	}
+
+// 	double* after = new double[(NV-2-length)*2 + padding1*2];
+// 	startx = temp[((NV + pair.i-1)%NV)*2];
+// 	endx = temp[((NV+pair.j+1)%NV)*2];
+// 	starty = temp[((NV + pair.i-1)%NV)*2 + 1];
+// 	endy = temp[((NV+pair.j+1)%NV)*2 + 1];
+
+// 	for (int c=0; c<(NV-2-length)*2; c++)
+// 		after[c] = temp[((pair.j+1)*2 + c)%(NV*2)];
+
+// 	for (int c = 0; c< padding1; c++)
+// 	{
+// 		after[(NV-2-length)*2 + c*2 + 1] = starty + (c+1.0)*(endy - starty)/(padding1+1.0);
+// 		after[(NV-2-length)*2 + c*2] = startx + (c+1.0)*(endx - startx)/(padding1+1.0);
+// 	}
+	
+// 	return after;
+// }
+
+// void cellPacking2D::breakup(){
+// 	int increase = 0;
+// 	for (int ci = 0; ci < NCELLS; ci++)
+// 	{
+// 		breakupPair pair = cell(ci).breakup();
+// 		if (pair.i >= 0)
+// 		{
+// 			increase ++;
+// 			resetSubFlag = 1;
+// 			cout << "droplet breakup" << endl;
+// 			// indicate NV for new cell
+// 			double segx = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i+1)%cell(ci).NV,(cell(ci).NV+pair.j-1)%cell(ci).NV,0);
+// 			double segy = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i+1)%cell(ci).NV,(cell(ci).NV+pair.j-1)%cell(ci).NV,1);
+// 			double dist = sqrt(segx*segx + segy * segy);
+// 			int padding = floor(dist/cell(ci).l0) - 1;
+
+// 			double segx1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,0);
+// 			double segy1 = cell(ci).distance(cell(ci),(cell(ci).NV + pair.i-1)%cell(ci).NV,(cell(ci).NV+pair.j+1)%cell(ci).NV,1);
+// 			double dist1 = sqrt(segx1*segx1 + segy1 * segy1);
+// 			int padding1 = floor(dist1/cell(ci).l0) - 1;
+
+// 			// breakupArray(cell(ci).vertexPositions,pair,cell(ci).NV, padding, padding1);
+// 			int newNV = (pair.j - pair.i - 1);
+// 			int daughtorNV = cell(ci).NV - 2 - newNV;
+// 			// push new cell
+// 			cellArray.emplace_back(deformableParticles2D());
+// 			cellArray.back().NV = daughtorNV + padding1;
+// 			cellArray.back().initializeVertices();
+// 			cellArray.back().initializeCell();
+// 			// split position array
+// 			double * p = cellArray.back().vertexPositions;
+// 			delete [] p;
+// 			cellArray.back().vertexPositions = breakupArray(cell(ci).vertexPositions,pair,cell(ci).NV, padding, padding1);
+// 			cellArray.back().setkl(cell(ci).kl);
+// 			cellArray.back().l0 = cell(ci).l0;
+// 			cellArray.back().a = cell(ci).a;
+// 			cellArray.back().setka(cell(ci).ka);
+// 			cellArray.back().setgam(cell(ci).gam);
+// 			cellArray.back().setkb(cell(ci).kb);
+// 			cellArray.back().setkint(cell(ci).kint);
+// 			cellArray.back().setdel(cell(ci).del);
+// 			cellArray.back().seta0(cellArray.back().polygonArea());
+// 			// update original cell
+// 			cell(ci).NV = newNV + padding;
+// 			cell(ci).seta0(cell(ci).polygonArea());
+// 		}
+// 	}
+// 	// NCELLS += increase;
+// }

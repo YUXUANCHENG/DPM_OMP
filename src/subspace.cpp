@@ -405,12 +405,12 @@ void subspace::calculateForces_insub() {
 			// forces between resident cells
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
-				if (resident_cells[ci]->ci == resident_cells[cj]->ci)
-				{
-					int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
-					if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
-						continue;
-				}
+				// if (resident_cells[ci]->ci == resident_cells[cj]->ci)
+				// {
+				// 	int distance = abs(resident_cells[ci]->vi - resident_cells[cj]->vi);
+				// 	if (distance == 1 || distance == (pointer_to_system->cell(resident_cells[ci]->ci).getNV() - 1))
+				// 		continue;
+				// }
 				if (!(pointer_to_system->cell(resident_cells[ci]->ci).inside_hopper) || !(pointer_to_system->cell(resident_cells[cj]->ci).inside_hopper))
 					continue;
 				if (resident_cells[ci]->boxid != resident_cells[cj]->boxid) {
@@ -572,8 +572,9 @@ int subspace::vertexForce(cvpair* onTheLeft, cvpair* onTheRight, double& sigmaXX
 	int inContact = 0;
 	deformableParticles2D& leftCell = pointer_to_system->cell(onTheLeft->ci);
 	deformableParticles2D& rightCell = pointer_to_system->cell(onTheRight->ci);
-	if ((leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci) && (onTheRight->ci != onTheLeft->ci))
-		return 0;
+	// disable this may cause some friction
+	// if ((leftCell.vertexEdgeContact[onTheLeft->vi] == onTheRight->ci) && (onTheRight->ci != onTheLeft->ci))
+	// 	return 0;
 	// local variables
 	int d, dd;
 
@@ -752,7 +753,8 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 	// get contact distance
 	contactDistance = 0.5 * (leftCell.del * leftCell.l0 + rightCell.del * rightCell.l0) * pointer_to_system->cutoff;
 
-
+	if (vertexDist < 0 && onTheLeft->ci != onTheRight->ci)
+		return 0;
 	// check overlap distances
 	if (vertexDist < contactDistance && vertexDist > -pointer_to_system->insideCutoffFactor * contactDistance) {
 		// increment number of vertex-vertex contacts

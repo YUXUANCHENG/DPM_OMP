@@ -10,8 +10,9 @@ extern bool replaceFlag;
 extern bool variableExtFflag;
 extern bool settleDown;
 extern bool frictionFlag;
-
+extern bool breakUpFlag;
 extern bool softFlag;
+extern bool closedWallFlag;
 
 class DPMNVEsimulator{
 public:
@@ -214,13 +215,14 @@ public:
 			if (replaceFlag)
 				startFlag = (t > cellpointer->NT / 500 || Ke() < 1e-4 * N_inside);
 			else 
-				startFlag = (t > 1e4 && Ke() < 1e-4 * N_inside);
+				startFlag = closedWallFlag? 0: 1;
+				// startFlag = (t > 1e4 && Ke() < 1e-4 * N_inside);
 				// startFlag = (t > cellpointer->NT / 500 && Ke() < 1e-4 * N_inside);
 
 			if (closed == 1 && startFlag) 
 				closed = 0;
-
-			addBack();
+			if (replaceFlag)
+				addBack();
 			cellpointer->printRoutine(t, round(cellpointer->NPRINT * 0.005 / cellpointer->dt), t, N_inside, closed);
 			if (replaceFlag && closed == 0 && (t+1) % int (1e4 * 0.005 / cellpointer->dt) == 0) {
 			// if (replaceFlag && closed == 0 && (t+1) % (cellpointer->NPRINT*1) == 0) {
@@ -298,7 +300,8 @@ public:
 		if (softFlag){
 			cellpointer->hopperPosVerletSP();
 		}
-		cellpointer->breakup();
+		if (breakUpFlag)
+			cellpointer->breakup();
 		for (int ci = 0; ci < cellpointer->NCELLS; ci++) {
 			if (cellpointer->cell(ci).inside_hopper)
 			{

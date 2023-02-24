@@ -18,7 +18,7 @@ extern bool constPressureFlag;
 bool constPressureFlag = 0;
 
 extern bool replaceFlag;
-bool replaceFlag = 1;
+bool replaceFlag = 0;
 extern bool frictionFlag;
 bool frictionFlag = 1;
 extern bool softFlag;
@@ -26,6 +26,12 @@ extern bool softFlag;
 bool softFlag = 0;
 extern bool deformObs;
 bool deformObs = 0;
+extern bool obstaclesFlag;
+bool obstaclesFlag = 1;
+extern bool breakUpFlag;
+bool breakUpFlag = 0;
+extern bool closedWallFlag;
+bool closedWallFlag = 0;
 
 extern bool variableExtFflag;
 bool variableExtFflag = 0;

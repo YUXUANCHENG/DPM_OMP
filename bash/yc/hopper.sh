@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # directories with code
-cellsdir=~/DPM_Obstacle/DPM_OMP
+cellsdir=~/DPM_Breakup/DPM_OMP
 srcdir=$cellsdir/src
 # maindir=$cellsdir/main
 
@@ -13,9 +13,9 @@ jobnumber=1
 # factor2=40
 
 
-factor1=1
+factor1=10
 factor1s=1
-factor2=20
+factor2=1
 
 # factor1=10
 # factor1s=1
@@ -54,10 +54,10 @@ done
 slurmf=$workdir/slurm.sh
 rm -f $slurmf
 
-# partition=scavenge
+partition=scavenge
 # partition=pi_ohern
 # partition=general
-partition=day
+# partition=day
 job_name=hopper
 let range1t=$factor1-$factor1s+1
 let total_job=$jobnumber*$jobnumber*$range1t*$factor2

@@ -52,7 +52,7 @@ public:
 		this->NT = 5e6;			// number of time steps for flow simulation
 		// this->NT = 1e6;			// number of time steps for flow simulation
 		this->NPRINT = 1e4;			// number of steps between printing
-		this->kl = 0.01*scaleFactor;
+		this->kl = 0.02*scaleFactor;
 		this->ka = 100*scaleFactor;
 		this->kb = 0.001*scaleFactor;
 		if (frictionFlag)
@@ -82,17 +82,15 @@ public:
 			// this->g = 0.01;
 		}
 		this->kint = 2.0*scaleFactor;
-		if (replaceFlag)
+		// if (replaceFlag)
 		{
 			// this->NT = 1e8;	
-			// this->NPRINT = 1e7;	
-			this->NT = 1e6;	
+			this->NT = 1e7;	
 			this->NPRINT = 1e3;	
 			// this->NPRINT = 1e5;	
 			// this->NCELLS = 1600;
-			// this->NCELLS = 400;
+			// this->NCELLS = 64;
 			this->NCELLS = 1;
-			// this->timeStepMag = 0.002;
 			// w0 = 60.0;
 			// w0 = 25.0;
 			w0 = 10.0;
@@ -102,41 +100,42 @@ public:
 			// th = PI/6.0;
 			// th =  (20.0)/180 * PI;
 			// th =  (15.0)/180 * PI;
-			this->kint = 10*scaleFactor;
+			this->kint = 1*scaleFactor;
+			// this->kint = 10*scaleFactor;
 			factorNx = 1;
 		}
-		else
-		{
-			// this->NCELLS = 64;
-			// this->NPRINT = 1e2;
-			// this->NCELLS = 800;
-			// this->NCELLS = 100;
-			this->NCELLS = 200;
-			if (this->NCELLS > 100)
-			{
-				this->NT = 1e8;			// number of time steps for flow simulation
-				this->NPRINT = 1e5;	
-				// this->timeStepMag = 0.002;
-				w0 = 40.0;
-			}
-		}
+		// else
+		// {
+		// 	// this->NCELLS = 64;
+		// 	// this->NPRINT = 1e2;
+		// 	// this->NCELLS = 800;
+		// 	// this->NCELLS = 100;
+		// 	this->NCELLS = 200;
+		// 	if (this->NCELLS > 100)
+		// 	{
+		// 		this->NT = 1e8;			// number of time steps for flow simulation
+		// 		this->NPRINT = 1e5;	
+		// 		// this->timeStepMag = 0.002;
+		// 		w0 = 40.0;
+		// 	}
+		// }
 		
 		this->NV = 64;
 		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
-		this->NBy = 4 * round(w0/10) * this->NV/16;
-		this->NBx = 2 * factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
+		this->NBy = 15 * round(w0/10) * this->NV/16;
+		this->NBx = 20 * factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 		if (this->NCELLS > 300)
 			this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
 		else
-			this->Lini = 1;
+			this->Lini = 3;
 		cout << "Lini = " << this->Lini << endl;
 		// if (this->kb > 9 || this->NV > 16)
 		// if (this->kb > 9)
-		// 	// this->timeStepMag = 0.001;		
-		// 	this->timeStepMag = 0.002;		
+		// this->timeStepMag = 0.001;		
+		this->timeStepMag = 0.005;		
 		this->radii = vector<double>(this->NCELLS, 0.0);
 		for (int ci = 0; ci < this->NCELLS; ci++) {
 			if (ci % 2 == 0)
@@ -169,6 +168,8 @@ public:
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
 		// 	this->timeStepMag = 0.002;
+		this->kl = 0.001 * scaleFactor * (this->index_i + 3);
+
 	}
 
 	void setFriction()
@@ -201,8 +202,8 @@ public:
 	}
 
 	virtual void setSeed() {
-		this->seed = this->index_i;
-		// this->seed = 0;
+		// this->seed = this->index_i;
+		this->seed = 0;
 	}
 
 	virtual void prepareSystem() {
@@ -216,11 +217,12 @@ public:
 		// w_scale = 3 + 1 * this->index_j;
 		// w_scale = start + interval * this->index_j;
 		// w_scale = 2.2;
-		w_scale = 0.3;
+		// w_scale = 0.3;
 		// w_scale = 10;
 		// w_scale = 2.5;
 		// w_scale = 0.5 + 1 * this->index_j;
-		w = w_scale * (1 + sizeRatio) / 2;
+		// w = w_scale * (1 + sizeRatio) / 2;
+		w = w0 - 2;
 		double ObX;
 		// int cutoff = 15; double spacing = 0.2;
 		// if (this->index_j <= cutoff)

@@ -33,6 +33,7 @@
 
 extern bool deformObs;
 extern bool resetSubFlag;
+extern bool obstaclesFlag;
 // constants
 const double PI = 4 * atan(1);
 extern vector<vector<double>> obstacleArray;
@@ -72,7 +73,7 @@ public:
 	int gDire = 0;
 	int gOn = 1;
 	double cutoff = 0.2;
-	double insideCutoffFactor = 1;
+	double insideCutoffFactor = 0.5;
 
 	// boundary lengths
 	std::vector<double> L;
