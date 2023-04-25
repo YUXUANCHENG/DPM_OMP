@@ -4,7 +4,7 @@
         {
             "type": "shell",
             "label": "C/C++: g++ build active file",
-            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
+            "command": "g++",
             "args": [
                 "-g",
                 "--std=c++17",
@@ -29,7 +29,7 @@
         {
             "type": "shell",
             "label": "C/C++: g++ build production",
-            "command": "/gpfs/loomis/apps/avx/software/GCCcore/10.2.0/bin/g++",
+            "command": "g++",
             "args": [
                 "-O3",
                 "--std=c++17",

@@ -34,6 +34,7 @@
 extern bool deformObs;
 extern bool resetSubFlag;
 extern bool obstaclesFlag;
+extern double obXmax;
 // constants
 const double PI = 4 * atan(1);
 extern vector<vector<double>> obstacleArray;

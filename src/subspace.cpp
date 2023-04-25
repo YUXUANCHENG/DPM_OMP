@@ -756,7 +756,8 @@ int frictionlessSubspace::vertexEdgeForce(cvpair* onTheLeft, cvpair* onTheRight,
 	if (vertexDist < 0 && onTheLeft->ci != onTheRight->ci)
 		return 0;
 	// check overlap distances
-	if (vertexDist < contactDistance && vertexDist > -pointer_to_system->insideCutoffFactor * contactDistance) {
+	// if (vertexDist < contactDistance && vertexDist > -pointer_to_system->insideCutoffFactor * contactDistance) {
+	if (vertexDist < contactDistance && vertexDist > -contactDistance) {
 		// increment number of vertex-vertex contacts
 		inContact++;
 		// cvpair onTheLeftV = *onTheLeft;

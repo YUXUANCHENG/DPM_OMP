@@ -7,6 +7,7 @@
 #include "deformableParticles2D.h"
 
 extern bool replaceFlag;
+extern bool loopThrough;
 extern bool variableExtFflag;
 extern bool settleDown;
 extern bool frictionFlag;
@@ -334,12 +335,23 @@ public:
 				if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.4 && cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) + 5 * sqrt(cellpointer->cell(ci).geta0()/PI))
 				//if (cellpointer->cell(ci).cpos(0) > cellpointer->L.at(0) * 1.5 || cellpointer->cell(ci).cpos(0) < cellpointer->BoundaryCoor.at(0))
 				{
-					cellpointer->cell(ci).inside_hopper = 0;
-					cellpointer->cell(ci).setCVel(0,0);
-					cellpointer->cell(ci).setCVel(1,0);
-					cellpointer->cell(ci).setCPos(0,100);
-					cellpointer->cell(ci).setCPos(1,cellpointer->L.at(1)/2);
-					cellpointer->cell(ci).regularPolygon();
+					if (!loopThrough){
+						cellpointer->cell(ci).inside_hopper = 0;
+						cellpointer->cell(ci).setCVel(0,0);
+						cellpointer->cell(ci).setCVel(1,0);
+						cellpointer->cell(ci).setCPos(0,100);
+						cellpointer->cell(ci).setCPos(1,cellpointer->L.at(1)/2);
+						cellpointer->cell(ci).regularPolygon();
+					}
+					else{
+						double x = cellpointer->L.at(0) - cellpointer->ObX -cellpointer->ObR - 2;
+						double ymin = 5;
+						double ymax = cellpointer->L.at(1) - 5;
+						double ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+						cellpointer->cell(ci).setCPos(1,ypos);
+						cellpointer->cell(ci).setCPos(0,x);
+						cellpointer->cell(ci).regularPolygon();
+					}
 				}
 			}
 		}

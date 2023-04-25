@@ -17,6 +17,7 @@ extern bool frictionFlag;
 extern bool horrizontalPistonFlag;
 extern bool frictionalWallFlag;
 extern bool softFlag;
+extern double obSepMin;
 // 2D HOPPER FLOW FUNCTIONS
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -154,7 +155,7 @@ double obS = 0.2;
 // double obSepMax = 2;
 // double obSepMin = 1;
 double obSepMax = 0.5;
-double obSepMin = 0.3;
+// double obSepMin = 0.3;
 
 void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double w, double th, double Lmin, int NV){
 	// local variables
@@ -163,7 +164,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	double xpos, ypos;
 	double xmin, xmax, ymin, ymax;
 	double vrmin, Ltmp;
-
+	obSepMax = 0.2 + obSepMin;
 	// minimum number of vertices
 	const int nvmin = 12;
 	diskRadii = radii;
@@ -247,9 +248,9 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 	}
 	ymin = !softFlag ? 0 : 0.7;
 	ymax = !softFlag ? w0 :w0 - 0.7;
-	xmin = L.at(0) - ObX -ObR - 1;
-	xmax = L.at(0) - ObX - 1;
-	int obNumberUp = obstaclesFlag? 300 : 0;
+	xmin = L.at(0) - ObX -ObR - 0;
+	xmax = L.at(0) - ObX - 0;
+	int obNumberUp = obstaclesFlag? 1e4 : 0;
 	for (int obIndex = 0; obIndex < obNumberUp; obIndex++)
 	{
 		if (obstacleArray.empty())
@@ -267,7 +268,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		{
 			double dist = 100;
 			int randcount = 0;
-			int limit = 1e6;
+			int limit = 1e7;
 			while((dist > obSepMax || dist < obSepMin) && randcount < limit)
 			{	
 				dist = 100;
@@ -338,7 +339,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		}
 		if (NCELLS == 1)
 		{
-			ypos = ymax/2;
+			ypos = w0/2;
 			xpos = xmax;
 		}
 		else
@@ -348,7 +349,7 @@ void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double 
 		cell(ci).setCPos(0,xpos);
 		cell(ci).setCPos(1,ypos);
 	}
-
+	obXmax = xmax;
 	// initialize phi
 	cout << "		-- Ininitializing packing fraction...";
 	phi = hopperPackingFraction(radii,w0,w,th);
@@ -1493,10 +1494,12 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 
 		// if orifice closed, check orifice wall
 		if (closed == 1){
-			if (x > L.at(0) - radii.at(ci)){
+			// double wallLoc = L.at(0);
+			double wallLoc = obXmax;
+			if (x > wallLoc - radii.at(ci)){
 
 				// vector from particle to wall
-				lwx = L.at(0) - x;
+				lwx = wallLoc - x;
 
 				// overlap with wall
 				overlap = 2.0*lwx/sigma;
@@ -1833,7 +1836,7 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 	// edge bead information
 	// sb 		= cell(0).getl0()*cell(0).getdel();
 	// sb 		= cell(0).getl0()*cell(0).getdel() * cutoff;
-	sb 		= cell(0).getl0()*cell(0).getdel() * 5;
+	sb 		= cell(0).getl0()*cell(0).getdel() * 2;
 	Lx = 0.5*(w0 - w + sb * (s - 1)) * t + 0.5 * sb * (1 + c);
 	// Ltmp = 0.5*(w0 - w)*tan(th) + vrmin*((1.0/cos(th)) + 1.0 - tan(th));
 	xtb 	= Lx - 0.5*sb;
@@ -1866,6 +1869,21 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 		// sigma = cell(ci).getl0()*cell(ci).getdel() * cutoff;
 		// sigma = sb;
 		double a = 0.01* sqrt(cell(ci).geta0()/PI)/ sigma;
+		std::vector<std::vector<double>> obInContact;
+		std::vector<int> obIndex;
+		int count = 0;
+		for (vector<double> it: obstacleArray){
+			double obx = it.at(0);
+			double oby = it.at(1);
+			double ObR = count%2 ? obS : obL;
+			double dist2Ob = (cell(ci).cpos(0) - obx)*(cell(ci).cpos(0) - obx) + (cell(ci).cpos(1) - oby)*(cell(ci).cpos(1) - oby);
+			double robi = 10 + ObR;
+			if (dist2Ob < robi*robi){
+					obInContact.push_back(it);
+					obIndex.push_back(count);
+			}
+			count ++;
+		}
 		for (vi=0; vi<cell(ci).getNV(); vi++){
 			cFlag = false;
 
@@ -1905,10 +1923,11 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 
 			int count = 0;
-			for (vector<double> it: obstacleArray){
+			for (vector<double> it: obInContact){
 				double obx = it.at(0);
 				double oby = it.at(1);
-				double ObR = count%2 ? obS : obL;
+				int currentObIndex = obIndex.at(count);
+				double ObR = currentObIndex%2 ? obS : obL;
 				count ++;
 				double dist2Ob = (x - obx)*(x - obx) + (y - oby)*(y - oby);
 				double robi = sigma/2 + ObR;
@@ -2312,10 +2331,12 @@ void cellPacking2D::hopperWallForcesDP(double w0, double w, double th, int close
 
 			// if orifice closed, check orifice wall
 			if (closed == 1){
-				if (x > Lx - 0.5*sigma){
+				double upperLim = 0;
+				// double upperLim = Lx;
+				if (x > upperLim - 0.5*sigma){
 
 					// vector from particle to wall
-					lwx = Lx - x;
+					lwx = upperLim - x;
 
 					// overlap with wall
 					overlap = 2.0*lwx/sigma;

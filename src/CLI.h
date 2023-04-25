@@ -68,7 +68,7 @@ public:
 	double vtau = 1e-2;
 	double t_scale = 1.00;
 	std::ofstream v0PrintObject;
-	int index_i, index_j;
+	int index_i, index_j, index_k;
 	int timeStepCutOff = 9;
 	int numOfRuns = 40;
 

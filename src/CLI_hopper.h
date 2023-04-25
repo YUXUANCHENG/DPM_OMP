@@ -14,6 +14,10 @@
 extern bool constPressureFlag;
 extern bool frictionFlag;
 extern bool replaceFlag;
+extern double obXmax;
+double obXmax = 1e4;
+extern double obSepMin;
+double obSepMin = 0.3;
 
 // check list: kb ksp interval angle, mu factor, script, softflag, cpu, partition
 template <class Ptype = cellPacking2D>
@@ -59,6 +63,7 @@ public:
 			this->b = 0;
 		this->b *= scaleFactor;
 		int factorNx = 5;
+		obSepMin = 0.4;
 		// this->gamafactor1 = 0.9;
 		// this->gamafactor2 = -1;
 		//this->g = 0.05;
@@ -85,15 +90,17 @@ public:
 		// if (replaceFlag)
 		{
 			// this->NT = 1e8;	
-			this->NT = 1e7;	
-			this->NPRINT = 1e3;	
-			// this->NPRINT = 1e5;	
+			this->NT = 2e7;	
+			// this->NPRINT = 1e4;	
+			// this->NPRINT = 4e2;	 // this is frequency
+			this->NPRINT = 1e4;	
 			// this->NCELLS = 1600;
 			// this->NCELLS = 64;
 			this->NCELLS = 1;
+			// this->NCELLS = 16;
 			// w0 = 60.0;
 			// w0 = 25.0;
-			w0 = 10.0;
+			w0 = 30.0;
 			th =  (90.0 - 89.9)/180 * PI;
 			// th = PI/4.0;
 			// th = PI/3.0;
@@ -124,8 +131,16 @@ public:
 		// this->NV = 16;
 		this->calA0 = 1.0;
 		// this->calA0 = 1.15;
+		if (this->NCELLS > 1)
+		{
 		this->NBy = 15 * round(w0/10) * this->NV/16;
 		this->NBx = 20 * factorNx * ceil((this->NCELLS/64.0)) * pow(this->NV/16, 1) * ceil((this->NBy/30.0));
+		}
+		else
+		{
+			this->NBy = 3;
+			this->NBx = 3;
+		}
 		// this->NBx = 5 * (this->NCELLS/64) * pow(this->NV/16, 2) / (this->NBy/30);
 		if (this->NCELLS > 300)
 			this->Lini = this->NCELLS * (PI / 4) * (1 + sizeRatio * sizeRatio)/ 2/ 0.6 / pow(w0, 2);
@@ -148,10 +163,13 @@ public:
 	virtual void setIndex(char const* argv[]) {
 		string index_i_str = argv[1];
 		string index_j_str = argv[2];
+		string index_k_str = argv[3];
 		stringstream index_i_ss(index_i_str);
 		stringstream index_j_ss(index_j_str);
+		stringstream index_k_ss(index_k_str);
 		index_i_ss >> this->index_i;
 		index_j_ss >> this->index_j;
+		index_k_ss >> this->index_k;
 	}
 
 	virtual void setKB() {
@@ -168,8 +186,16 @@ public:
 		// if (this->kb > 9)
 		// 	// this->timeStepMag = 0.001;		
 		// 	this->timeStepMag = 0.002;
-		this->kl = 0.001 * scaleFactor * (this->index_i + 3);
 
+		// this->kl = 0.0008 + 0.0004 * (this->index_j);
+		// this->kl = 0.001 + 0.001 * (this->index_j);
+		this->kl = 0.001 * scaleFactor * (this->index_j + 3);
+		// this->kl = 0.01 + 0.001 * (this->index_j);
+		// this->g = 0.3; this->b = 0.1; this->NPRINT = 1e2;
+		// this->g = 0.3; this->b = 1;
+
+		// obSepMin = 0.1 + 0.08 * this->index_i;
+		obSepMin = 0.3 + 0.1 * this->index_k;
 	}
 
 	void setFriction()
@@ -202,8 +228,8 @@ public:
 	}
 
 	virtual void setSeed() {
-		// this->seed = this->index_i;
-		this->seed = 0;
+		this->seed = this->index_i;
+		// this->seed = 0;
 	}
 
 	virtual void prepareSystem() {
@@ -219,10 +245,10 @@ public:
 		// w_scale = 2.2;
 		// w_scale = 0.3;
 		// w_scale = 10;
-		// w_scale = 2.5;
+		w_scale = 0.35;
 		// w_scale = 0.5 + 1 * this->index_j;
-		// w = w_scale * (1 + sizeRatio) / 2;
-		w = w0 - 2;
+		w = w_scale * (1 + sizeRatio) / 2;
+		w = w0 - 0.5; // for obstacles
 		double ObX;
 		// int cutoff = 15; double spacing = 0.2;
 		// if (this->index_j <= cutoff)
@@ -230,7 +256,8 @@ public:
 		// else
 		// 	ObX = (1 + spacing * cutoff + 1 * (this->index_j-cutoff) ) * (1 + sizeRatio) / 2;
 		// double ObR = 6 * (1 + sizeRatio) / 2;
-		double ObR = 10;
+		// double ObR = 10;
+		double ObR = 100;
 		ObX = 0;
 		// Initialze the system as disks
 		cout << "	** Initializing hopper " << endl;

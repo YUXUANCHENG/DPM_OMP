@@ -2452,7 +2452,7 @@ void deformableParticles2D::velVerlet_Langevin(double dt, double drag, double Kb
 void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam){
     // local variables                                                                                                                                                                                                                 
     int i,d;
-    double veltmp,anew,b;
+    double veltmp,velCtmp,anew,b;
     double ftmp, dampNum, dampDenom, dampUpdate;
 
     // scale damping                                                                                                                                                                                                                   
@@ -2463,10 +2463,13 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
 		for (d=0; d<NDIM; d++){
             // get current velocities                                                                                                                                                                                          
             veltmp = vvel(i,d);
-
+			velCtmp = cvel(d);
             // calculate force damping update                                                                                                                                                                                  
             ftmp = vforce(i,d);
-            dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
+            // dampNum = b*(veltmp - 0.5*vacc(i,d)*dt);
+			dampNum = b * velCtmp + 2 * b * (veltmp - velCtmp);
+			// dampNum = b * velCtmp + 10000* b * (veltmp - velCtmp) * abs(pow(veltmp - velCtmp,1));
+			// dampNum = b * velCtmp + 5000*300 * b * (veltmp - velCtmp) * abs(pow(veltmp - velCtmp,2));
             // dampDenom = 1.0 + 0.5*b*dt;
             dampDenom = 1.0;
             dampUpdate = (ftmp - dampNum)/dampDenom;
@@ -2475,7 +2478,9 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
             setVForce(i,d,dampUpdate);
 
 	        // get the new acceleration from forces with damping                                                                                                                                                               
-            anew = vforce(i,d)/(a0*16/NV);
+            // anew = vforce(i,d)/(a0*16/NV);
+			anew = vforce(i,d)/(a0/NV); //correct mass
+
 
 			// update velocity                                                                                                                                                                                                 
 			veltmp += 0.5*dt*(anew + vacc(i,d));
@@ -2486,6 +2491,7 @@ void deformableParticles2D::verletVelocityUpdate(double dt, double dampingParam)
 		}
     }
 }
+
 
 
 

@@ -6246,7 +6246,7 @@ void cellPacking2D::breakup(){
 			// printRoutine(0, round(NPRINT * 0.005 /dt), 0, 0, 0);
 			increase ++;
 			resetSubFlag = 1;
-			cout << "droplet breakup" << endl;
+			cout << "droplet breakup" << ci << ": " << pair.i << ", " << pair.j << endl;
 			// indicate NV for new cell
 			double segx = cell(ci).distance(cell(ci),pair.i,pair.j,0);
 			double segy = cell(ci).distance(cell(ci),pair.i,pair.j,1);

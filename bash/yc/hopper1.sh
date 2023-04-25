@@ -15,7 +15,8 @@ jobnumber=1
 
 factor1=10
 factor1s=1
-factor2=20
+factor2=30
+factor3=10
 
 # factor1=10
 # factor1s=1
@@ -42,12 +43,15 @@ rm -f $taskf
 let range2=$jobnumber*$factor2-1
 let range1=$jobnumber*$factor1-1
 let range1s=$factor1s-1
+let range3=$factor3-1
 # let range1=$factor1
-for index_i in `seq $range1s $range1`; do
-    for index_j in `seq 0 $range2`; do
-        current=$workdir/"$index_i"_"$index_j"/
-        runString="mkdir -p $current;cd $current;$binf $index_i $index_j 0;"
-        echo "$runString" >> $taskf
+for index_k in `seq 0 $range3`; do
+    for index_i in `seq $range1s $range1`; do
+        for index_j in `seq 0 $range2`; do
+            current=$workdir/"$index_k"/"$index_i"_"$index_j"/
+            runString="mkdir -p $current;cd $current;$binf $index_i $index_j $index_k;"
+            echo "$runString" >> $taskf
+        done
     done
 done
 
@@ -60,7 +64,7 @@ rm -f $slurmf
 partition=day
 job_name=hopper
 let range1t=$factor1-$factor1s+1
-let total_job=$jobnumber*$jobnumber*$range1t*$factor2
+let total_job=$jobnumber*$jobnumber*$range1t*$factor2*factor3
 
 echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf

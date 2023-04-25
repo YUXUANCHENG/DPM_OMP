@@ -10,6 +10,7 @@
 
 // use std name space
 using namespace std;
+// extern double obSepMin;
 extern bool settleDown;
 bool settleDown = 0;
 extern bool wallAttracFlag;
@@ -19,6 +20,9 @@ bool constPressureFlag = 0;
 
 extern bool replaceFlag;
 bool replaceFlag = 0;
+extern bool loopThrough;
+// bool loopThrough = 0;
+bool loopThrough = 1;
 extern bool frictionFlag;
 bool frictionFlag = 1;
 extern bool softFlag;
@@ -28,9 +32,12 @@ extern bool deformObs;
 bool deformObs = 0;
 extern bool obstaclesFlag;
 bool obstaclesFlag = 1;
+// bool obstaclesFlag = 0;
 extern bool breakUpFlag;
+// bool breakUpFlag = 1;
 bool breakUpFlag = 0;
 extern bool closedWallFlag;
+// bool closedWallFlag = 1;
 bool closedWallFlag = 0;
 
 extern bool variableExtFflag;
