@@ -189,13 +189,18 @@ public:
 
 		// this->kl = 0.0008 + 0.0004 * (this->index_j);
 		// this->kl = 0.001 + 0.001 * (this->index_j);
-		this->kl = 0.001 * scaleFactor * (this->index_j + 3);
+		// this->kl = 0.001 * scaleFactor * (this->index_j + 3);
+		// this->kl = 0.001 * scaleFactor * (18 + 3) + 0.00005 * this->index_j;
+		this->spK = 0.02 * scaleFactor * (this->index_j);
+
+
 		// this->kl = 0.01 + 0.001 * (this->index_j);
 		// this->g = 0.3; this->b = 0.1; this->NPRINT = 1e2;
 		// this->g = 0.3; this->b = 1;
 
 		// obSepMin = 0.1 + 0.08 * this->index_i;
 		obSepMin = 0.3 + 0.1 * this->index_k;
+		// obSepMin = 0.3 + 0.1 * 1;
 	}
 
 	void setFriction()

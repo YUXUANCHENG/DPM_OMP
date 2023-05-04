@@ -30,6 +30,18 @@ extern double obSepMin;
 // 	** NCELLS, NPRINT, L.at(0) (using w,w0,th)
 // 	** SET PBCS TO 0
 
+vector<vector<double>> obstacleArray;
+int Nobs;
+double obL = 0.4;
+double obS = 0.2;
+// double obL = 0.7;
+// double obS = 0.5;
+// double obSepMax = 0.6;
+// double obSepMin = 0.4;
+// double obSepMax = 2;
+// double obSepMin = 1;
+double obSepMax = 0.5;
+// double obSepMin = 0.3;
 
 void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double w, double th, double Lmin){
 	// local variables
@@ -37,7 +49,8 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 	double a0tmp, l0tmp, calA0tmp;
 	double xpos, ypos;
 	double xmin, xmax, ymin, ymax;
-
+	obSepMax = 0.2 + obSepMin;
+	diskRadii = radii;
 	// minimum number of vertices
 	const int nvmin = 12;
 
@@ -118,6 +131,111 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 		cell(ci).regularPolygon();
 	}
 
+	ymin = !softFlag ? 0 : 0.7;
+	ymax = !softFlag ? w0 :w0 - 0.7;
+	xmin = L.at(0) - ObX -ObR - 0;
+	xmax = L.at(0) - ObX - 0;
+	int obNumberUp = obstaclesFlag? 1e4 : 0;
+	for (int obIndex = 0; obIndex < obNumberUp; obIndex++)
+	{
+		if (obstacleArray.empty())
+		{
+			// xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+			// ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+			vector<double> obPos{xmax,ymax/2};
+			obstacleArray.push_back(obPos);
+			// obPos = vector<double>{xmax,ymax};
+			// obstacleArray.push_back(obPos);
+			// obPos = vector<double>{xmax,ymin};
+			// obstacleArray.push_back(obPos);
+		}
+		else
+		{
+			double dist = 100;
+			int randcount = 0;
+			int limit = 1e7;
+			while((dist > obSepMax || dist < obSepMin) && randcount < limit)
+			{	
+				dist = 100;
+				double obr = obIndex%2 ? obS : obL;
+				xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+				ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+				int count = 0;
+				for (vector<double> it: obstacleArray){
+    				double obrj = count%2 ? obS : obL;
+					double sep = sqrt((xpos- it.at(0))*(xpos- it.at(0)) + (ypos- it.at(1))*(ypos- it.at(1)));
+					sep -= (obrj + obr);
+					count ++;
+					if (sep < dist)
+						dist = sep;
+				}
+				randcount ++;
+			}
+			if (randcount == limit)
+				break;
+			vector<double> obPos{xpos,ypos};
+			obstacleArray.push_back(obPos);
+		}
+	}
+
+	double obTop = 100;
+	Nobs = 0;
+	
+	for (vector<double> it: obstacleArray){
+		contactPrintObject << it.at(0) << "," << it.at(1) << endl;
+		if (it.at(0) < obTop)
+			obTop = it.at(0);
+		if (deformObs){
+			cell(Nobs).setCPos(0,it.at(0));
+			cell(Nobs).setCPos(1,it.at(1));
+			Nobs ++;
+		}
+	}
+	// cutoff *= NV/16.0;
+	// initialize particle positions
+	cout << "		-- Ininitializing cell positions" << endl;
+	for (ci=Nobs; ci<NCELLS; ci++){
+		// set min and max values of positions
+		xmin = -Lmin*L.at(1) + radii.at(ci);
+		if (th < (90.0 - 85.0)/180 * PI)
+		// if (th < PI/4.0 - 0.1)
+			xmax = -radii.at(ci);
+		else
+			xmax = L.at(0) * 0.5;
+		
+		// double obTop = L.at(0) - ObX -ObR;
+		if (xmax > obTop - 1)
+			xmax = obTop - 1;
+
+		// get random x location in hopper
+		xpos = (xmin-xmax)* (double)rand() / (RAND_MAX + 1.0) + xmax;
+		//xpos *= 0.9;
+
+		// assign random y components
+		if (xpos < 0){
+			ymin = radii.at(ci);
+			ymax = w0 - radii.at(ci);
+		}
+		else{
+			// ymin = xpos/tan(th) + cell(ci).getl0();
+			// ymax = w0 - (xpos/tan(th)) - cell(ci).getl0();
+			ymin = xpos/tan(th) + radii.at(ci)/sin(th);
+			ymax = w0 - (xpos/tan(th)) - radii.at(ci)/sin(th);
+		}
+		if (NCELLS == 1)
+		{
+			ypos = w0/2;
+			xpos = xmax;
+		}
+		else
+			ypos = (ymax-ymin)* (double)rand() / (RAND_MAX + 1.0) + ymin;
+
+		// set as initial position of com
+		cell(ci).setCPos(0,xpos);
+		cell(ci).setCPos(1,ypos);
+	}
+	obXmax = xmax;
+
 	// initialize phi
 	cout << "		-- Ininitializing packing fraction...";
 	phi = hopperPackingFraction(radii,w0,w,th);
@@ -144,18 +262,6 @@ void cellPacking2D::initializeHopperSP(vector<double>& radii, double w0, double 
 // 	** NCELLS, NPRINT, L.at(0) (using w,w0,th)
 // 	** SET PBCS TO 0
 
-vector<vector<double>> obstacleArray;
-int Nobs;
-double obL = 0.4;
-double obS = 0.2;
-// double obL = 0.7;
-// double obS = 0.5;
-// double obSepMax = 0.6;
-// double obSepMin = 0.4;
-// double obSepMax = 2;
-// double obSepMin = 1;
-double obSepMax = 0.5;
-// double obSepMin = 0.3;
 
 void cellPacking2D::initializeHopperDP(vector<double>& radii, double w0, double w, double th, double Lmin, int NV){
 	// local variables
@@ -1221,6 +1327,7 @@ void cellPacking2D::hopperWallForcesSP(vector<double>& radii, double w0, double 
 					double overlap = dist2Ob/robi;
 
 					// force scale
+					factor = this->spK;
 					ftmp = factor * (1 - overlap);
 					for (int d=0; d<NDIM; d++){
 						// unit vector
