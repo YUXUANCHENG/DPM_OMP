@@ -3,3 +3,5 @@ Deformable Particle Model MD simulator with OpenMP support.
 Originally forked from https://github.com/jacktreado/cells.
 
 But the code base changed dramatically over the years, with improved OOP designed structure and OpenMP support, I decided to detach the fork.
+
+For paper 'Flow and clogging of capillary droplets', experimental images are stored in https://drive.google.com/drive/folders/18Mx9t6MyRM45tAprRDykjGwZpQPCdnZ8
